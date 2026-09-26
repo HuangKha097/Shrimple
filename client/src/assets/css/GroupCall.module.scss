@@ -1,0 +1,791 @@
+// ==========================================
+// Discord-style Group Voice & Video Room
+// Modern Pure Monochromatic & Minimalist Luxury
+// ==========================================
+
+// ------------------------------------------
+// 1. Fullscreen / Centered Voice Modal
+// ------------------------------------------
+.group-call-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.group-call-container {
+  width: 100%;
+  max-width: 1080px;
+  height: 86vh;
+  max-height: 780px;
+  background: #111214; // Discord-dark tone
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+  position: relative;
+}
+
+// ------------------------------------------
+// 2. Top Header Bar
+// ------------------------------------------
+.call-header {
+  height: 60px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(18, 19, 22, 0.95);
+  flex-shrink: 0;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 9999px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #22c55e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+
+      .pulse-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #22c55e;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #22c55e;
+        animation: pulse 1.8s infinite;
+      }
+    }
+
+    .group-meta {
+      display: flex;
+      flex-direction: column;
+
+      .group-name {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      .participant-count {
+        font-size: 1.2rem;
+        color: #86868b;
+      }
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #e7e9ea;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+// ------------------------------------------
+// 3. Main Stage / Participant Grid
+// ------------------------------------------
+.call-stage {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  position: relative;
+  background: radial-gradient(circle at 50% 50%, #17181c 0%, #0d0e11 100%);
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+  }
+}
+
+// Screen Sharing Theater Layout
+.theater-layout {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .theater-screen-box {
+    flex: 1;
+    background: #000000;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .theater-screen-badge {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  .theater-strip {
+    height: 110px;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    flex-shrink: 0;
+
+    .participant-card {
+      width: 140px;
+      height: 100%;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Standard Dynamic Grid Layout
+.participants-grid {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+
+  &.grid-1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .participant-card {
+      width: min(720px, 100%);
+      aspect-ratio: 16 / 10;
+      max-height: min(520px, calc(100vh - 240px));
+    }
+  }
+
+  &.grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 1100px;
+    align-content: center;
+    justify-content: center;
+    margin: auto;
+
+    .participant-card {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      max-height: min(440px, calc(100vh - 240px));
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(2, auto);
+      gap: 12px;
+      max-width: 480px;
+
+      .participant-card {
+        max-height: 240px;
+      }
+    }
+  }
+
+  &.grid-3,
+  &.grid-4 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(240px, 1fr));
+    gap: 16px;
+    width: 100%;
+    max-width: 1100px;
+    align-content: center;
+    justify-content: center;
+    margin: auto;
+
+    .participant-card {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      max-height: min(340px, calc((100vh - 260px) / 2));
+    }
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 10px;
+      max-width: 440px;
+    }
+  }
+
+  &.grid-many {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 1280px;
+    align-content: center;
+    justify-content: center;
+    margin: auto;
+
+    .participant-card {
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      max-height: 280px;
+    }
+  }
+}
+
+// Participant Card Tile
+.participant-card {
+  background: #1e1f22; // Discord tile background
+  border-radius: 18px;
+  border: 2px solid transparent;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+
+  &.speaking {
+    border-color: #23a55a; // Discord speaking green
+    box-shadow: 0 0 20px rgba(35, 165, 90, 0.45);
+
+    .avatar-wrapper {
+      box-shadow: 0 0 0 3px #23a55a, 0 0 16px rgba(35, 165, 90, 0.6);
+      animation: speakingPulse 1.2s infinite alternate;
+    }
+  }
+
+  // Camera video stream
+  .camera-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000000;
+  }
+
+  // Avatar View (when camera is off)
+  .avatar-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px;
+  }
+
+  .avatar-wrapper {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #2b2d31;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  // Name Tag & Status Indicators
+  .participant-tag {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(10px);
+    padding: 5px 12px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: calc(100% - 24px);
+
+    .tag-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .you-pill {
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+  }
+
+  .status-badges {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 5;
+
+    .badge-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      transition: all 0.2s ease;
+
+      &.muted {
+        background: rgba(239, 68, 68, 0.9);
+        color: #ffffff;
+      }
+
+      &.unmuted {
+        background: rgba(0, 0, 0, 0.65);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.35);
+
+        &.speaking {
+          background: #22c55e;
+          color: #ffffff;
+          box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+        }
+      }
+
+      &.cam-off {
+        background: rgba(239, 68, 68, 0.9);
+        color: #ffffff;
+      }
+
+      &.cam-on {
+        background: rgba(0, 0, 0, 0.65);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.35);
+      }
+
+      &.live {
+        background: #5865f2;
+        color: #ffffff;
+      }
+    }
+  }
+}
+
+// ------------------------------------------
+// 4. Discord Bottom Floating Control Dock
+// ------------------------------------------
+.call-dock {
+  height: 80px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(18, 19, 22, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+
+  .dock-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #2b2d31; // Discord button gray
+    border: none;
+    color: #dbdee1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+
+    &:hover {
+      background: #35373c;
+      color: #ffffff;
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    // Active state (e.g. camera on / screen sharing)
+    &.active {
+      background: #ffffff;
+      color: #000000;
+
+      &:hover {
+        background: #e5e5e5;
+      }
+    }
+
+    // Muted / Off state (Red highlight)
+    &.muted {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+
+      &:hover {
+        background: #ef4444;
+        color: #ffffff;
+      }
+    }
+
+    // Leave Call Red Button
+    &.disconnect {
+      width: 56px;
+      height: 48px;
+      border-radius: 24px;
+      background: #da373c; // Discord red
+      color: #ffffff;
+
+      &:hover {
+        background: #b82e33;
+        transform: translateY(-2px);
+      }
+    }
+  }
+}
+
+// ------------------------------------------
+// 5. Minimized Voice Floating Widget (Discord style)
+// ------------------------------------------
+.minimized-voice-bar {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #111214;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  z-index: 9998;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-3px);
+  }
+
+  .bar-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background-color: #22c55e;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #22c55e;
+      animation: pulse 1.6s infinite;
+    }
+
+    .bar-text {
+      display: flex;
+      flex-direction: column;
+
+      .title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #22c55e;
+        line-height: 1.2;
+      }
+
+      .sub {
+        font-size: 1.15rem;
+        color: #949ba4;
+      }
+    }
+  }
+
+  .bar-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .mini-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #2b2d31;
+      border: none;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+
+      &:hover {
+        background: #35373c;
+      }
+
+      &.muted {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+
+      &.leave {
+        background: #da373c;
+        color: #ffffff;
+
+        &:hover {
+          background: #b82e33;
+        }
+      }
+    }
+  }
+}
+
+// ------------------------------------------
+// 6. In-Chat Active Call Banner
+// ------------------------------------------
+.group-call-banner {
+  margin: 12px 16px;
+  background: linear-gradient(135deg, rgba(35, 165, 90, 0.12) 0%, rgba(20, 21, 24, 0.85) 100%);
+  border: 1px solid rgba(35, 165, 90, 0.35);
+  border-radius: 14px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  animation: slideDown 0.3s ease-out;
+
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .banner-icon-box {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(35, 165, 90, 0.2);
+      border: 1px solid rgba(35, 165, 90, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #23a55a;
+      flex-shrink: 0;
+    }
+
+    .banner-info {
+      display: flex;
+      flex-direction: column;
+
+      .banner-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .live-dot {
+          width: 7px;
+          height: 7px;
+          background: #23a55a;
+          border-radius: 50%;
+          box-shadow: 0 0 6px #23a55a;
+        }
+      }
+
+      .banner-desc {
+        font-size: 1.2rem;
+        color: #949ba4;
+      }
+    }
+  }
+
+  .banner-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .avatar-stack {
+      display: flex;
+      align-items: center;
+
+      img {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid #111214;
+        margin-left: -8px;
+        object-fit: cover;
+
+        &:first-child {
+          margin-left: 0;
+        }
+      }
+    }
+
+    .join-call-btn {
+      background: #23a55a; // Discord Join green
+      color: #ffffff;
+      border: none;
+      border-radius: 9999px;
+      padding: 8px 18px;
+      font-size: 1.3rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+
+      &:hover {
+        background: #1f9450;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(35, 165, 90, 0.4);
+      }
+
+      &.in-call {
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.2);
+        }
+      }
+    }
+  }
+}
+
+// ------------------------------------------
+// Keyframe Animations
+// ------------------------------------------
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+}
+
+@keyframes speakingPulse {
+  0% {
+    box-shadow: 0 0 0 2px #23a55a, 0 0 8px rgba(35, 165, 90, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 0 4px #23a55a, 0 0 20px rgba(35, 165, 90, 0.7);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

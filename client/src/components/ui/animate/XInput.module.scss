@@ -1,0 +1,129 @@
+.input-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+}
+
+.input-container {
+  position: relative;
+  width: 100%;
+  min-height: 56px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid #333639;
+  border-radius: 8px;
+  padding: 0 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: border-color 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+              box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s ease;
+
+  &:hover {
+    border-color: #4b5156;
+    background: rgba(18, 20, 23, 0.6);
+  }
+
+  &.focused {
+    border-color: #e56d32;
+    background: rgba(18, 20, 23, 0.85);
+    box-shadow: 0 0 0 1px #e56d32, 0 0 16px rgba(229, 109, 50, 0.15);
+
+    .label {
+      color: #e56d32;
+    }
+  }
+
+  &.error {
+    border-color: #f4212e;
+    box-shadow: 0 0 0 1px #f4212e, 0 0 12px rgba(244, 33, 46, 0.15);
+
+    .label {
+      color: #f4212e;
+    }
+  }
+}
+
+.label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #71767b;
+  font-size: 1.5rem;
+  pointer-events: none;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              font-size 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              top 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              color 0.2s ease;
+  user-select: none;
+  line-height: 1;
+
+  &.floating {
+    top: 10px;
+    transform: translateY(0);
+    font-size: 1.15rem;
+    font-weight: 500;
+  }
+
+  .required {
+    color: #e56d32;
+  }
+}
+
+.field-wrapper {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding-top: 14px;
+
+  .input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #e7e9ea;
+    font-size: 1.55rem;
+    line-height: 1.4;
+    padding: 2px 0 6px 0;
+    font-family: inherit;
+
+    &::placeholder {
+      color: #4b5156;
+      font-size: 1.45rem;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .toggle-btn {
+    background: transparent;
+    border: none;
+    color: #71767b;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 50%;
+    margin-left: 6px;
+    transition: color 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      color: #e7e9ea;
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+  }
+}
+
+.error-text {
+  color: #f4212e;
+  font-size: 1.25rem;
+  margin-top: 5px;
+  padding-left: 4px;
+  font-weight: 500;
+}

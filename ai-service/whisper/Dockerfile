@@ -1,0 +1,30 @@
+FROM debian:bookworm-slim AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential ca-certificates cmake git \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 --recurse-submodules --shallow-submodules --branch v1.9.4 \
+    https://github.com/ggml-org/whisper.cpp.git /src/whisper.cpp \
+    && cmake -S /src/whisper.cpp -B /src/whisper.cpp/build \
+       -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
+       -DGGML_NATIVE=ON -DWHISPER_BUILD_SERVER=ON -DWHISPER_BUILD_TESTS=OFF \
+    && cmake --build /src/whisper.cpp/build --config Release --target whisper-server -j 2
+
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates curl ffmpeg libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /src/whisper.cpp/build/bin/whisper-server /usr/local/bin/whisper-server
+COPY start.sh /usr/local/bin/start-whisper
+RUN chmod +x /usr/local/bin/start-whisper \
+    && mkdir -p /models /tmp/whisper /usr/share/whisper-public \
+    && chown -R 10001:10001 /models /tmp/whisper
+
+USER 10001:10001
+WORKDIR /tmp/whisper
+
+EXPOSE 8080
+CMD ["/usr/local/bin/start-whisper"]

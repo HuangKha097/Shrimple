@@ -1,0 +1,11 @@
+// Danh sách chat
+.slidebar-body-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+
+  // Tùy chỉnh thanh cuộn cho đẹp (Webkit browsers)
+}

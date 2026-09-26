@@ -1,0 +1,72 @@
+# Dependencies
+**/node_modules/
+**/.pnp/
+**/.pnp.js
+
+# Environment files and local secrets
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+*.local
+
+# Build output and tool caches
+**/dist/
+**/dist-ssr/
+**/build/
+**/.vite/
+**/.cache/
+**/coverage/
+**/.nyc_output/
+
+# Runtime files and logs
+**/logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.pid
+*.pid.lock
+server/public/uploads/
+
+# Python caches and virtual environments
+**/__pycache__/
+*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.venv/
+**/venv/
+
+# Private keys and certificates
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Editor and IDE files
+**/.vscode/*
+!**/.vscode/extensions.json
+!**/.vscode/settings.json
+**/.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Temporary files
+**/.tmp/
+**/tmp/
+**/temp/
+*.tmp
+*.temp
+*.bak
+*~

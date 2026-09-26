@@ -1,0 +1,212 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* {
+    box-sizing: border-box;
+}
+
+:root {
+    --motion-panel: 280ms;
+    --motion-ease: cubic-bezier(.22, 1, .36, 1);
+    color-scheme: dark;
+    --primary-color: #f97316;
+    --primary-rgb: 249, 115, 22;
+    --on-primary: #ffffff;
+    --primary-backgroundColor: #000000;
+    --primary-textColor: #e7e9ea;
+    --primary-borderColor: rgba(255, 255, 255, 0.08);
+    --primary-blockBackgroundColor: #000000;
+    --primary-hoverBackgroundColor: rgba(255, 255, 255, 0.04);
+    --surface-subtle: #16181c;
+    --text-muted: #71767b;
+    --accent-soft: rgba(249, 115, 22, 0.12);
+    --accent-text: #f97316;
+    --surface-shadow: 0 16px 64px rgb(0 0 0 / 40%);
+}
+:root:not(.dark) {
+    color-scheme: light;
+    --primary-backgroundColor: #f3f5f7;
+    --primary-textColor: #1c2530;
+    --primary-borderColor: #dce1e7;
+    --primary-blockBackgroundColor: #ffffff;
+    --primary-hoverBackgroundColor: #edf0f4;
+    --surface-subtle: #f6f8fa;
+    --text-muted: #596575;
+    --accent-text: color-mix(in srgb, var(--primary-color) 65%, #111827);
+    --surface-shadow: 0 16px 64px rgb(32 43 58 / 8%);
+}
+
+/* Common */
+button {
+    cursor: pointer;
+}
+
+a {
+    text-decoration: none;
+    color: unset;
+}
+
+li {
+    list-style: none;
+}
+
+/*  */
+html {
+    font-size: 62.5%;
+}
+
+body {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1.6rem;
+    color: var(--primary-textColor);
+    background: var(--primary-backgroundColor);
+
+}
+
+.container {
+    padding: 8rem;
+}
+/* Mobile Prevent Auto Zoom */
+input, textarea, select {
+  font-size: 16px;
+}
+
+/* Global Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}
+
+button, input, textarea, select { font-family: inherit; }
+button:disabled { cursor: not-allowed; }
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+:where(button, a, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--accent-text); outline-offset: 3px;
+}
+::selection { background: var(--accent-soft); color: var(--primary-textColor); }
+input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; transition-delay: 0s !important; animation-delay: 0s !important; scroll-behavior: auto !important; }
+}
+
+/* Keep zoom transitions inside the viewport. */
+html, body { overflow-x: clip; }
+
+/* ============================================================
+   Twitter/X Monochrome Toast Notifications (Sonner Override)
+   ============================================================ */
+[data-sonner-toaster] {
+  --normal-bg: #000000 !important;
+  --normal-border: rgba(255, 255, 255, 0.18) !important;
+  --normal-text: #ffffff !important;
+  --success-bg: #000000 !important;
+  --success-border: rgba(255, 255, 255, 0.18) !important;
+  --success-text: #ffffff !important;
+  --info-bg: #000000 !important;
+  --info-border: rgba(255, 255, 255, 0.18) !important;
+  --info-text: #ffffff !important;
+  --warning-bg: #000000 !important;
+  --warning-border: rgba(255, 255, 255, 0.18) !important;
+  --warning-text: #ffffff !important;
+  --error-bg: #0d0606 !important;
+  --error-border: rgba(239, 68, 68, 0.4) !important;
+  --error-text: #ffffff !important;
+}
+
+[data-sonner-toast] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 9999px !important;
+  padding: 10px 20px !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  font-family: inherit !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  user-select: none !important;
+}
+
+[data-sonner-toast] [data-icon] {
+  color: #ffffff !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+[data-sonner-toast] [data-title] {
+  color: #ffffff !important;
+  font-size: 1.4rem !important;
+  font-weight: 600 !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: #a8b3bc !important;
+  font-size: 1.25rem !important;
+}
+
+/* Eliminate green / colorful backgrounds on all toast types */
+[data-sonner-toast][data-type="success"],
+[data-sonner-toast][data-type="info"],
+[data-sonner-toast][data-type="warning"],
+[data-sonner-toast][data-type="default"] {
+  background: #000000 !important;
+  background-color: #000000 !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-icon],
+[data-sonner-toast][data-type="info"] [data-icon],
+[data-sonner-toast][data-type="default"] [data-icon] {
+  color: #ffffff !important;
+}
+
+/* Subtle error accent */
+[data-sonner-toast][data-type="error"] {
+  background: #0d0606 !important;
+  background-color: #0d0606 !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  color: #ffffff !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: #ef4444 !important;
+}
+
+/* Light mode adjustments */
+:root:not(.dark) [data-sonner-toaster] {
+  --normal-bg: #ffffff !important;
+  --normal-border: rgba(0, 0, 0, 0.12) !important;
+  --normal-text: #0f1419 !important;
+  --success-bg: #ffffff !important;
+  --success-border: rgba(0, 0, 0, 0.12) !important;
+  --success-text: #0f1419 !important;
+}
+
+:root:not(.dark) [data-sonner-toast] {
+  background-color: #ffffff !important;
+  color: #0f1419 !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+:root:not(.dark) [data-sonner-toast] [data-title],
+:root:not(.dark) [data-sonner-toast] [data-icon] {
+  color: #0f1419 !important;
+}
+

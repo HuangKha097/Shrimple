@@ -1,0 +1,77 @@
+services:
+  frontend:
+    build:
+      context: ./client
+    env_file:
+      - ./client/.env.development
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./server
+    env_file:
+      - ./server/.env
+    environment:
+      TRANSLATION_AI_URL: http://ai:8001
+    ports:
+      - "5001:5001"
+    depends_on:
+      - ai
+    # environment:
+    #   MONGO_URI: ${MONGODB_CONNECTIONSTRING}
+    # depends_on:
+    #   - mongo
+
+  ai:
+    build:
+      context: ./ai-service
+    env_file:
+      - ./ai-service/.env
+    environment:
+      WHISPER_CPP_URL: http://whisper:8080
+      QWEN_URL: http://qwen:8080
+    depends_on:
+      whisper:
+        condition: service_healthy
+      qwen:
+        condition: service_started
+    ports:
+      - "127.0.0.1:8001:8001"
+    restart: unless-stopped
+
+  qwen:
+    image: ghcr.io/ggml-org/llama.cpp@sha256:6257697a7f5d034b8fb499ddb07af3e250506352f94102054252a23f3b85e0af
+    command: ["-hf", "Qwen/Qwen3-1.7B-GGUF:Q8_0", "--host", "0.0.0.0", "--port", "8080", "-c", "1024", "-np", "1", "-t", "4"]
+    environment:
+      LLAMA_CACHE: /models
+    volumes:
+      - qwen-model-cache:/models
+    restart: unless-stopped
+
+  whisper:
+    image: qtmshrimple-whisper-cuda
+    build:
+      context: ./ai-service/whisper
+      dockerfile: Dockerfile.cuda
+    volumes:
+      - whisper-model-cache:/models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 120
+    restart: unless-stopped
+
+volumes:
+  qwen-model-cache:
+  whisper-model-cache:

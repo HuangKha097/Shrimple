@@ -1,0 +1,6 @@
+# Cấu hình 1: Proxy cho API (Để backend xử lý)
+# Thay https://backend-cua-ban.com bằng link server thật của bạn
+/api/* https://shrimple.onrender.com/api/:splat  200
+
+# Cấu hình 2: Fix lỗi 404 khi F5 (Refresh) trang trong React Router
+/* /index.html  200

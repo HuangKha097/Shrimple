@@ -1,0 +1,136 @@
+.button {
+  position: relative;
+  overflow: hidden;
+  border-radius: 9999px; // Signature X pill shape
+  font-family: inherit;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, 
+              border-color 0.2s ease, 
+              color 0.2s ease, 
+              box-shadow 0.2s ease;
+  user-select: none;
+
+  &.full-width {
+    width: 100%;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Sizes */
+.sm {
+  min-height: 36px;
+  padding: 0 16px;
+  font-size: 1.4rem;
+}
+
+.md {
+  min-height: 44px;
+  padding: 0 24px;
+  font-size: 1.5rem;
+}
+
+.lg {
+  min-height: 48px;
+  padding: 0 28px;
+  font-size: 1.6rem;
+}
+
+/* Variants */
+.primary {
+  background-color: #eff3f4;
+  color: #0f1419;
+  border-color: transparent;
+
+  &:hover:not(:disabled) {
+    background-color: #d7dbdc;
+    box-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.accent {
+  background: linear-gradient(135deg, #e56d32 0%, #ff8348 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(229, 109, 50, 0.25);
+
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, #ee763a 0%, #ff8f59 100%);
+    box-shadow: 0 6px 20px rgba(229, 109, 50, 0.35);
+  }
+}
+
+.outline {
+  background-color: transparent;
+  color: #e7e9ea;
+  border-color: #536471;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(239, 243, 244, 0.08);
+    border-color: #71767b;
+  }
+}
+
+.ghost {
+  background-color: transparent;
+  color: #e56d32;
+  border-color: transparent;
+
+  &:hover:not(:disabled) {
+    background-color: rgba(229, 109, 50, 0.1);
+  }
+}
+
+/* Shimmer Sweep Animation from Animate UI */
+.shimmer-sweep {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: shimmer 4s infinite ease-in-out;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  30% {
+    left: 140%;
+  }
+  100% {
+    left: 140%;
+  }
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

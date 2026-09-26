@@ -1,0 +1,100 @@
+.chat-container-wrapper {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  background-color: #000000;
+  overflow: hidden;
+  position: relative;
+
+  .block-left {
+    height: 100%;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background-color: #000000;
+    position: relative;
+
+    .header {
+      flex-shrink: 0;
+      z-index: 10;
+    }
+
+    .body {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .footer {
+      flex-shrink: 0;
+      z-index: 10;
+    }
+  }
+
+  .block-right {
+    width: 320px;
+    height: 100%;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: #000000;
+    flex-shrink: 0;
+    z-index: 15;
+
+    @media (max-width: 900px) {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.8);
+    }
+
+    .chat-info-wrapper {
+      height: 100%;
+      width: 100%;
+      overflow-y: auto;
+    }
+  }
+}
+
+// X-Style Empty State: 100% fidelity to x.com/messages empty view
+.x-empty-state-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000000;
+  padding: 32px;
+  user-select: none;
+
+  .empty-content-box {
+    max-width: 380px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+
+    .empty-title {
+      font-size: 3.1rem;
+      font-weight: 800;
+      line-height: 1.15;
+      color: #e7e9ea;
+      margin: 0 0 10px 0;
+      letter-spacing: -0.02em;
+      font-family: inherit;
+    }
+
+    .empty-subtitle {
+      font-size: 1.5rem;
+      line-height: 1.45;
+      color: #71767b;
+      margin: 0;
+      font-weight: 400;
+    }
+  }
+}
