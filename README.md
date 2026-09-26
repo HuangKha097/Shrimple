@@ -34,7 +34,6 @@
 
 ### 3. Giao Diện & Trải Nghiệm
 - Giao diện xây dựng trên React 19 hiện đại, mượt mà.
-- Hỗ trợ chế độ Sáng / Tối (Light / Dark mode).
 - Hỗ trợ đa ngôn ngữ giao diện (Tiếng Việt và Tiếng Anh).
 
 ---
