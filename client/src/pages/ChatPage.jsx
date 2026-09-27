@@ -3,13 +3,12 @@ import MotionPresence from '../components/common/MotionPresence';
 import React, { useRef, useState } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../assets/css/ChatPage.module.scss';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import SlideBar from "../components/slidebar/SlideBar.jsx";
 import XNavRail from "../components/common/XNavRail.jsx";
 import { useAuthStore } from "../stores/useAuthStore.js";
 import { useChatStore } from "../stores/useChatStore.js";
-import { toast } from "sonner";
 import AddFriendPopUp from "../components/slidebar/AddFriendPopUp.jsx";
 import CreateGroupPopUp from "../components/slidebar/CreateGroupPopUp.jsx";
 import TreeQRCodeModal from "../components/common/TreeQRCodeModal.jsx";
@@ -25,9 +24,8 @@ const ChatPage = () => {
     const [isShowAddFriendPopup, setIsShowAddFriendPopup] = useState(false);
     const [isShowCreateGroupPopup, setIsShowCreateGroupPopup] = useState(false);
     const [isShowQRModal, setIsShowQRModal] = useState(false);
-    const { signOut, user: currentUser } = useAuthStore();
+    const currentUser = useAuthStore((state) => state.user);
     const location = useLocation();
-    const navigate = useNavigate();
     const shellRef = useRef(null);
     const contentRef = useRef(null);
     useSceneMotion(shellRef, contentRef, location.pathname);
@@ -49,17 +47,6 @@ const ChatPage = () => {
         }
     }, [activeConversationId]);
 
-    const handleLogout = async () => {
-        try {
-            const confirmLogout = confirm("Bạn có muốn đăng xuất không?");
-            if (confirmLogout) await signOut();
-        } catch (err) {
-            toast.error(err.message);
-            console.error(err);
-        }
-    };
-
-    const onCloseSetting = () => navigate('/setting');
     const onCloseSlideBar = () => setIsShowSlideBar((prev) => !prev);
     const onCloseChatInfo = () => setIsShowChatInfo((prev) => !prev);
     const onCloseAddFriendPopup = () => setIsShowAddFriendPopup((prev) => !prev);
@@ -82,17 +69,13 @@ const ChatPage = () => {
                 "feed-menu-open": isFeedMenuOpen
             })}>
                 {/* Column 1: X Global Navigation Rail (Always present on desktop) */}
-                <XNavRail 
-                    onCloseSetting={onCloseSetting} 
-                    onOpenNewChat={onCloseAddFriendPopup} 
-                />
+                <XNavRail />
 
                 {/* Column 2: Chat Sidebar (Only in /chat mode on desktop) OR Mobile Drawer for Feed */}
                 {!isFeedView && isShowSlideBar && (
                     <div className={cx("block-left")}>
                         <div key="chat-sidebar" style={{ height: '100%', width: '100%' }}>
                             <SlideBar
-                                onCloseSetting={onCloseSetting}
                                 onCloseAddFriendPopup={onCloseAddFriendPopup}
                                 onCloseCreateGroupPopup={onCloseCreateGroupPopup}
                                 onOpenQRModal={() => setIsShowQRModal(true)}
@@ -109,7 +92,6 @@ const ChatPage = () => {
                             <PostsSidebar
                                 onNavigate={closeFeedMenu}
                                 onClose={closeFeedMenu}
-                                onCloseSetting={onCloseSetting}
                             />
                         </div>
                     </>

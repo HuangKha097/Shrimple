@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePostStore } from '../stores/usePostStore';
 import styles from '../assets/css/VideoFeed.module.scss';
 import classNames from 'classnames/bind';
@@ -45,8 +45,7 @@ const VideoItem = ({
     isMuted, 
     volume, 
     onVolumeChange, 
-    onDelete,
-    onOpenUpload
+    onDelete
 }) => {
     const videoRef = useRef(null);
     const progressRef = useRef(null);
@@ -459,7 +458,7 @@ const CommentsDrawer = ({ post, onClose, open }) => {
                     commentsRef.current.scrollTop = commentsRef.current.scrollHeight;
                 }
             }, 100);
-        } catch (err) {
+        } catch {
             toast.error("Không thể gửi bình luận");
         } finally {
             setIsSubmitting(false);
@@ -748,7 +747,6 @@ const VideoCommentItem = ({ comment, postId, currentUserId, onHashtagClick, onMe
 // Main Video Feed Page
 const VideoFeed = () => {
     const { videoPosts, fetchVideoFeed, likePost, deletePost, hasMoreVideos } = usePostStore();
-    const { toggleSidebar } = useOutletContext() || { toggleSidebar: () => { } };
     const navigate = useNavigate();
 
     const [activePostId, setActivePostId] = useState(() => {
@@ -794,11 +792,12 @@ const VideoFeed = () => {
     };
 
     // Initial Fetch
+    const hasVideoPosts = Boolean(videoPosts?.length);
     useEffect(() => {
-        if (!videoPosts || videoPosts.length === 0) {
+        if (!hasVideoPosts) {
             fetchVideoFeed(true);
         }
-    }, [fetchVideoFeed, videoPosts?.length]);
+    }, [fetchVideoFeed, hasVideoPosts]);
 
     // Restore scroll position
     useEffect(() => {
@@ -909,7 +908,6 @@ const VideoFeed = () => {
                                 volume={volume}
                                 onVolumeChange={handleVolumeChange}
                                 onDelete={deletePost}
-                                onOpenUpload={() => setIsUploadOpen(true)}
                             />
                         </div>
                     ))}

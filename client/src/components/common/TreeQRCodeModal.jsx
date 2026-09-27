@@ -89,11 +89,18 @@ const TreeQRCodeModal = ({
     return { ...base, leaf: [...swatch.leaf], qrLeaf: [...swatch.qr] };
   }, [season, blossom]);
 
+  // Create the scene when the modal opens; later effects update its live settings.
+  const sceneInputsRef = useRef({ committed, palette, species });
+  useEffect(() => {
+    sceneInputsRef.current = { committed, palette, species };
+  }, [committed, palette, species]);
+
   // ---- 3D Scene Lifecycle ----
   useEffect(() => {
     if (!isOpen || isScannerOpen || !canvasRef.current) return;
 
-    const scene = new MagicTreeScene(canvasRef.current, committed, palette, SPECIES[species]);
+    const { committed: initialText, palette: initialPalette, species: initialSpecies } = sceneInputsRef.current;
+    const scene = new MagicTreeScene(canvasRef.current, initialText, initialPalette, SPECIES[initialSpecies]);
     sceneRef.current = scene;
 
     const onResize = () => scene.resize();

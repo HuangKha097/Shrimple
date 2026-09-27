@@ -3,6 +3,7 @@ import {persist} from "zustand/middleware";
 import {chatService} from "../services/chatService.js";
 import {friendService} from "../services/friendService.js";
 import {useAuthStore} from "./useAuthStore.js"; // 1. Import thêm service
+import {toast} from "sonner";
 
 
 export const useChatStore = create(
@@ -149,10 +150,6 @@ export const useChatStore = create(
             sendRequestAction: async (targetUserId) => {
                 try {
                     await friendService.sendRequest(targetUserId);
-                    // Optionally update state if needed, e.g. add to sent requests list
-                     set((state) => ({
-                         // Maybe track sent requests ID to disable button
-                     }));
                 } catch (error) {
                     console.error("Error sending friend request:", error);
                     throw error;
@@ -511,33 +508,6 @@ export const useChatStore = create(
                          if (convoIndex !== -1) {
                              const updatedConversations = [...state.conversations];
                              
-                             // Reset unread count logic
-                             // Need to handle both Map and plain object structure just in case
-                             // Mongoose Maps often come as objects in JSON unless strictly typed
-                             
-                             // Simple approach: Just assume we receive an object map { userId: count, ... } from backend
-                             // But here we might just want to set the whole unreadCounts object/map for 'me' to 0
-                             
-                             const currentUnread = updatedConversations[convoIndex].unreadCounts || {};
-                             
-                             // If it's a Map in local state (unlikely from JSON), convert or set.
-                             // Safest: clone object and set logic
-                             
-                             // However, since we track simple unread counts mostly effectively by just resetting:
-                             // Let's assume we refresh the conversation or just set it to 0 for current user locally.
-                             
-                             // But wait, the UI uses `unreadCounts` which might be the number itself or the map.
-                             // Let's check how UI renders unread count.
-                             
-                             // Looking at socket logic (line 500):
-                             // unreadCounts: isActive ? ... : unreadCounts + 1
-                             // It implies unreadCounts MIGHT be a number in the socket update logic? 
-                             // Wait, line 498 checks `updatedConversations[conversationIndex].unreadCounts instanceof Map`
-                             
-                             // Let's fix the structure to be consistent. 
-                             // Backend sends unreadCounts as Map-like object { "userId": 5 }.
-                             
-                             // If we want to reset for ME:
                              let newUnreadCounts = updatedConversations[convoIndex].unreadCounts;
                              if (newUnreadCounts && typeof newUnreadCounts === 'object') {
                                  newUnreadCounts = { ...newUnreadCounts, [user._id]: 0 };

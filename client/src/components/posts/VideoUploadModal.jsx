@@ -88,7 +88,7 @@ const VideoUploadModal = ({ isOpen, onClose }) => {
             setFile(null);
             if (preview) URL.revokeObjectURL(preview);
             setPreview(null);
-        } catch (err) {
+        } catch {
             toast.error("Không thể tải lên video");
         }
     };

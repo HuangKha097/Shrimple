@@ -1,29 +1,35 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {Navigate, Outlet} from "react-router";
 
 import LoadingSpin from "../components/common/loading/LoadingSpin.jsx";
 
 const ProtectedRoute = () => {
-    const {accessToken, user, loading, refresh, fetchMe, connectSocket} = useAuthStore()
+    const {accessToken, user} = useAuthStore()
     const [starting, setStarting] = useState(true);
-
-    const init = async () => {
-        if (!accessToken) {
-            await refresh()
-        }
-        if (accessToken && !user) {
-            await fetchMe();
-        } else if (user) {
-            connectSocket();
-        }
-
-        setStarting(false);
-    }
+    const initPromiseRef = useRef(null);
 
     useEffect(() => {
-        init()
-    }, [])
+        let active = true;
+        if (!initPromiseRef.current) {
+            initPromiseRef.current = (async () => {
+                const auth = useAuthStore.getState();
+                if (!auth.accessToken) await auth.refresh();
+
+                const latest = useAuthStore.getState();
+                if (latest.accessToken && !latest.user) await latest.fetchMe();
+                if (useAuthStore.getState().user) useAuthStore.getState().connectSocket();
+            })();
+        }
+        initPromiseRef.current.then(
+            () => { if (active) setStarting(false); },
+            (error) => {
+                console.error('Failed to initialize session', error);
+                if (active) setStarting(false);
+            }
+        );
+        return () => { active = false; };
+    }, []);
     if (starting) {
         return (
             <div style={{

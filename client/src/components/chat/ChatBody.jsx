@@ -12,6 +12,7 @@ import { Calendar, GraduationCap } from 'lucide-react';
 import { ASSET_BASE_URL } from '../../config/env.js';
 
 const cx = classNames.bind(styles);
+const EMPTY_MESSAGES = [];
 
 const ChatBody = () => {
     const { messages, activeConversationId, conversations, fetchMessages, reactToMessageAction, friends, messageLoading } = useChatStore();
@@ -21,7 +22,7 @@ const ChatBody = () => {
 
     const currentConvo = conversations.find(c => c._id === activeConversationId);
     const currentMessagesData = messages[activeConversationId];
-    const messageList = currentMessagesData?.items || [];
+    const messageList = currentMessagesData?.items || EMPTY_MESSAGES;
     const hasMore = currentMessagesData?.hasMore;
 
     const containerRef = useRef(null);
@@ -75,7 +76,7 @@ const ChatBody = () => {
             containerRef.current.scrollTop = containerRef.current.scrollHeight;
             setIsReady(true);
         }
-    }, [messageList, messageLoading]);
+    }, [messageList, messageLoading, isReady]);
 
     const handleScroll = (e) => {
         const { scrollTop, scrollHeight } = e.target;

@@ -7,7 +7,6 @@ import {
     User, 
     Globe, 
     Bell, 
-    EyeOff, 
     UserX, 
     Info, 
     ChevronRight, 
@@ -20,7 +19,6 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import AccountSettings from './AccountSettings';
 import LanguageSettings from './LanguageSettings';
 import Notifications from './Notifications';
-import AntiPeepSettings from './AntiPeepSettings';
 import BlockedUsers from './BlockedUsers';
 import Application from './Application';
 
@@ -50,12 +48,6 @@ const SettingContainer = () => {
             label: t('settings.notificationsTab'),
             sublabel: t('settings.notificationsSublabel'),
             icon: <Bell size={20} />
-        },
-        {
-            id: 'anti-peep',
-            label: t('settings.antiPeepTab'),
-            sublabel: t('settings.antiPeepSublabel'),
-            icon: <EyeOff size={20} />
         },
         {
             id: 'blocked',
@@ -111,8 +103,6 @@ const SettingContainer = () => {
                 return <LanguageSettings />;
             case 'notifications':
                 return <Notifications />;
-            case 'anti-peep':
-                return <AntiPeepSettings />;
             case 'blocked':
                 return <BlockedUsers />;
             case 'application':

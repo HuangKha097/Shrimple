@@ -20,7 +20,7 @@ export const useCallStore = create((set, get) => ({
         callType: data.isVideo ? "video" : "audio"
     }),
 
-    setCallAccepted: (signal) => {
+    setCallAccepted: () => {
         // Here we would typically trigger the Peer signal processing
         set({ isCallActive: true, isCallIncoming: false });
     },

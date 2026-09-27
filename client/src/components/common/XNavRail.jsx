@@ -24,7 +24,7 @@ import { ASSET_BASE_URL } from '../../config/env';
 
 const cx = classNames.bind(styles);
 
-export default function XNavRail({ onCloseSetting, onOpenNewChat, onOpenPostModal }) {
+export default function XNavRail({ onOpenPostModal }) {
     const { t } = useTranslation();
     const { user, signOut } = useAuthStore();
     const conversations = useChatStore(state => state.conversations || []);

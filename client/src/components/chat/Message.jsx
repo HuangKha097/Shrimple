@@ -34,7 +34,6 @@ const Message = ({
     createdAt,
     callId = null,
     callStatus = 'ended',
-    callDuration = null,
     poll = null
 }) => {
     const [pickerStyle, setPickerStyle] = useState({});

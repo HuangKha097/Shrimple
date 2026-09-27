@@ -88,9 +88,6 @@ const SignupOtpDialog = ({ open, email, pendingToken, onVerified, onCancel }) =>
                                     length={CODE_LENGTH}
                                     value={code}
                                     onChange={setCode}
-                                    onComplete={(fullCode) => {
-                                        // Optional immediate submit on complete
-                                    }}
                                     disabled={loading}
                                     autoFocus={open}
                                 />

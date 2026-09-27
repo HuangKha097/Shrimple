@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/ChatHeader.module.scss';
 import defaultAvatar from "../../../public/favicon.png";
@@ -7,7 +7,7 @@ import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useCallStore } from '../../stores/useCallStore';
 import { useGroupCallStore } from '../../stores/useGroupCallStore';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ASSET_BASE_URL } from '../../config/env.js';
 
@@ -21,12 +21,13 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
     const navigate = useNavigate();
     const [showMenu, setShowMenu] = useState(false);
     const [showAllPins, setShowAllPins] = useState(false);
+    const chatId = chat?._id;
 
     useEffect(() => {
-        if (chat && chat._id) {
-            fetchPinnedMessages(chat._id);
+        if (chatId) {
+            fetchPinnedMessages(chatId);
         }
-    }, [chat?._id]);
+    }, [chatId, fetchPinnedMessages]);
 
     if (!chat) return null;
 
@@ -62,11 +63,9 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
         partnerId = partner._id;
     }
 
-    const isAllowedToCall = useMemo(() => {
-        if (isGroup) return true;
-        if (!partner) return false;
-        return friends.some(f => f._id.toString() === partner._id.toString());
-    }, [isGroup, partner, friends]);
+    const isAllowedToCall = isGroup || Boolean(partner && friends.some(
+        f => f._id.toString() === partner._id.toString()
+    ));
 
     const renderAvatar = () => {
         const getAvatarSrc = (url) => {

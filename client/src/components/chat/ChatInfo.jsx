@@ -90,7 +90,7 @@ const ChatInfo = ({ chat, onClose }) => {
                     .catch(err => console.error("Failed to fetch group invite", err));
             }
         }
-    }, [chat?._id, isGroup]);
+    }, [chat?._id, isGroup, fetchPinnedMessages]);
 
     // Close menu when clicking outside
     useEffect(() => {

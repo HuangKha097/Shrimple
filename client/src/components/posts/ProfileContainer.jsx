@@ -186,7 +186,7 @@ const ProfileContainer = () => {
         if (!u?.createdAt) return '';
         const d = new Date(u.createdAt);
         return `Đã tham gia tháng ${d.getMonth() + 1} năm ${d.getFullYear()}`;
-    }, [profileUser?.createdAt, currentUser?.createdAt]);
+    }, [profileUser, currentUser]);
 
     // Format Birthday respecting privacy settings
     const birthdayText = useMemo(() => {

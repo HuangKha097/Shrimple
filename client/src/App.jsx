@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useOutletContext } from "react-router-dom";
 import SignInPage from "./pages/SignInPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
@@ -10,7 +10,6 @@ import { useThemeStore } from "./stores/useThemeStore.js";
 import PostsContainer from "./components/posts/PostsContainer.jsx";
 import SearchResultsContainer from "./components/posts/SearchResultsContainer.jsx";
 import ChatContainer from "./components/chat/ChatContainer.jsx";
-import { useOutletContext } from "react-router-dom";
 import SinglePostPage from "./pages/SinglePostPage.jsx";
 import SavedPostsContainer from "./components/posts/SavedPostsContainer.jsx";
 import FriendsContainer from "./components/posts/FriendsContainer.jsx";
@@ -26,12 +25,6 @@ import { useGroupCallStore } from "./stores/useGroupCallStore.js";
 import { useNotificationStore } from "./stores/useNotificationStore.js";
 import { useAuthStore } from "./stores/useAuthStore.js";
 import { useUIStore } from "./stores/useUIStore.js";
-// import LoadingSpin from "./components/common/loading/LoadingSpin.jsx"; // Removed from here
-
-
-import { AntiPeepProvider } from "./components/anti-peep/AntiPeepProvider.jsx";
-
-
 import { useTranslation } from 'react-i18next';
 
 // Wrapper to consume outlet context and pass it to ChatContainer
@@ -82,7 +75,7 @@ const App = () => {
     }, [setOffline]);
 
     return (
-        <AntiPeepProvider>
+        <>
             <Toaster 
                 theme={isLight ? "light" : "dark"} 
                 position="bottom-center"
@@ -123,7 +116,7 @@ const App = () => {
                     </Route>
                 </Routes>
             </BrowserRouter>
-        </AntiPeepProvider>
+        </>
     );
 };
 

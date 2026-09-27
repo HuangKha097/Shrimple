@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import api from "../lib/axios.js";
 import { toast } from "sonner";
+import { useAuthStore } from "./useAuthStore.js";
 
 export const usePostStore = create((set, get) => ({
     posts: [],
@@ -326,9 +327,7 @@ export const usePostStore = create((set, get) => ({
     },
 
     fetchVideoFeed: async (isRefresh = false) => {
-         const { videoNextCursor, hasMoreVideos, isLoading } = get();
-         // If already loading, maybe debounce or ignore, but here simple check
-         // We might want separate loading state for video feed if they can load purely independently without UI conflict
+         const { videoNextCursor, hasMoreVideos } = get();
          
          if (!isRefresh && !hasMoreVideos) return;
          
@@ -387,21 +386,16 @@ export const usePostStore = create((set, get) => ({
             }
             
             // Update AuthStore User object too, so UI relying on user.savedPosts updates immediately
-             import("./useAuthStore.js").then(({ useAuthStore }) => {
-                 const user = useAuthStore.getState().user;
-                 if (user) {
-                     let newSavedPosts = user.savedPosts || [];
-                     // Check if it's already in the user's list (which might be just IDs or Objects)
-                     const exists = newSavedPosts.some(id => (typeof id === 'string' ? id : id._id) === postId);
-                     
-                     if (exists) {
-                         newSavedPosts = newSavedPosts.filter(id => (typeof id === 'string' ? id : id._id) !== postId);
-                     } else {
-                         newSavedPosts = [...newSavedPosts, postId];
-                     }
-                     useAuthStore.getState().updateUser({ savedPosts: newSavedPosts });
-                 }
-             });
+            const authState = useAuthStore.getState();
+            if (authState.user) {
+                const savedPosts = authState.user.savedPosts || [];
+                const getPostId = (item) => typeof item === 'string' ? item : item._id;
+                const exists = savedPosts.some((item) => getPostId(item) === postId);
+                const updatedSavedPosts = exists
+                    ? savedPosts.filter((item) => getPostId(item) !== postId)
+                    : [...savedPosts, postId];
+                authState.updateUser({ savedPosts: updatedSavedPosts });
+            }
 
             return res.data;
         } catch (error) {

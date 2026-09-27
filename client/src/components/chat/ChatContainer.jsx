@@ -8,8 +8,7 @@ import ChatBody from "./ChatBody.jsx";
 import ChatInput from "./ChatInput.jsx";
 import ChatInfo from "./ChatInfo.jsx";
 import { useChatStore } from "../../stores/useChatStore.js";
-import { useSearchParams, useOutletContext } from 'react-router-dom';
-import api from '../../lib/axios.js';
+import { useSearchParams } from 'react-router-dom';
 
 const cx = classNames.bind(styles);
 

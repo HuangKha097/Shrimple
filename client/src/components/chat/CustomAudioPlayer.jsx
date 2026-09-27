@@ -10,10 +10,8 @@ const CustomAudioPlayer = ({ src }) => {
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
-    const [volume, setVolume] = useState(1);
 
     const audioRef = useRef(null);
-    const progressRef = useRef(null);
 
     useEffect(() => {
         const audio = audioRef.current;

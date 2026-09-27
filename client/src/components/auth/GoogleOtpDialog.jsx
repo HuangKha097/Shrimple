@@ -88,9 +88,6 @@ const GoogleOtpDialog = ({ open, email, pendingToken, onVerified, onCancel }) =>
                                     length={CODE_LENGTH}
                                     value={code}
                                     onChange={setCode}
-                                    onComplete={(fullCode) => {
-                                        // Optional auto submit
-                                    }}
                                     disabled={loading}
                                     autoFocus={open}
                                 />

@@ -6,7 +6,7 @@ import { useChatStore } from '../../stores/useChatStore';
 import AppNavigation, { ThemeToggle } from '../common/AppNavigation';
 import styles from '../../assets/css/PostsSidebar.module.scss';
 
-export default function PostsSidebar({ onCloseSetting, onNavigate, onClose }) {
+export default function PostsSidebar({ onNavigate, onClose }) {
     const { user } = useAuthStore();
     const { suggestedFriends, fetchSuggestedFriends } = useChatStore();
     const navigate = useNavigate();

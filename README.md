@@ -53,7 +53,7 @@ Shrimple được triển khai theo mô hình microservices, đóng gói đồng
                              └─────────────┘
 ```
 
-- **Frontend (`/client`):** React 19, Vite, Zustand, Socket.io Client, Simple-Peer (WebRTC), Tailwind/SASS, Lucide.
+- **Frontend (`/client`):** React 19, Vite, Zustand, Socket.io Client, Simple-Peer (WebRTC), Sass, Lucide.
 - **Backend Gateway (`/server`):** Node.js, Express 5, MongoDB, Mongoose, Socket.io, JWT, Multer, Cloudinary.
 - **AI Core Service (`/ai-service`):**
   - **FastAPI:** Quản lý pipeline nhận file âm thanh, điều phối STT và dịch thuật.

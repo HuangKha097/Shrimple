@@ -9,13 +9,6 @@ let localAnalyser = null;
 let audioInterval = null;
 const remoteAnalysers = new Map(); // socketId -> AnalyserNode
 
-const peerConfig = {
-    iceServers: [
-        { urls: "stun:stun.l.google.com:19302" },
-        { urls: "stun:stun1.l.google.com:19302" },
-    ],
-};
-
 export const useGroupCallStore = create((set, get) => {
     // Internal refs held inside closure
     const peersRef = { current: {} }; // socketId -> { peer, user, stream, isMuted, isCameraOn, isScreenSharing }
@@ -186,7 +179,9 @@ export const useGroupCallStore = create((set, get) => {
                                 if (peersRef.current[sid]?.peer) {
                                     try {
                                         peersRef.current[sid].peer.destroy();
-                                    } catch (e) {}
+                                    } catch (error) {
+                                        console.warn("Failed to destroy group peer", error);
+                                    }
                                 }
                                 delete peersRef.current[sid];
                                 delete newPeers[sid];
@@ -218,9 +213,8 @@ export const useGroupCallStore = create((set, get) => {
             socket.emit("getAllActiveGroupCalls");
 
             // 3. Newly joined user receives existing participants
-            socket.on("groupCallExistingUsers", ({ conversationId, participants }) => {
+            socket.on("groupCallExistingUsers", ({ participants }) => {
                 const stream = localStreamRef.current;
-                const { isMuted, isCameraOn, isScreenSharing } = get();
 
                 participants.forEach((participant) => {
                     const peer = new Peer({
@@ -279,7 +273,7 @@ export const useGroupCallStore = create((set, get) => {
             });
 
             // 4. Other participants receive notification that a new user joined
-            socket.on("groupCallUserJoined", ({ conversationId, user: newUser }) => {
+            socket.on("groupCallUserJoined", ({ user: newUser }) => {
                 // Wait for their signal to create non-initiator peer
                 set((state) => ({
                     peers: {

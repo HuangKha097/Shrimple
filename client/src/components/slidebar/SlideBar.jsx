@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 const cx = classNames.bind(styles);
 
-const SlideBar = ({ onCloseSetting, onCloseAddFriendPopup, onCloseCreateGroupPopup, onOpenQRModal }) => {
+const SlideBar = ({ onCloseAddFriendPopup, onCloseCreateGroupPopup, onOpenQRModal }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
