@@ -23,7 +23,18 @@ import {
 import '../magic-tree/styles.css';
 import { chatService } from '../../services/chatService.js';
 import { useChatStore } from '../../stores/useChatStore.js';
-import { Download, ScanLine, X, Camera, Upload, Trees } from 'lucide-react';
+import { 
+  ScanLine, 
+  X, 
+  Trees, 
+  ArrowLeft, 
+  Image as ImageIcon, 
+  Flashlight, 
+  SwitchCamera, 
+  RefreshCw, 
+  AlertCircle, 
+  Loader2 
+} from 'lucide-react';
 
 const SEASON_ICONS = {
   spring: SpringIcon,
@@ -58,6 +69,7 @@ const TreeQRCodeModal = ({
   const sceneRef = useRef(null);
   const html5QrCodeRef = useRef(null);
   const fileScanInputRef = useRef(null);
+  const scanSessionRef = useRef(0);
 
   const defaultUrl = dataValue || (
     type === 'group'
@@ -73,6 +85,12 @@ const TreeQRCodeModal = ({
   const [mode, setMode] = useState('tree'); // 'tree' | 'code'
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
+  const [isCameraStarting, setIsCameraStarting] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const [hasTorch, setHasTorch] = useState(false);
+  const [isTorchOn, setIsTorchOn] = useState(false);
+  const [cameraDevices, setCameraDevices] = useState([]);
+  const [selectedCameraId, setSelectedCameraId] = useState(null);
 
   // Sync incoming dataValue
   useEffect(() => {
@@ -147,34 +165,254 @@ const TreeQRCodeModal = ({
     return () => window.clearTimeout(t);
   }, [draft, defaultUrl]);
 
-  // ---- Scanner Lifecycle Cleanup ----
-  useEffect(() => {
-    return () => {
-      if (html5QrCodeRef.current && scannerActive) {
-        html5QrCodeRef.current.stop().catch(() => {});
+  // ---- Camera & Scanner Controls ----
+  const stopCamera = useCallback(async () => {
+    // Invalidate any ongoing start operation
+    scanSessionRef.current++;
+    setScannerActive(false);
+    setIsCameraStarting(false);
+    setIsTorchOn(false);
+
+    if (html5QrCodeRef.current) {
+      const qrScanner = html5QrCodeRef.current;
+      html5QrCodeRef.current = null;
+      try {
+        if (qrScanner.isScanning) {
+          await qrScanner.stop();
+        }
+      } catch (err) {
+        console.warn("Failed to stop Html5Qrcode cleanly:", err);
       }
+      try {
+        qrScanner.clear();
+      } catch (e) {}
+    }
+
+    // Safety fallback: ensure any video element stream tracks are explicitly stopped
+    try {
+      const videoEl = document.querySelector('#qr-camera-reader-3d video');
+      if (videoEl && videoEl.srcObject) {
+        const stream = videoEl.srcObject;
+        stream.getTracks().forEach((track) => track.stop());
+        videoEl.srcObject = null;
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    stopCamera();
+    setIsScannerOpen(false);
+    onClose();
+  }, [stopCamera, onClose]);
+
+  const handleQRResult = useCallback(async (result) => {
+    await stopCamera();
+    toast.info("Đã quét mã QR!");
+
+    // 1. Group Invite
+    if (result.includes("joinGroup=") || result.includes("/chat?joinGroup=")) {
+      try {
+        const url = new URL(result);
+        const inviteCode = url.searchParams.get("invite") || url.searchParams.get("joinGroup");
+        if (inviteCode) {
+          const res = await chatService.joinGroupByInvite(inviteCode);
+          toast.success("Đã tham gia nhóm thành công!");
+          await fetchConversations();
+          if (res?.conversation?._id) {
+            setActiveConversationId(res.conversation._id);
+          }
+          handleCloseModal();
+          navigate("/chat");
+          return;
+        }
+      } catch (e) {
+        console.error("Parse group invite failed", e);
+      }
+    }
+
+    // 2. Profile link
+    if (result.includes("/feed/profile/")) {
+      try {
+        const parts = result.split("/feed/profile/");
+        const targetUid = parts[1]?.split("?")[0];
+        if (targetUid) {
+          toast.success("Mở hồ sơ người dùng");
+          handleCloseModal();
+          navigate(`/feed/profile/${targetUid}`);
+          return;
+        }
+      } catch (e) {
+        console.error("Parse profile link failed", e);
+      }
+    }
+
+    if (result.startsWith("http://") || result.startsWith("https://")) {
+      window.open(result, "_blank");
+    } else {
+      toast.info(`Nội dung QR: ${result}`);
+    }
+    handleCloseModal();
+  }, [fetchConversations, handleCloseModal, navigate, setActiveConversationId, stopCamera]);
+
+  const startCamera = useCallback(async (preferredCameraId = null) => {
+    // Stop any existing scanner first
+    await stopCamera();
+
+    const thisSession = ++scanSessionRef.current;
+    setIsCameraStarting(true);
+    setCameraError(null);
+
+    // Wait until element exists in DOM
+    let el = document.getElementById('qr-camera-reader-3d');
+    if (!el) {
+      await new Promise((resolve) => setTimeout(resolve, 80));
+      el = document.getElementById('qr-camera-reader-3d');
+    }
+
+    if (!el || scanSessionRef.current !== thisSession) {
+      setIsCameraStarting(false);
+      return;
+    }
+
+    try {
+      const qrScanner = new Html5Qrcode('qr-camera-reader-3d', false);
+      html5QrCodeRef.current = qrScanner;
+
+      // Query available camera devices if not fetched yet
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (devices && devices.length > 0) {
+          setCameraDevices(devices);
+        }
+      } catch (e) {}
+
+      if (scanSessionRef.current !== thisSession) {
+        try { qrScanner.clear(); } catch (e) {}
+        html5QrCodeRef.current = null;
+        setIsCameraStarting(false);
+        return;
+      }
+
+      const activeCameraId = preferredCameraId || selectedCameraId;
+      const cameraConfig = activeCameraId 
+        ? { deviceId: { exact: activeCameraId } }
+        : { facingMode: 'environment' };
+
+      await qrScanner.start(
+        cameraConfig,
+        {
+          fps: 15,
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            const edge = Math.floor(minEdge * 0.72);
+            return { width: Math.max(edge, 200), height: Math.max(edge, 200) };
+          },
+          aspectRatio: 1.0,
+        },
+        async (decodedText) => {
+          if (scanSessionRef.current !== thisSession) return;
+          await stopCamera();
+          handleQRResult(decodedText);
+        },
+        () => {
+          // Normal frame scan pass
+        }
+      );
+
+      if (scanSessionRef.current !== thisSession) {
+        try {
+          if (qrScanner.isScanning) {
+            await qrScanner.stop();
+          }
+          qrScanner.clear();
+        } catch (e) {}
+        html5QrCodeRef.current = null;
+        return;
+      }
+
+      setScannerActive(true);
+      setIsCameraStarting(false);
+
+      // Check if torch/flashlight is supported
+      try {
+        const video = document.querySelector('#qr-camera-reader-3d video');
+        const track = video?.srcObject?.getVideoTracks()?.[0];
+        const capabilities = track?.getCapabilities ? track.getCapabilities() : null;
+        setHasTorch(Boolean(capabilities && 'torch' in capabilities));
+      } catch (e) {
+        setHasTorch(false);
+      }
+    } catch (err) {
+      console.error('Camera startup error:', err);
+      if (scanSessionRef.current === thisSession) {
+        setIsCameraStarting(false);
+        setScannerActive(false);
+        setCameraError(
+          'Không thể truy cập máy ảnh. Vui lòng kiểm tra quyền truy cập máy ảnh của trình duyệt hoặc tải ảnh QR từ máy.'
+        );
+      }
+    }
+  }, [handleQRResult, selectedCameraId, stopCamera]);
+
+  const toggleTorch = useCallback(async () => {
+    try {
+      const video = document.querySelector('#qr-camera-reader-3d video');
+      const track = video?.srcObject?.getVideoTracks()?.[0];
+      if (track && hasTorch) {
+        const nextTorch = !isTorchOn;
+        await track.applyConstraints({
+          advanced: [{ torch: nextTorch }],
+        });
+        setIsTorchOn(nextTorch);
+      }
+    } catch (err) {
+      console.warn('Cannot toggle torch:', err);
+      toast.error('Thiết bị không hỗ trợ bật đèn flash');
+    }
+  }, [hasTorch, isTorchOn]);
+
+  const handleSwitchCamera = useCallback(async () => {
+    if (cameraDevices.length <= 1) return;
+    const currentIndex = cameraDevices.findIndex((c) => c.id === selectedCameraId);
+    const nextIndex = (currentIndex + 1) % cameraDevices.length;
+    const nextDevice = cameraDevices[nextIndex];
+    setSelectedCameraId(nextDevice.id);
+    await startCamera(nextDevice.id);
+  }, [cameraDevices, selectedCameraId, startCamera]);
+
+  const handleToggleScanner = useCallback(() => {
+    if (isScannerOpen) {
+      stopCamera();
+      setIsScannerOpen(false);
+    } else {
+      setIsScannerOpen(true);
+    }
+  }, [isScannerOpen, stopCamera]);
+
+  // Auto-start camera when scanner view opens; stop camera when scanner closes
+  useEffect(() => {
+    if (isOpen && isScannerOpen) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+  }, [isOpen, isScannerOpen, startCamera, stopCamera]);
+
+  // Clean up if modal closes or unmounts
+  useEffect(() => {
+    if (!isOpen) {
+      setIsScannerOpen(false);
+      stopCamera();
+    }
+    return () => {
+      stopCamera();
     };
-  }, [scannerActive]);
+  }, [isOpen, stopCamera]);
 
   // ---- Actions ----
   const toggleMode = useCallback(() => {
     setMode((m) => (m === 'tree' ? 'code' : 'tree'));
   }, []);
-
-  const handleDownload = () => {
-    if (!canvasRef.current) return;
-    try {
-      const dataUrl = canvasRef.current.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.download = `MagicTree-3D-QR-${name || 'tree'}.png`;
-      a.href = dataUrl;
-      a.click();
-      toast.success("Đã tải xuống hình ảnh 3D Magic Tree!");
-    } catch (err) {
-      console.error("Failed to download image", err);
-      toast.error("Không thể tải hình ảnh");
-    }
-  };
 
   const share = useCallback(async () => {
     const url = committed;
@@ -204,31 +442,6 @@ const TreeQRCodeModal = ({
     }
   };
 
-  const handleStartCameraScan = async () => {
-    try {
-      if (!html5QrCodeRef.current) {
-        html5QrCodeRef.current = new Html5Qrcode("qr-camera-reader-3d");
-      }
-      setScannerActive(true);
-      await html5QrCodeRef.current.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 220, height: 220 } },
-        (decodedText) => {
-          handleQRResult(decodedText);
-          if (html5QrCodeRef.current) {
-            html5QrCodeRef.current.stop().catch(() => {});
-            setScannerActive(false);
-          }
-        },
-        () => {}
-      );
-    } catch (err) {
-      console.error("Camera scan error:", err);
-      toast.error("Không thể mở máy ảnh. Vui lòng cấp quyền hoặc tải ảnh lên để quét.");
-      setScannerActive(false);
-    }
-  };
-
   const handleFileUploadScan = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -236,59 +449,16 @@ const TreeQRCodeModal = ({
     try {
       const html5Qr = new Html5Qrcode("qr-camera-reader-3d-temp", false);
       const decodedText = await html5Qr.scanFile(file, true);
+      await stopCamera();
       handleQRResult(decodedText);
     } catch (err) {
       console.error("File scan error:", err);
       toast.error("Không tìm thấy mã QR trong hình ảnh này");
-    }
-  };
-
-  const handleQRResult = async (result) => {
-    toast.info("Đã quét mã QR!");
-
-    // 1. Group Invite
-    if (result.includes("joinGroup=") || result.includes("/chat?joinGroup=")) {
-      try {
-        const url = new URL(result);
-        const inviteCode = url.searchParams.get("invite") || url.searchParams.get("joinGroup");
-        if (inviteCode) {
-          const res = await chatService.joinGroupByInvite(inviteCode);
-          toast.success("Đã tham gia nhóm thành công!");
-          await fetchConversations();
-          if (res?.conversation?._id) {
-            setActiveConversationId(res.conversation._id);
-          }
-          onClose();
-          navigate("/chat");
-          return;
-        }
-      } catch (e) {
-        console.error("Parse group invite failed", e);
+    } finally {
+      if (fileScanInputRef.current) {
+        fileScanInputRef.current.value = '';
       }
     }
-
-    // 2. Profile link
-    if (result.includes("/feed/profile/")) {
-      try {
-        const parts = result.split("/feed/profile/");
-        const targetUid = parts[1]?.split("?")[0];
-        if (targetUid) {
-          toast.success("Mở hồ sơ người dùng");
-          onClose();
-          navigate(`/feed/profile/${targetUid}`);
-          return;
-        }
-      } catch (e) {
-        console.error("Parse profile link failed", e);
-      }
-    }
-
-    if (result.startsWith("http://") || result.startsWith("https://")) {
-      window.open(result, "_blank");
-    } else {
-      toast.info(`Nội dung QR: ${result}`);
-    }
-    onClose();
   };
 
   return (
@@ -300,7 +470,7 @@ const TreeQRCodeModal = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.22, ease: "easeOut" }}
-          onClick={onClose}
+          onClick={handleCloseModal}
         >
           <Motion.div 
             className="magic-tree-frame" 
@@ -334,39 +504,20 @@ const TreeQRCodeModal = ({
                     className="tree-top-btn"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.94 }}
-                    onClick={() => {
-                      if (scannerActive && html5QrCodeRef.current) {
-                        html5QrCodeRef.current.stop().catch(() => {});
-                        setScannerActive(false);
-                      }
-                      setIsScannerOpen(!isScannerOpen);
-                    }}
-                    title={isScannerOpen ? "Trở lại cây 3D" : "Quét mã QR"}
+                    onClick={handleToggleScanner}
+                    title={isScannerOpen ? "Trở lại QR của tôi" : "Quét mã QR"}
                   >
                     {isScannerOpen ? <Trees size={14} /> : <ScanLine size={14} />}
-                    <span>{isScannerOpen ? "Cây 3D" : "Quét mã"}</span>
+                    <span>{isScannerOpen ? "QR của tôi" : "Quét mã"}</span>
                   </Motion.button>
 
-                  {!isScannerOpen && (
-                    <Motion.button
-                      type="button"
-                      className="tree-top-btn"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.94 }}
-                      onClick={handleDownload}
-                      title="Tải ảnh QR 3D"
-                    >
-                      <Download size={14} />
-                      <span>Tải ảnh</span>
-                    </Motion.button>
-                  )}
 
                   <Motion.button
                     type="button"
                     className="tree-top-btn close-btn"
                     whileHover={{ scale: 1.08 }}
                     whileTap={{ scale: 0.92 }}
-                    onClick={onClose}
+                    onClick={handleCloseModal}
                     title="Đóng"
                     aria-label="Đóng"
                   >
@@ -375,7 +526,7 @@ const TreeQRCodeModal = ({
                 </div>
               </div>
 
-              {/* Main 3D Canvas */}
+              {/* Main 3D Canvas or Banking QR Camera Scanner */}
               {!isScannerOpen ? (
                 <>
                   <canvas
@@ -475,96 +626,163 @@ const TreeQRCodeModal = ({
                   </div>
                 </>
               ) : (
-                /* QR Camera & File Scanner Panel */
+                /* Banking-Grade QR Camera Scanner Panel */
                 <Motion.div 
-                  className="tree-scanner-panel"
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
+                  className="tree-scanner-panel bank-scanner-theme"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  {/* Scanner Header with explicit Close button */}
-                  <div className="scanner-header">
-                    <div className="scanner-title-group">
-                      <div className="scanner-icon-bubble">
-                        <ScanLine size={18} />
-                      </div>
-                      <div className="scanner-header-text">
-                        <span className="scanner-title">Quét mã QR</span>
-                        <span className="scanner-subtitle">Mở máy ảnh hoặc tải ảnh lên</span>
-                      </div>
-                    </div>
+                  {/* Scanner Header */}
+                  <div className="bank-scanner-header">
                     <Motion.button
                       type="button"
-                      className="scanner-close-btn"
+                      className="bank-header-btn"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.94 }}
+                      onClick={handleToggleScanner}
+                      title="Quay lại QR của tôi"
+                    >
+                      <ArrowLeft size={16} />
+                      <span>QR của tôi</span>
+                    </Motion.button>
+
+                    <div className="bank-header-center">
+                      <span className="bank-header-title">Quét mã QR</span>
+                    </div>
+
+                    <Motion.button
+                      type="button"
+                      className="bank-header-btn close"
                       whileHover={{ scale: 1.08 }}
                       whileTap={{ scale: 0.92 }}
-                      onClick={() => {
-                        if (scannerActive && html5QrCodeRef.current) {
-                          html5QrCodeRef.current.stop().catch(() => {});
-                          setScannerActive(false);
-                        }
-                        setIsScannerOpen(false);
-                      }}
-                      title="Đóng quét mã"
-                      aria-label="Đóng quét mã"
+                      onClick={handleCloseModal}
+                      title="Đóng"
+                      aria-label="Đóng"
                     >
                       <X size={18} />
                     </Motion.button>
                   </div>
 
-                  <div className="scanner-body">
-                    <div className="scanner-viewport-wrap">
-                      <div id="qr-camera-reader-3d" className="scanner-view-box">
-                        {!scannerActive && (
-                          <div className="scanner-idle-placeholder">
-                            <div className="scanner-reticle">
-                              <span className="reticle-corner tl" />
-                              <span className="reticle-corner tr" />
-                              <span className="reticle-corner bl" />
-                              <span className="reticle-corner br" />
-                              <ScanLine size={44} className="reticle-center-icon" />
-                            </div>
-                            <p className="scanner-idle-hint">Bấm mở máy ảnh để bắt đầu quét</p>
+                  {/* Stage & Viewfinder */}
+                  <div className="bank-scanner-stage">
+                    <div id="qr-camera-reader-3d" className="bank-camera-host" />
+                    <div id="qr-camera-reader-3d-temp" style={{ display: 'none' }} />
+
+                    {/* Dark Vignette Mask with Center Transparent Cutout */}
+                    <div className="bank-viewfinder-overlay">
+                      <div className="bank-reticle-cutout">
+                        <span className="reticle-corner top-left" />
+                        <span className="reticle-corner top-right" />
+                        <span className="reticle-corner bottom-left" />
+                        <span className="reticle-corner bottom-right" />
+
+                        {scannerActive && <div className="bank-laser-beam" />}
+
+                        {isCameraStarting && (
+                          <div className="bank-reticle-loading">
+                            <Loader2 className="bank-spinner-icon" size={36} />
+                            <span>Đang kết nối camera...</span>
+                          </div>
+                        )}
+
+                        {scannerActive && (
+                          <div className="bank-reticle-crosshair">
+                            <div className="crosshair-h" />
+                            <div className="crosshair-v" />
                           </div>
                         )}
                       </div>
-                      <div id="qr-camera-reader-3d-temp" style={{ display: 'none' }} />
+
+                      {!cameraError && (
+                        <div className="bank-guide-pill">
+                          <ScanLine size={16} className="guide-icon" />
+                          <span>Đặt mã QR vào trong khung để quét</span>
+                        </div>
+                      )}
+
+                      {cameraError && (
+                        <div className="bank-camera-error-card">
+                          <div className="error-icon-bubble">
+                            <AlertCircle size={26} />
+                          </div>
+                          <h4>Không thể mở máy ảnh</h4>
+                          <p>{cameraError}</p>
+                          <div className="error-actions">
+                            <button
+                              type="button"
+                              className="error-btn-retry"
+                              onClick={() => startCamera()}
+                            >
+                              <RefreshCw size={15} />
+                              <span>Thử lại</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="error-btn-upload"
+                              onClick={() => fileScanInputRef.current?.click()}
+                            >
+                              <ImageIcon size={15} />
+                              <span>Tải ảnh QR từ máy</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
+                  </div>
 
-                    <p className="scanner-note">
-                      Hướng máy ảnh về phía mã QR hoặc tải ảnh từ thiết bị để tự động kết nối.
-                    </p>
+                  {/* Hidden file input */}
+                  <input
+                    type="file"
+                    ref={fileScanInputRef}
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleFileUploadScan}
+                  />
 
-                    <input
-                      type="file"
-                      ref={fileScanInputRef}
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleFileUploadScan}
-                    />
-
-                    <div className="scanner-actions">
+                  {/* Bottom Banking Toolbar */}
+                  <div className="bank-scanner-bottom-toolbar">
+                    <div className="bank-bottom-actions">
                       <Motion.button
                         type="button"
-                        className="scanner-action-btn secondary"
+                        className="bank-circle-btn"
+                        whileHover={{ scale: 1.08 }}
+                        whileTap={{ scale: 0.92 }}
                         onClick={() => fileScanInputRef.current?.click()}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.95 }}
+                        title="Tải ảnh QR từ máy"
+                        aria-label="Tải ảnh QR từ máy"
                       >
-                        <Upload size={16} />
-                        <span>Tải ảnh lên</span>
+                        <ImageIcon size={22} />
                       </Motion.button>
-                      <Motion.button
-                        type="button"
-                        className="scanner-action-btn primary"
-                        onClick={handleStartCameraScan}
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <Camera size={16} />
-                        <span>{scannerActive ? "Đang quét..." : "Mở máy ảnh"}</span>
-                      </Motion.button>
+
+                      {hasTorch && (
+                        <Motion.button
+                          type="button"
+                          className={`bank-circle-btn ${isTorchOn ? 'active-torch' : ''}`}
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.92 }}
+                          onClick={toggleTorch}
+                          title={isTorchOn ? "Tắt đèn flash" : "Bật đèn flash"}
+                          aria-label={isTorchOn ? "Tắt đèn flash" : "Bật đèn flash"}
+                        >
+                          <Flashlight size={22} />
+                        </Motion.button>
+                      )}
+
+                      {cameraDevices.length > 1 && (
+                        <Motion.button
+                          type="button"
+                          className="bank-circle-btn"
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.92 }}
+                          onClick={handleSwitchCamera}
+                          title="Đổi camera"
+                          aria-label="Đổi camera"
+                        >
+                          <SwitchCamera size={22} />
+                        </Motion.button>
+                      )}
                     </div>
                   </div>
                 </Motion.div>

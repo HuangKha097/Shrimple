@@ -294,6 +294,7 @@ const AddFriendPopUp = ({ onCloseAddFriendPopup }) => {
                                 {username}
                             </span>
                         )}
+                        {user.suggestionReason && <span className={cx('username')}>{user.suggestionReason}</span>}
                         {user.bio && (
                             <p className={cx('bio')}>{user.bio}</p>
                         )}

@@ -133,5 +133,11 @@ const userSchema = new mongoose.Schema(
     }
 );
 
+const profileCollation = { locale: "vi", strength: 2 };
+userSchema.index({ school: 1 }, { collation: profileCollation });
+userSchema.index({ workplace: 1 }, { collation: profileCollation });
+userSchema.index({ "location.city": 1, "location.country": 1 }, { collation: profileCollation });
+userSchema.index({ "location.province": 1, "location.country": 1 }, { collation: profileCollation });
+
 const User = mongoose.model("User", userSchema);
 export default User;

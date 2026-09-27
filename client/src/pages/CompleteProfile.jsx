@@ -669,6 +669,7 @@ const CompleteProfile = () => {
                                                 <div className={styles["friend-info"]}>
                                                     <strong>{friend.displayName}</strong>
                                                     <small>@{friend.username || "user"}</small>
+                                                    {friend.suggestionReason && <small>{friend.suggestionReason}</small>}
                                                 </div>
                                                 <button
                                                     type="button"
@@ -681,7 +682,7 @@ const CompleteProfile = () => {
                                                             <Check size={14} /> Đã gửi
                                                         </>
                                                     ) : (
-                                                        "Theo dõi"
+                                                        "Kết bạn"
                                                     )}
                                                 </button>
                                             </article>

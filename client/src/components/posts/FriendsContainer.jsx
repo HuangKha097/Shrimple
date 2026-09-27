@@ -642,6 +642,7 @@ const FriendsContainer = () => {
                                                             >
                                                                 <span className={cx('user-display-name')}>{sug.displayName}</span>
                                                                 <span className={cx('user-username')}>@{sug.username || 'user'}</span>
+                                                                {sug.suggestionReason && <span className={cx('user-username')}>{sug.suggestionReason}</span>}
                                                             </div>
 
                                                             <div className={cx('user-actions-right')}>

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "node --test tests/translationSession.test.js",
+    "test": "node --test",
     "test:ai": "node tests/translationSmoke.js"
   },
   "type": "module",
