@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
 import classNames from 'classnames/bind';
 import { motion as Motion } from 'motion/react';
 import styles from '../../assets/css/Message.module.scss';
@@ -9,6 +11,7 @@ import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useGroupCallStore } from "../../stores/useGroupCallStore.js";
 import CustomAudioPlayer from './CustomAudioPlayer.jsx';
 import ForwardModal from './ForwardModal.jsx';
+import { formatHashtags } from '../../utils/hashtagFormatter.jsx';
 import { toast } from 'sonner';
 
 const cx = classNames.bind(styles);
@@ -34,7 +37,9 @@ const Message = ({
     createdAt,
     callId = null,
     callStatus = 'ended',
-    poll = null
+    poll = null,
+    isFirstInGroup = true,
+    isLastInGroup = true
 }) => {
     const [pickerStyle, setPickerStyle] = useState({});
     const [showDropdown, setShowDropdown] = useState(false);
@@ -43,9 +48,9 @@ const Message = ({
     const containerRef = React.useRef(null);
     const timeoutRef = React.useRef(null);
 
-    const { 
-        recallMessageAction, 
-        deleteMessageForMeAction, 
+    const {
+        recallMessageAction,
+        deleteMessageForMeAction,
         togglePinMessageAction,
         activeReactionMessageId,
         setActiveReactionMessageId,
@@ -56,13 +61,26 @@ const Message = ({
     } = useChatStore();
 
     const { user: currentUser } = useAuthStore();
+    const navigate = useNavigate();
 
-    const { 
-        activeGroupCalls, 
-        isInCall, 
-        currentConversationId, 
-        joinGroupCall, 
-        setModalOpen 
+    const isMentioningMe = React.useMemo(() => {
+        if (!text || typeof text !== 'string' || isMe) return false;
+        const lower = text.toLowerCase();
+        if (/(?:^|\s)@(?:everyone|all)\b/i.test(lower)) return true;
+        if (currentUser?.username) {
+            const escaped = currentUser.username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const myRegex = new RegExp(`(?:^|\\s)@${escaped}\\b`, 'i');
+            if (myRegex.test(text)) return true;
+        }
+        return false;
+    }, [text, isMe, currentUser?.username]);
+
+    const {
+        activeGroupCalls,
+        isInCall,
+        currentConversationId,
+        joinGroupCall,
+        setModalOpen
     } = useGroupCallStore();
 
     const currentConvo = (conversations || []).find(c => c && c._id === activeConversationId);
@@ -70,7 +88,7 @@ const Message = ({
 
     // A group call message is only active if the global activeCall matches this message's callId
     const isThisCallActive = Boolean(
-        activeCall?.isActive && 
+        activeCall?.isActive &&
         (callId ? activeCall?.callId === callId : callStatus === 'active')
     );
     const isCurrentInThisCall = isInCall && currentConversationId === activeConversationId && (!callId || !activeCall?.callId || activeCall?.callId === callId);
@@ -126,8 +144,8 @@ const Message = ({
 
         if (containerRef.current) {
             const rect = containerRef.current.getBoundingClientRect();
-            const top = Math.max(8, rect.top - 46); 
-            
+            const top = Math.max(8, rect.top - 46);
+
             const style = {
                 position: 'fixed',
                 top: `${top}px`,
@@ -206,22 +224,31 @@ const Message = ({
     return (
         <Motion.div
             id={messageId ? `msg-${messageId}` : undefined}
-            className={cx('message-wrapper', { me: isMe })}
+            className={cx('message-wrapper', {
+                me: isMe,
+                'first-in-group': isFirstInGroup,
+                'last-in-group': isLastInGroup,
+                grouped: !isFirstInGroup
+            })}
             initial={{ opacity: 0, y: 6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 450, damping: 30 }}
         >
             {!isMe && (
-                <img 
-                    src={avatar} 
-                    alt="avatar" 
-                    className={cx('avatar')} 
-                    onError={(e) => { e.target.src = profilePic_test; }}
-                />
+                isLastInGroup ? (
+                    <img
+                        src={avatar}
+                        alt="avatar"
+                        className={cx('avatar')}
+                        onError={(e) => { e.target.src = profilePic_test; }}
+                    />
+                ) : (
+                    <div className={cx('avatar-spacer')} aria-hidden="true" />
+                )
             )}
 
             <div className={cx('message-content')}>
-                {!isMe && isGroup && senderName && (
+                {!isMe && isGroup && senderName && isFirstInGroup && (
                     <p className={cx('sender-name')}>{senderName}</p>
                 )}
 
@@ -232,16 +259,17 @@ const Message = ({
                     </div>
                 )}
 
-                <div 
-                    className={cx('message-container')} 
+                <div
+                    className={cx('message-container')}
                     ref={containerRef}
+                    title={time}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                 >
                     {/* Reaction Picker */}
-                    {isPickerOpen && (
-                        <div 
-                            className={cx('reaction-picker')} 
+                    {isPickerOpen && createPortal(
+                        <div
+                            className={cx('reaction-picker')}
                             style={pickerStyle}
                             onMouseEnter={() => {
                                 if (timeoutRef.current) {
@@ -252,8 +280,8 @@ const Message = ({
                             onMouseLeave={handleMouseLeave}
                         >
                             {EMOJIS.map(emoji => (
-                                <span 
-                                    key={emoji} 
+                                <span
+                                    key={emoji}
                                     className={cx('emoji-btn')}
                                     onClick={() => {
                                         onReact(emoji);
@@ -264,8 +292,8 @@ const Message = ({
                                     {emoji}
                                 </span>
                             ))}
-                            
-                            <span 
+
+                            <span
                                 className={cx('emoji-btn', 'more-actions-btn', { active: showDropdown })}
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -276,8 +304,8 @@ const Message = ({
                             </span>
 
                             {showDropdown && (
-                                <div 
-                                    className={cx('actions-dropdown', { 'dropdown-me': isMe })} 
+                                <div
+                                    className={cx('actions-dropdown', { 'dropdown-me': isMe })}
                                     onClick={(e) => e.stopPropagation()}
                                     onMouseEnter={() => {
                                         if (timeoutRef.current) {
@@ -307,7 +335,8 @@ const Message = ({
                                     </button>
                                 </div>
                             )}
-                        </div>
+                        </div>,
+                        document.body
                     )}
 
                     {/* Bubble Content */}
@@ -318,15 +347,15 @@ const Message = ({
                     ) : (
                         <>
                             {image && (messageType === 'image' || messageType === 'text') && (
-                                <img 
-                                    src={image} 
-                                    alt="chat-content" 
+                                <img
+                                    src={image}
+                                    alt="chat-content"
                                     className={cx('message-image')}
                                     onClick={() => setIsImageModalOpen(true)}
                                     style={{ cursor: 'pointer', marginBottom: '4px' }}
                                 />
                             )}
-                            
+
                             {messageType === 'location' && locationData ? (
                                 <div className={cx('location-bubble')}>
                                     <div className={cx('location-card')}>
@@ -344,7 +373,7 @@ const Message = ({
                                                 allowFullScreen
                                             ></iframe>
                                         </div>
-                                        <a 
+                                        <a
                                             href={`https://www.google.com/maps?q=${locationData.lat},${locationData.lng}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -369,7 +398,7 @@ const Message = ({
                                                 <div className={cx('file-meta')}>Tài liệu</div>
                                             </div>
                                         </div>
-                                        <a 
+                                        <a
                                             href={fileUrl}
                                             target="_blank"
                                             rel="noopener noreferrer"
@@ -493,7 +522,7 @@ const Message = ({
                                         </span>
                                         {!poll.closed && (
                                             (poll.createdBy?.toString() === currentUser?._id?.toString() ||
-                                            currentConvo?.participants?.some(p => p._id === currentUser?._id && p.role === 'admin'))
+                                            currentConvo?.participants?.some(p => p._id === currentUser?._id && ['leader', 'admin'].includes(p.role)))
                                         ) && (
                                             <button
                                                 type="button"
@@ -507,8 +536,21 @@ const Message = ({
                                 </div>
                             ) : (
                                 (!image || text) && (
-                                    <div className={cx('message-bubble', { 'pinned-message': isPinned })}>
-                                        <p className={cx('message-text')}>{text}</p>
+                                    <div className={cx('message-bubble', { 'pinned-message': isPinned, 'mentioned-me-bubble': isMentioningMe })}>
+                                        <p className={cx('message-text')}>
+                                            {formatHashtags(
+                                                text,
+                                                (tag) => navigate(`/feed/search?q=${encodeURIComponent('#' + tag)}`),
+                                                (username, resolvedUser) => {
+                                                    if (resolvedUser?._id) {
+                                                        navigate(`/feed/profile/${resolvedUser._id}`);
+                                                    } else {
+                                                        navigate(`/feed/search?q=${encodeURIComponent('@' + username)}`);
+                                                    }
+                                                },
+                                                { isOwnMessage: isMe }
+                                            )}
+                                        </p>
                                     </div>
                                 )
                             )}
@@ -525,7 +567,7 @@ const Message = ({
                     )}
 
                     {/* X-Style Timestamp and Status BELOW Bubble */}
-                    {!isRecalled && (
+                    {!isRecalled && (isLastInGroup || isPinned) && (
                         <div className={cx('message-time-meta')}>
                             {isPinned && <Pin size={11} className={cx('meta-pin')} />}
                             <span className={cx('meta-time')}>{time}</span>
@@ -540,11 +582,11 @@ const Message = ({
             </div>
 
             {/* Image Modal Overlay */}
-            {isImageModalOpen && (
-                <div 
+            {isImageModalOpen && createPortal(
+                <div
                     style={{
                         position: 'fixed',
-                        top: 0, 
+                        top: 0,
                         left: 0,
                         width: '100vw',
                         height: '100vh',
@@ -552,20 +594,20 @@ const Message = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        zIndex: 10000
-                    }} 
+                        zIndex: 99999
+                    }}
                     onClick={() => setIsImageModalOpen(false)}
                 >
-                    <img 
-                        src={image} 
-                        alt="Full size" 
+                    <img
+                        src={image}
+                        alt="Full size"
                         style={{
                             maxWidth: '90%',
                             maxHeight: '90%',
                             objectFit: 'contain'
-                        }} 
+                        }}
                     />
-                    <button 
+                    <button
                         onClick={() => setIsImageModalOpen(false)}
                         style={{
                             position: 'absolute',
@@ -579,7 +621,8 @@ const Message = ({
                     >
                         <X size={32} />
                     </button>
-                </div>
+                </div>,
+                document.body
             )}
 
             {/* Forward Modal Overlay */}
@@ -617,13 +660,13 @@ const ReactionItem = ({ emoji, users }) => {
     if (remaining > 0) tooltipText += ` và ${remaining} người khác`;
 
     return (
-        <div 
+        <div
             className={cx('reaction-item')}
             onMouseEnter={() => setShowTooltip(true)}
             onMouseLeave={() => setShowTooltip(false)}
         >
             {emoji} <span className={cx('reaction-count')}>{users.length > 1 ? users.length : ''}</span>
-            
+
             {showTooltip && (
                 <div className={cx('reaction-tooltip')}>
                     {tooltipText}

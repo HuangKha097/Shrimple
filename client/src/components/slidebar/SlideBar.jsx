@@ -1,15 +1,15 @@
-import React from 'react';
+
 import classNames from 'classnames/bind';
 import { useTranslation } from 'react-i18next';
 import styles from '../../assets/css/SlideBar.module.scss';
 import SlidebarBody from './SlidebarBody.jsx';
 import NotificationDropdown from '../common/NotificationDropdown.jsx';
-import { SquarePen, Users, ArrowLeft, QrCode } from 'lucide-react';
+import { SquarePen, Users, ArrowLeft, QrCode, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const cx = classNames.bind(styles);
 
-const SlideBar = ({ onCloseAddFriendPopup, onCloseCreateGroupPopup, onOpenQRModal }) => {
+const SlideBar = ({ onCloseAddFriendPopup, onCloseCreateGroupPopup, onOpenQRModal, onOpenNavigation }) => {
     const { t } = useTranslation();
     const navigate = useNavigate();
 
@@ -19,9 +19,13 @@ const SlideBar = ({ onCloseAddFriendPopup, onCloseCreateGroupPopup, onOpenQRModa
             <div className={cx('messages-header')}>
                 <div className={cx('header-title-row')}>
                     <div className={cx('header-title-group')}>
+                        <button type="button" className={cx('header-back-btn', 'header-menu-btn')}
+                            onClick={onOpenNavigation} title="Mở menu" aria-label="Mở menu">
+                            <Menu size={20} />
+                        </button>
                         <button 
                             type="button" 
-                            className={cx('header-back-btn')} 
+                            className={cx('header-back-btn', 'header-feed-btn')}
                             onClick={() => navigate('/feed')}
                             title={t('chat.backToFeed')}
                             aria-label={t('chat.backToFeed')}

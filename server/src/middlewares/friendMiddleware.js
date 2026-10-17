@@ -1,8 +1,6 @@
 import Friend from "../models/Friend.js";
 import Conversation from "../models/Conversation.js";
 
-const pair = (a, b) => (a < b ? [a, b] : [b, a])
-
 export const checkFriendship = async (req, res, next) => {
     try {
         const me = req.user._id.toString();

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import classNames from 'classnames/bind';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import styles from '../../assets/css/CreatePollModal.module.scss';
@@ -65,7 +66,9 @@ const CreatePollModal = ({ conversationId, onClose }) => {
         }
     };
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <AnimatePresence>
             <div className={cx('overlay')} onClick={onClose}>
                 <Motion.div 
@@ -83,12 +86,12 @@ const CreatePollModal = ({ conversationId, onClose }) => {
                             </div>
                             <h3 className={cx('title')}>Tạo cuộc bình chọn</h3>
                         </div>
-                        <button className={cx('close-btn')} onClick={onClose}>
+                        <button type="button" className={cx('close-btn')} onClick={onClose} aria-label="Đóng">
                             <X size={18} />
                         </button>
                     </div>
 
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleSubmit} className={cx('form')}>
                         <div className={cx('body')}>
                             <div className={cx('form-group')}>
                                 <label className={cx('label')}>Câu hỏi bình chọn</label>
@@ -108,6 +111,7 @@ const CreatePollModal = ({ conversationId, onClose }) => {
                                 <div className={cx('options-list')}>
                                     {options.map((opt, idx) => (
                                         <div key={idx} className={cx('option-row')}>
+                                            <span className={cx('option-badge')}>{idx + 1}</span>
                                             <input
                                                 type="text"
                                                 className={cx('option-input')}
@@ -143,20 +147,25 @@ const CreatePollModal = ({ conversationId, onClose }) => {
                             </div>
 
                             <div 
-                                className={cx('toggle-group')}
+                                className={cx('toggle-group', { active: allowMultiple })}
                                 onClick={() => setAllowMultiple(!allowMultiple)}
+                                role="switch"
+                                aria-checked={allowMultiple}
+                                tabIndex={0}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        setAllowMultiple(!allowMultiple);
+                                    }
+                                }}
                             >
                                 <div className={cx('toggle-info')}>
-                                    <span className={cx('toggle-title')}>Nhiều lựa chọn</span>
-                                    <span className={cx('toggle-desc')}>Cho phép mọi người chọn nhiều hơn một phương án</span>
+                                    <span className={cx('toggle-title')}>Cho phép chọn nhiều phương án</span>
+                                    <span className={cx('toggle-desc')}>Thành viên có thể bình chọn nhiều hơn 1 lựa chọn</span>
                                 </div>
-                                <input
-                                    type="checkbox"
-                                    className={cx('checkbox')}
-                                    checked={allowMultiple}
-                                    onChange={(e) => setAllowMultiple(e.target.checked)}
-                                    onClick={(e) => e.stopPropagation()}
-                                />
+                                <div className={cx('switch-track', { checked: allowMultiple })}>
+                                    <div className={cx('switch-thumb')} />
+                                </div>
                             </div>
                         </div>
 
@@ -180,7 +189,8 @@ const CreatePollModal = ({ conversationId, onClose }) => {
                     </form>
                 </Motion.div>
             </div>
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };
 

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/ForwardModal.module.scss';
 import defaultAvatar from "../../../public/favicon.png";
@@ -28,15 +29,15 @@ const ForwardModal = ({ messageId, onClose }) => {
         return conversations
             .map(convo => {
                 const isGroup = convo.isGroup;
-                let name = "Unknown Chat";
+                let name = "Cuộc trò chuyện";
                 let avatar = defaultAvatar;
                 let subText = "";
                 let isValidTarget = true;
 
                 if (isGroup) {
-                    name = convo.name || convo.group?.name || "Unnamed Group";
+                    name = convo.name || convo.group?.name || "Nhóm chưa đặt tên";
                     avatar = getSafeAvatar(convo.avatarURL || convo.group?.avatarURL);
-                    subText = `${convo.participants?.length || 0} members`;
+                    subText = `${convo.participants?.length || 0} thành viên`;
                 } else {
                     // 1-1 chat
                     let partner = convo.participants?.find(p => {
@@ -56,9 +57,9 @@ const ForwardModal = ({ messageId, onClose }) => {
                         isValidTarget = false;
                     }
 
-                    name = partner?.displayName || partner?.username || "Unknown User";
+                    name = partner?.displayName || partner?.username || "Người dùng";
                     avatar = getSafeAvatar(partner?.avatarURL);
-                    subText = partner?.username ? `@${partner.username}` : "1-1 Chat";
+                    subText = partner?.username ? `@${partner.username}` : "Trò chuyện trực tiếp";
                 }
 
                 return {
@@ -111,7 +112,9 @@ const ForwardModal = ({ messageId, onClose }) => {
         }
     };
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <div className={cx('overlay')} onClick={(e) => e.target === e.currentTarget && onClose()}>
             <div className={cx('modal-card')}>
                 <div className={cx('header')}>
@@ -186,7 +189,8 @@ const ForwardModal = ({ messageId, onClose }) => {
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 };
 

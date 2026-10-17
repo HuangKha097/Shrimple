@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 import User from "../models/User.js";
 import Friend from "../models/Friend.js";
-import Post from "../models/Post.js";
+import "../models/Post.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
 
 export const authMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select("-password");
+        const user = await User.findById(req.user._id).select(
+            "-password +antiPeepData.isEnabled +antiPeepData.faceDescriptor "
+            + "+antiPeepData.faceDescriptors +antiPeepData.modelVersion"
+        );
 
         return res.status(200).json({ user });
     } catch (error) {
@@ -14,6 +18,9 @@ export const authMe = async (req, res) => {
         return res.status(500).json({ message: "System error" });
     }
 };
+export const test = async (req, res) => {
+    return res.sendStatus(204);
+}
 export const getUserByUsername = async (req, res) => {
     try {
 
@@ -265,6 +272,166 @@ export const getBlockedUsers = async (req, res) => {
     }
 };
 
+const ANTI_PEEP_MODEL_VERSION = "human-faceres-v3.3.6";
+const ANTI_PEEP_DESCRIPTOR_LENGTH = 1024;
+const ANTI_PEEP_PIN_WINDOW_MS = 5 * 60 * 1000;
+const ANTI_PEEP_PIN_MAX_ATTEMPTS = 5;
+const antiPeepPinAttempts = new Map();
+
+const getAntiPeepSettings = (antiPeepData) => ({
+    isEnabled: antiPeepData?.isEnabled || false,
+    faceDescriptor: antiPeepData?.faceDescriptor || [],
+    faceDescriptors: antiPeepData?.faceDescriptors || [],
+    modelVersion: antiPeepData?.modelVersion || "",
+});
+
+export const updateAntiPeepSettings = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const {
+            isEnabled,
+            pin,
+            faceDescriptor,
+            faceDescriptors,
+            modelVersion,
+        } = req.body;
+
+        const normalizedFaceDescriptor = faceDescriptor === undefined
+            ? undefined
+            : Array.isArray(faceDescriptor)
+                ? faceDescriptor
+                : faceDescriptor && typeof faceDescriptor === "object"
+                    ? Object.values(faceDescriptor)
+                    : faceDescriptor;
+
+        const isFiniteDescriptor = (descriptor, validLengths) => (
+            Array.isArray(descriptor)
+            && validLengths.includes(descriptor.length)
+            && descriptor.every((value) => Number.isFinite(value) && Math.abs(value) <= 100)
+        );
+
+        if (isEnabled !== undefined && typeof isEnabled !== "boolean") {
+            return res.status(400).json({ message: "isEnabled must be boolean" });
+        }
+        if (pin !== undefined && !/^\d{4}$/.test(pin)) {
+            return res.status(400).json({ message: "PIN must contain exactly 4 digits" });
+        }
+        if (
+            normalizedFaceDescriptor !== undefined
+            && !isFiniteDescriptor(normalizedFaceDescriptor, [128, ANTI_PEEP_DESCRIPTOR_LENGTH])
+        ) {
+            return res.status(400).json({ message: "faceDescriptor is invalid" });
+        }
+
+        const hasGallery = faceDescriptors !== undefined;
+        const hasModelVersion = modelVersion !== undefined;
+        if (hasGallery !== hasModelVersion) {
+            return res.status(400).json({
+                message: "faceDescriptors and modelVersion must be updated together",
+            });
+        }
+        if (
+            hasGallery
+            && (
+                !Array.isArray(faceDescriptors)
+                || faceDescriptors.length !== 5
+                || !faceDescriptors.every((descriptor) => (
+                    isFiniteDescriptor(descriptor, [ANTI_PEEP_DESCRIPTOR_LENGTH])
+                ))
+                || modelVersion !== ANTI_PEEP_MODEL_VERSION
+            )
+        ) {
+            return res.status(400).json({ message: "Face enrollment payload is invalid" });
+        }
+
+        const user = await User.findById(userId).select(
+            "+antiPeepData.isEnabled +antiPeepData.faceDescriptor "
+            + "+antiPeepData.faceDescriptors +antiPeepData.modelVersion +antiPeepData.pin"
+        );
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        if (user.antiPeepData === undefined) {
+            user.antiPeepData = {
+                isEnabled: false,
+                pin: "",
+                faceDescriptor: [],
+                faceDescriptors: [],
+                modelVersion: "",
+            };
+        }
+
+        if (isEnabled !== undefined) user.antiPeepData.isEnabled = isEnabled;
+        if (pin !== undefined) user.antiPeepData.pin = await bcrypt.hash(pin, 10);
+        if (normalizedFaceDescriptor !== undefined) {
+            user.antiPeepData.faceDescriptor = normalizedFaceDescriptor;
+        }
+        if (faceDescriptors !== undefined) user.antiPeepData.faceDescriptors = faceDescriptors;
+        if (modelVersion !== undefined) user.antiPeepData.modelVersion = modelVersion;
+
+        await user.save();
+        return res.status(200).json(getAntiPeepSettings(user.antiPeepData));
+    } catch (error) {
+        console.error("Error updateAntiPeepSettings:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
+
+export const verifyAntiPeepPin = async (req, res) => {
+    try {
+        const pin = String(req.body?.pin || "");
+        if (!/^\d{4}$/.test(pin)) {
+            return res.status(400).json({ message: "PIN must contain exactly 4 digits" });
+        }
+
+        const key = req.user._id.toString();
+        const now = Date.now();
+        const attempt = antiPeepPinAttempts.get(key);
+        if (
+            attempt
+            && now - attempt.startedAt < ANTI_PEEP_PIN_WINDOW_MS
+            && attempt.count >= ANTI_PEEP_PIN_MAX_ATTEMPTS
+        ) {
+            return res.status(429).json({
+                message: "Too many incorrect PIN attempts. Try again in a few minutes.",
+            });
+        }
+        if (attempt && now - attempt.startedAt >= ANTI_PEEP_PIN_WINDOW_MS) {
+            antiPeepPinAttempts.delete(key);
+        }
+
+        // Reserve synchronously before DB/bcrypt awaits.
+        const current = antiPeepPinAttempts.get(key);
+        antiPeepPinAttempts.set(key, current
+            ? { ...current, count: current.count + 1 }
+            : { count: 1, startedAt: now });
+        for (const [entryKey, entry] of antiPeepPinAttempts) {
+            if (now - entry.startedAt >= ANTI_PEEP_PIN_WINDOW_MS) antiPeepPinAttempts.delete(entryKey);
+        }
+        const user = await User.findById(req.user._id).select("+antiPeepData.pin");
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        const storedPin = user.antiPeepData?.pin || "";
+        const isHash = /^\$2[aby]\$/.test(storedPin);
+        const valid = isHash
+            ? await bcrypt.compare(pin, storedPin)
+            : storedPin.length > 0 && pin === storedPin;
+
+        if (!valid) {
+
+            return res.status(401).json({ valid: false, message: "Incorrect PIN" });
+        }
+
+        antiPeepPinAttempts.delete(key);
+        if (!isHash) {
+            user.antiPeepData.pin = await bcrypt.hash(pin, 10);
+            await user.save();
+        }
+        return res.status(200).json({ valid: true });
+    } catch (error) {
+        console.error("Error verifyAntiPeepPin:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 export const completeProfile = async (req, res) => {
     try {
         const userId = req.user._id;

@@ -1,4 +1,4 @@
-import mongoose, * as ongoose from 'mongoose'
+import mongoose from 'mongoose'
 
 const messageSchema = mongoose.Schema({
     conversationId: {

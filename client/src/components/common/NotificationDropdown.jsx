@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import classNames from 'classnames/bind';
 import { motion as Motion, AnimatePresence } from 'motion/react';
-import { Bell, Heart, MessageCircle, Reply, UserPlus } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import styles from '../../assets/css/NotificationDropdown.module.scss';
 import { useNotificationStore } from '../../stores/useNotificationStore';
 import { useChatStore } from '../../stores/useChatStore';
@@ -260,6 +260,7 @@ const NotificationDropdown = ({ align = 'right' }) => {
                                                 if (notif.type === 'like') actionDesc = 'đã thích bài viết của bạn.';
                                                 if (notif.type === 'comment') actionDesc = `đã bình luận: "${notif.text || ''}"`;
                                                 if (notif.type === 'reply') actionDesc = `đã phản hồi: "${notif.text || ''}"`;
+                                                if (notif.type === 'mention') actionDesc = `đã nhắc đến bạn: "${notif.text || ''}"`;
                                                 if (notif.type === 'friend_accept') actionDesc = 'đã chấp nhận lời mời kết bạn của bạn.';
                                                 if (notif.type === 'friend_request') actionDesc = 'đã gửi cho bạn một lời mời kết bạn.';
 

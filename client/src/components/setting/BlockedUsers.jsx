@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import classNames from 'classnames/bind';
 import { useTranslation } from 'react-i18next';
 import styles from '../../assets/css/SettingContainer.module.scss';
 import { userSettingsService } from "../../services/userSettingsService.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { toast } from 'sonner';
-import { UserX, Loader2 } from 'lucide-react';
+
 
 const cx = classNames.bind(styles);
 

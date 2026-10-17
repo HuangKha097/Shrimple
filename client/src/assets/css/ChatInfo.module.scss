@@ -16,15 +16,17 @@
 .header-nav {
     display: flex;
     align-items: center;
-    gap: 16px;
-    height: 54px;
+    gap: 14px;
+    height: 53px;
+    min-height: 53px;
     padding: 0 16px;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.82);
     backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     position: sticky;
     top: 0;
-    z-index: 20;
+    z-index: 25;
     flex-shrink: 0;
 
     .back-btn {
@@ -32,12 +34,13 @@
         border: none;
         color: #e7e9ea;
         cursor: pointer;
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
         transition: background-color 0.2s ease, transform 0.15s ease;
 
         &:hover {
@@ -52,21 +55,43 @@
     .nav-title-box {
         display: flex;
         align-items: center;
+        min-width: 0;
 
         .nav-title {
-            font-size: 1.6rem;
+            font-size: 1.55rem;
             font-weight: 700;
             color: #e7e9ea;
             letter-spacing: -0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
+    }
+}
+
+// Unified Scrollable Body
+.info-scroll-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+
+    &::-webkit-scrollbar {
+        width: 5px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.12);
+        border-radius: 9999px;
     }
 }
 
 // 2. Profile Hero
 .profile-hero {
-    padding: 24px 20px 20px;
+    padding: 20px 16px 16px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: linear-gradient(180deg, rgba(249, 115, 22, 0.04) 0%, rgba(0, 0, 0, 0) 100%);
+    background: linear-gradient(180deg, rgba(249, 115, 22, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
     flex-shrink: 0;
 
     .hero-content {
@@ -74,10 +99,11 @@
         flex-direction: column;
         align-items: center;
         text-align: center;
+        width: 100%;
     }
 
     .avatar-wrapper {
-        margin-bottom: 14px;
+        margin-bottom: 12px;
         position: relative;
     }
 
@@ -86,8 +112,8 @@
         display: inline-block;
 
         .single-avatar {
-            width: 76px;
-            height: 76px;
+            width: 72px;
+            height: 72px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid rgba(255, 255, 255, 0.12);
@@ -98,8 +124,8 @@
             position: absolute;
             bottom: 2px;
             right: 2px;
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
             border-radius: 50%;
             background-color: #71767b;
             border: 3px solid #000000;
@@ -112,13 +138,13 @@
 
     .group-avatar-stack {
         position: relative;
-        width: 76px;
-        height: 76px;
+        width: 72px;
+        height: 72px;
 
         .stack-img {
             position: absolute;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #000000;
@@ -140,13 +166,13 @@
     }
 
     .hero-name {
-        font-size: 1.8rem;
+        font-size: 1.75rem;
         font-weight: 700;
         color: #e7e9ea;
-        margin: 0 0 4px;
+        margin: 0 0 3px;
         letter-spacing: -0.015em;
         line-height: 1.3;
-        max-width: 280px;
+        max-width: 100%;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -157,15 +183,15 @@
         align-items: center;
         justify-content: center;
         gap: 8px;
-        margin-bottom: 18px;
+        margin-bottom: 14px;
 
         .hero-username {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             color: #71767b;
         }
 
         .hero-sub {
-            font-size: 1.3rem;
+            font-size: 1.25rem;
             color: #71767b;
 
             &.online {
@@ -177,42 +203,46 @@
 
     // Quick Action Pills
     .quick-actions {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+        gap: 8px;
         width: 100%;
 
         .action-pill {
-            flex: 1;
-            max-width: 110px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            padding: 10px 8px;
-            background: rgba(255, 255, 255, 0.05);
+            padding: 9px 6px;
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
+            border-radius: 12px;
             color: #e7e9ea;
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s ease;
+            white-space: nowrap;
 
             svg {
                 color: #e7e9ea;
+                flex-shrink: 0;
                 transition: transform 0.15s ease;
             }
 
-            &:hover {
-                background: rgba(255, 255, 255, 0.1);
+            &:hover:not(:disabled) {
+                background: rgba(255, 255, 255, 0.09);
                 border-color: rgba(255, 255, 255, 0.16);
 
                 svg {
-                    transform: scale(1.1);
+                    transform: scale(1.08);
                 }
+            }
+
+            &:disabled {
+                opacity: 0.45;
+                cursor: not-allowed;
             }
 
             &.active {
@@ -250,40 +280,42 @@
     }
 }
 
-// 3. Segmented Navigation Tabs (X Style)
+// 3. Segmented Navigation Tabs (Sticky inside scroll container)
 .tabs-container {
     display: flex;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    background: #000000;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 15;
     flex-shrink: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-        display: none;
-    }
     padding: 0 4px;
 
     .tab-btn {
         flex: 1 1 0;
-        min-width: 58px;
+        min-width: 0;
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 4px;
         height: 44px;
-        padding: 0 6px;
+        padding: 0 4px;
         background: transparent;
         border: none;
         color: #71767b;
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 600;
         cursor: pointer;
         position: relative;
         white-space: nowrap;
         transition: color 0.15s ease, background-color 0.15s ease;
+
+        svg {
+            flex-shrink: 0;
+        }
 
         &:hover {
             color: #e7e9ea;
@@ -297,18 +329,19 @@
         }
 
         .tab-label {
-            font-size: 1.25rem;
+            font-size: 1.2rem;
             letter-spacing: -0.01em;
         }
 
         .tab-count {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 700;
             padding: 1px 5px;
             border-radius: 9999px;
             background: rgba(255, 255, 255, 0.08);
             color: #a1a1aa;
             line-height: 1.2;
+            flex-shrink: 0;
         }
 
         &.active .tab-count {
@@ -319,8 +352,8 @@
         .tab-indicator {
             position: absolute;
             bottom: 0;
-            left: 4px;
-            right: 4px;
+            left: 6px;
+            right: 6px;
             height: 2.5px;
             border-radius: 9999px;
             background-color: #f97316;
@@ -331,16 +364,7 @@
 // 4. Content Area
 .scroll-content {
     flex: 1;
-    overflow-y: auto;
-    padding: 16px;
-
-    &::-webkit-scrollbar {
-        width: 6px;
-    }
-    &::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.12);
-        border-radius: 9999px;
-    }
+    padding: 14px;
 }
 
 .tab-pane {
@@ -805,6 +829,13 @@
 }
 
 // Loading & Empty States
+.remove-member {
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    width: 34px; height: 34px; border: 1px solid rgba(239, 68, 68, .3);
+    border-radius: 9px; background: transparent; color: #ef4444; cursor: pointer;
+    &:hover { background: rgba(239, 68, 68, .15); }
+    &:disabled { opacity: .5; cursor: wait; }
+}
 .loading-box {
     display: flex;
     align-items: center;

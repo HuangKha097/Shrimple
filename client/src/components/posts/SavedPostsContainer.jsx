@@ -1,11 +1,12 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { usePostStore } from '../../stores/usePostStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
 import { ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Image, Send, Heart, MessageCircle, Trash2, MoreHorizontal, Bookmark, EyeOff, Flag, Link as LinkIcon, Edit } from 'lucide-react';
+import { Bookmark } from 'lucide-react';
+
 import PostItem from './PostItem';
 
 const cx = classNames.bind(styles);

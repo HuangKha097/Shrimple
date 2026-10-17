@@ -18,6 +18,8 @@
 **/.cache/
 **/coverage/
 **/.nyc_output/
+**/.vercel/
+/output/
 
 # Runtime files and logs
 **/logs/

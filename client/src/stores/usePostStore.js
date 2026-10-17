@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import api from "../lib/axios.js";
 import { toast } from "sonner";
-import { useAuthStore } from "./useAuthStore.js";
 
 export const usePostStore = create((set, get) => ({
     posts: [],
@@ -13,10 +12,10 @@ export const usePostStore = create((set, get) => ({
     isSearching: false,
     postsNextCursor: null,
     hasMorePosts: true,
-    
+
     videoNextCursor: null,
     hasMoreVideos: true,
-    
+
     isLoading: false,
 
     fetchPosts: async (isRefresh = false) => {
@@ -30,7 +29,7 @@ export const usePostStore = create((set, get) => ({
         try {
             const cursor = isRefresh ? null : postsNextCursor;
             const query = cursor ? `?limit=10&cursor=${cursor}` : `?limit=10`;
-            
+
             const res = await api.get(`/api/posts${query}`);
             const { posts: newPosts, nextCursor } = res.data;
 
@@ -39,7 +38,7 @@ export const usePostStore = create((set, get) => ({
                 postsNextCursor: nextCursor,
                 hasMorePosts: !!nextCursor
             }));
-            
+
             return newPosts;
         } catch (error) {
             console.error(error);
@@ -75,9 +74,9 @@ export const usePostStore = create((set, get) => ({
         set({ isLoading: true });
         try {
             let dataToSend = postData;
-            const hasFile = (postData.image instanceof File) || 
-                            (postData.video instanceof File) || 
-                            (postData.media instanceof File) || 
+            const hasFile = (postData.image instanceof File) ||
+                            (postData.video instanceof File) ||
+                            (postData.media instanceof File) ||
                             (Array.isArray(postData.images) && postData.images.some(f => f instanceof File));
 
             if (hasFile) {
@@ -109,21 +108,21 @@ export const usePostStore = create((set, get) => ({
                 };
             }
 
-            const res = await api.post("/api/posts/create", dataToSend); 
-            
+            const res = await api.post("/api/posts/create", dataToSend);
+
             const newPost = res.data;
-            
+
             set((state) => {
                 const posts = [newPost, ...state.posts];
-                
+
                 // Keep video logic
                 let videoPosts = state.videoPosts;
                 const isVideo = newPost.video || (newPost.mediaUrl && (newPost.mediaUrl.endsWith('.mp4') || newPost.mediaType === 'video'));
-                
-                if (isVideo) { 
+
+                if (isVideo) {
                      videoPosts = [newPost, ...state.videoPosts];
                 }
-                
+
                 return { posts, videoPosts };
             });
             toast.success("Đã đăng bài viết thành công!");
@@ -176,7 +175,7 @@ export const usePostStore = create((set, get) => ({
         try {
             const res = await api.put(`/api/posts/like/${postId}`);
             const updatedPost = res.data;
-            
+
             set(state => ({
                 posts: state.posts.map(p => p._id === postId ? updatedPost : p),
                 videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
@@ -211,7 +210,7 @@ export const usePostStore = create((set, get) => ({
         try {
             const res = await api.put(`/api/posts/${postId}/comment/${commentId}/like`, { reaction });
             const updatedPost = res.data;
-            
+
              set(state => ({
                 posts: state.posts.map(p => p._id === postId ? updatedPost : p),
                 videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
@@ -226,13 +225,13 @@ export const usePostStore = create((set, get) => ({
 
     replyComment: async (postId, commentId, text, replyToReplyId = null, replyToUserId = null) => {
         try {
-            const res = await api.post(`/api/posts/${postId}/comment/${commentId}/reply`, { 
+            const res = await api.post(`/api/posts/${postId}/comment/${commentId}/reply`, {
                 text,
                 replyToReplyId,
                 replyToUserId,
             });
             const updatedPost = res.data;
-            
+
              set(state => ({
                 posts: state.posts.map(p => p._id === postId ? updatedPost : p),
                 videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
@@ -296,7 +295,7 @@ export const usePostStore = create((set, get) => ({
         try {
              const res = await api.put(`/api/posts/${postId}/comment/${commentId}/reply/${replyId}/like`, { reaction });
              const updatedPost = res.data;
-             
+
               set(state => ({
                 posts: state.posts.map(p => p._id === postId ? updatedPost : p),
                 videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
@@ -312,7 +311,7 @@ export const usePostStore = create((set, get) => ({
     deletePost: async (postId) => {
         try {
             await api.delete(`/api/posts/${postId}`);
-            
+
             set(state => ({
                 posts: state.posts.filter(p => p._id !== postId),
                 videoPosts: state.videoPosts.filter(p => p._id !== postId),
@@ -328,24 +327,26 @@ export const usePostStore = create((set, get) => ({
 
     fetchVideoFeed: async (isRefresh = false) => {
          const { videoNextCursor, hasMoreVideos } = get();
-         
+         // If already loading, maybe debounce or ignore, but here simple check
+         // We might want separate loading state for video feed if they can load purely independently without UI conflict
+
          if (!isRefresh && !hasMoreVideos) return;
-         
+
         try {
             const cursor = isRefresh ? null : videoNextCursor;
             const query = cursor ? `?limit=5&cursor=${cursor}` : `?limit=5`;
 
             const res = await api.get(`/api/posts/videos${query}`);
-            
+
             const { posts: newVideos, nextCursor } = res.data;
 
             set(state => {
                  // For refresh, replace. For load more, append.
                  const videos = isRefresh ? newVideos : [...state.videoPosts, ...newVideos];
-                 
+
                  // Deduplicate if needed (though cursor should prevent it mostly)
                  // Keeping simple strictly cursor based now.
-                return { 
+                return {
                     videoPosts: videos,
                     videoNextCursor: nextCursor,
                     hasMoreVideos: !!nextCursor
@@ -373,29 +374,34 @@ export const usePostStore = create((set, get) => ({
     toggleSavePost: async (postId) => {
         try {
             const res = await api.post("/api/users/toggle-save", { postId });
-            
+
             // We can locally update the savedPosts array if we have it loaded
             const currentSaved = get().savedPosts;
             const isAlreadySaved = currentSaved.some(p => p._id === postId);
-            
+
             if (isAlreadySaved) {
                 set({ savedPosts: currentSaved.filter(p => p._id !== postId) });
                  toast.success("Post unsaved");
             } else {
                 toast.success("Post saved");
             }
-            
+
             // Update AuthStore User object too, so UI relying on user.savedPosts updates immediately
-            const authState = useAuthStore.getState();
-            if (authState.user) {
-                const savedPosts = authState.user.savedPosts || [];
-                const getPostId = (item) => typeof item === 'string' ? item : item._id;
-                const exists = savedPosts.some((item) => getPostId(item) === postId);
-                const updatedSavedPosts = exists
-                    ? savedPosts.filter((item) => getPostId(item) !== postId)
-                    : [...savedPosts, postId];
-                authState.updateUser({ savedPosts: updatedSavedPosts });
-            }
+             import("./useAuthStore.js").then(({ useAuthStore }) => {
+                 const user = useAuthStore.getState().user;
+                 if (user) {
+                     let newSavedPosts = user.savedPosts || [];
+                     // Check if it's already in the user's list (which might be just IDs or Objects)
+                     const exists = newSavedPosts.some(id => (typeof id === 'string' ? id : id._id) === postId);
+
+                     if (exists) {
+                         newSavedPosts = newSavedPosts.filter(id => (typeof id === 'string' ? id : id._id) !== postId);
+                     } else {
+                         newSavedPosts = [...newSavedPosts, postId];
+                     }
+                     useAuthStore.getState().updateUser({ savedPosts: newSavedPosts });
+                 }
+             });
 
             return res.data;
         } catch (error) {

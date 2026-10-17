@@ -1,8 +1,8 @@
-import React from 'react';
+
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/GroupCall.module.scss';
 import { useGroupCallStore } from '../../stores/useGroupCallStore';
-import { PhoneCall, Radio, Users } from 'lucide-react';
+import { PhoneCall, Radio } from 'lucide-react';
 import defaultAvatar from '../../../public/favicon.png';
 import { ASSET_BASE_URL } from '../../config/env';
 

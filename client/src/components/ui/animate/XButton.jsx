@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { motion as Motion } from 'motion/react';
 import { Loader2 } from 'lucide-react';
 import styles from './XButton.module.scss';

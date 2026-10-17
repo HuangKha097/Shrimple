@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/CreateGroupPopUp.module.scss';
 import {

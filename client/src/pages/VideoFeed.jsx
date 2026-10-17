@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { usePostStore } from '../stores/usePostStore';
 import styles from '../assets/css/VideoFeed.module.scss';
@@ -792,12 +792,12 @@ const VideoFeed = () => {
     };
 
     // Initial Fetch
-    const hasVideoPosts = Boolean(videoPosts?.length);
+    const videoPostCount = videoPosts?.length || 0;
     useEffect(() => {
-        if (!hasVideoPosts) {
+        if (videoPostCount === 0) {
             fetchVideoFeed(true);
         }
-    }, [fetchVideoFeed, hasVideoPosts]);
+    }, [fetchVideoFeed, videoPostCount]);
 
     // Restore scroll position
     useEffect(() => {

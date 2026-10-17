@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/GroupCall.module.scss';
 import { useGroupCallStore } from '../../stores/useGroupCallStore';
@@ -12,10 +12,7 @@ import {
     Phone,
     PhoneOff,
     Minus,
-    Maximize2,
-    Users,
     Tv,
-    Radio
 } from 'lucide-react';
 
 const defaultAvatar = '/favicon.png';

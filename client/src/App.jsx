@@ -1,15 +1,16 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter, Route, Routes, Navigate, useOutletContext } from "react-router-dom";
+import { useEffect } from 'react';
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import SignInPage from "./pages/SignInPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
 import ChatPage from "./pages/ChatPage.jsx";
+import JoinGroupPage from './pages/JoinGroupPage.jsx';
 import { Toaster } from "sonner";
 import ProtectedRoute from "./auth/ProtectedRoute.jsx";
-import { useThemeStore } from "./stores/useThemeStore.js";
 import PostsContainer from "./components/posts/PostsContainer.jsx";
 import SearchResultsContainer from "./components/posts/SearchResultsContainer.jsx";
 import ChatContainer from "./components/chat/ChatContainer.jsx";
+import { useOutletContext } from "react-router-dom";
 import SinglePostPage from "./pages/SinglePostPage.jsx";
 import SavedPostsContainer from "./components/posts/SavedPostsContainer.jsx";
 import FriendsContainer from "./components/posts/FriendsContainer.jsx";
@@ -25,17 +26,24 @@ import { useGroupCallStore } from "./stores/useGroupCallStore.js";
 import { useNotificationStore } from "./stores/useNotificationStore.js";
 import { useAuthStore } from "./stores/useAuthStore.js";
 import { useUIStore } from "./stores/useUIStore.js";
+
+
+
+
 import { useTranslation } from 'react-i18next';
 
 // Wrapper to consume outlet context and pass it to ChatContainer
 const ChatContainerWrapper = () => {
     const context = useOutletContext();
+    const pendingInvite = sessionStorage.getItem('shrimple-group-invite');
+    if (/^\/groups\/join\/(?:[a-f0-9]{64}|[a-f0-9]{24})$/.test(pendingInvite || '')) {
+        return <Navigate to={pendingInvite} replace />;
+    }
     return <ChatContainer {...context} />;
 };
 
 const App = () => {
     const { i18n } = useTranslation();
-    const { isLight } = useThemeStore();
     const { subscribeToCallEvents, unsubscribeFromCallEvents } = useCallStore();
     const { subscribeToGroupCallEvents, unsubscribeFromGroupCallEvents } = useGroupCallStore();
     const { subscribeToNotificationEvents, unsubscribeFromNotificationEvents } = useNotificationStore();
@@ -77,7 +85,7 @@ const App = () => {
     return (
         <>
             <Toaster 
-                theme={isLight ? "light" : "dark"} 
+                theme="dark"
                 position="bottom-center"
                 toastOptions={{
                     duration: 2600,
@@ -97,6 +105,7 @@ const App = () => {
 
 
                     <Route element={<ProtectedRoute />}>
+                        <Route path="/groups/join/:token" element={<JoinGroupPage />} />
                         <Route path="/complete-profile" element={<CompleteProfile />} />
                         <Route element={<ChatPage />}>
                             <Route path="/" element={<Navigate to="/chat" replace />} />

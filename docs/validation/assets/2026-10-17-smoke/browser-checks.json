@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-10-17T02:47:52.336Z",
+  "origin": "http://localhost:5173",
+  "backend": "http://localhost:5002",
+  "data": "temporary MongoMemoryServer with disposable local users",
+  "consoleWindowStart": "2026-10-17T02:46:11.933Z",
+  "errors": [],
+  "mobile": {
+    "width": 390,
+    "height": 844,
+    "feedOverflow": false,
+    "settingsOverflow": false
+  },
+  "screenshots": [
+    "feed-mentions.jpg",
+    "feed-mobile.jpg",
+    "settings-mobile.jpg",
+    "chat-fixed.jpg"
+  ]
+}

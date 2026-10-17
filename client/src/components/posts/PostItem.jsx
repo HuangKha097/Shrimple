@@ -1,35 +1,17 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
 import { usePostStore } from '../../stores/usePostStore';
-import { 
-    Heart, 
-    MessageCircle, 
-    Trash2, 
-    MoreHorizontal, 
-    Bookmark, 
-    EyeOff, 
-    Flag, 
-    Link as LinkIcon, 
-    Repeat, 
-    Share, 
-    Send, 
-    Smile, 
-    Globe, 
-    Users, 
-    Lock, 
-    Check, 
-    X, 
-    Pencil, 
-    Volume2, 
-    VolumeX 
-} from 'lucide-react';
+import { useChatStore } from '../../stores/useChatStore';
+import { Heart, MessageCircle, Trash2, MoreHorizontal, Bookmark, EyeOff, Flag, Link as LinkIcon, Repeat, Share, Send, Globe, Users, Lock, Check, X, Pencil, Volume2, VolumeX, AtSign } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import default_avt from "../../../public/favicon.png";
 import MediaLightboxModal from './MediaLightboxModal';
 import PostCommentItem from './PostCommentItem';
+import MentionAutocomplete from '../common/MentionAutocomplete';
+import { insertAtTrigger } from '../../utils/mention.js';
 import formatHashtags from '../../utils/hashtagFormatter';
 
 const cx = classNames.bind(styles);
@@ -54,6 +36,7 @@ function formatXTime(dateString) {
 
 const PostItem = ({ post, currentUser, onLike, onComment, onDelete, defaultShowComments = false }) => {
     const { toggleSavePost, repostPost, updatePostPrivacy, editPost } = usePostStore();
+    const { friends } = useChatStore();
     const [commentText, setCommentText] = useState('');
     const [showComments, setShowComments] = useState(defaultShowComments);
     const [showOptions, setShowOptions] = useState(false);
@@ -72,7 +55,22 @@ const PostItem = ({ post, currentUser, onLike, onComment, onDelete, defaultShowC
     const [isVideoMuted, setIsVideoMuted] = useState(true);
 
     const optionsRef = useRef(null);
+    const editTextareaRef = useRef(null);
+    const commentInputRef = useRef(null);
     const navigate = useNavigate();
+
+    const mentionCandidates = useMemo(() => {
+        const list = [];
+        if (post?.author) list.push(post.author);
+        (post?.comments || []).forEach((c) => {
+            if (c?.user) list.push(c.user);
+            (c?.replies || []).forEach((r) => {
+                if (r?.user) list.push(r.user);
+            });
+        });
+        if (Array.isArray(friends)) list.push(...friends);
+        return list;
+    }, [post?.author, post?.comments, friends]);
 
     // Extract images list (support both multiple images and legacy single image)
     const postImages = useMemo(() => {
@@ -345,14 +343,24 @@ const PostItem = ({ post, currentUser, onLike, onComment, onDelete, defaultShowC
 
                 {/* Text Body or Inline Edit */}
                 {isEditing ? (
-                    <div className={cx('edit-post-box')} onClick={(e) => e.stopPropagation()}>
+                    <div className={cx('edit-post-box')} onClick={(e) => e.stopPropagation()} style={{ position: 'relative' }}>
                         <textarea
+                            ref={editTextareaRef}
                             className={cx('edit-post-textarea')}
                             value={editContent}
                             onChange={(e) => setEditContent(e.target.value)}
                             rows={3}
-                            placeholder="Chỉnh sửa nội dung bài viết..."
+                            placeholder="Chỉnh sửa nội dung bài viết... (Gõ @ để nhắc tên)"
                             autoFocus
+                        />
+                        <MentionAutocomplete
+                            value={editContent}
+                            onChange={setEditContent}
+                            inputRef={editTextareaRef}
+                            candidates={mentionCandidates}
+                            includeEveryone={true}
+                            everyoneDesc="Nhắc tất cả bạn bè của bạn"
+                            placement="bottom"
                         />
                         <div className={cx('edit-post-actions')}>
                             <button
@@ -379,9 +387,19 @@ const PostItem = ({ post, currentUser, onLike, onComment, onDelete, defaultShowC
                 ) : (
                     post.content && (
                         <div className={cx('post-content-body')}>
-                            {formatHashtags(post.content, (tag) => {
-                                navigate(`/feed/search?q=${encodeURIComponent('#' + tag)}`);
-                            })}
+                            {formatHashtags(
+                                post.content,
+                                (tag) => {
+                                    navigate(`/feed/search?q=${encodeURIComponent('#' + tag)}`);
+                                },
+                                (username, resolvedUser) => {
+                                    if (resolvedUser?._id) {
+                                        navigate(`/feed/profile/${resolvedUser._id}`);
+                                    } else {
+                                        navigate(`/feed/search?q=${encodeURIComponent('@' + username)}`);
+                                    }
+                                }
+                            )}
                         </div>
                     )
                 )}
@@ -569,21 +587,40 @@ const PostItem = ({ post, currentUser, onLike, onComment, onDelete, defaultShowC
                             transition={{ duration: 0.2 }}
                         >
                             {/* Reply Input Capsule */}
-                            <form onSubmit={handleCommentSubmit} className={cx('comment-compose-row')}>
+                            <form onSubmit={handleCommentSubmit} className={cx('comment-compose-row')} style={{ position: 'relative' }}>
                                 <img 
                                     src={currentUser?.avatarURL ? (currentUser.avatarURL.startsWith('http') ? currentUser.avatarURL : `http://localhost:5001${currentUser.avatarURL}`) : default_avt} 
                                     alt="avatar" 
                                     className={cx('compose-avatar')}
                                     onError={(e) => { e.currentTarget.src = default_avt; }}
                                 />
-                                <div className={cx('comment-input-box')}>
+                                <div className={cx('comment-input-box')} style={{ position: 'relative' }}>
+                                    <MentionAutocomplete
+                                        value={commentText}
+                                        onChange={setCommentText}
+                                        inputRef={commentInputRef}
+                                        candidates={mentionCandidates}
+                                        includeEveryone={true}
+                                        everyoneDesc="Nhắc tất cả mọi người"
+                                        placement="bottom"
+                                    />
                                     <input
+                                        ref={commentInputRef}
                                         type="text"
-                                        placeholder="Đăng câu trả lời của bạn..."
+                                        placeholder="Đăng câu trả lời của bạn... (Gõ @ để nhắc tên)"
                                         value={commentText}
                                         onChange={(e) => setCommentText(e.target.value)}
                                         className={cx('comment-input-field')}
                                     />
+                                    <button
+                                        type="button"
+                                        className={cx('comment-send-btn')}
+                                        onClick={() => insertAtTrigger(commentText, setCommentText, commentInputRef)}
+                                        title="Nhắc tên bạn bè (@)"
+                                        style={{ marginRight: '4px' }}
+                                    >
+                                        <AtSign size={14} />
+                                    </button>
                                     <button 
                                         type="submit" 
                                         className={cx('comment-send-btn', { active: commentText.trim() })}
@@ -598,7 +635,7 @@ const PostItem = ({ post, currentUser, onLike, onComment, onDelete, defaultShowC
                             {/* Comments List */}
                             <div className={cx('comment-list')}>
                                 {post.comments?.map((comment, index) => (
-                                    <PostCommentItem key={comment._id || index} comment={comment} postId={post._id} />
+                                    <PostCommentItem key={comment._id || index} comment={comment} postId={post._id} mentionCandidates={mentionCandidates} />
                                 ))}
                             </div>
                         </Motion.div>

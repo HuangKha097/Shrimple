@@ -21,7 +21,7 @@ export const useCallStore = create((set, get) => ({
     }),
 
     setCallAccepted: () => {
-        // Here we would typically trigger the Peer signal processing
+        // CallModal handles Peer signaling; this action updates call state.
         set({ isCallActive: true, isCallIncoming: false });
     },
 

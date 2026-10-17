@@ -9,6 +9,13 @@ let localAnalyser = null;
 let audioInterval = null;
 const remoteAnalysers = new Map(); // socketId -> AnalyserNode
 
+const peerConfig = {
+    iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:stun1.l.google.com:19302" },
+    ],
+};
+
 export const useGroupCallStore = create((set, get) => {
     // Internal refs held inside closure
     const peersRef = { current: {} }; // socketId -> { peer, user, stream, isMuted, isCameraOn, isScreenSharing }
@@ -125,10 +132,26 @@ export const useGroupCallStore = create((set, get) => {
         peers: {}, // { [socketId]: { socketId, user, stream, isMuted, isCameraOn, isScreenSharing } }
         speakingSockets: new Set(), // Set of socketIds + "local"
         activeGroupCalls: {}, // { [conversationId]: { isActive, startedBy, startedAt, participants: [...] } }
+        incomingCall: null,
 
         // Actions
         setModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
         toggleMinimize: () => set((state) => ({ isMinimized: !state.isMinimized, isModalOpen: state.isMinimized })),
+        acceptIncomingCall: async () => {
+            const incoming = get().incomingCall;
+            if (!incoming) return;
+            set({ incomingCall: null });
+            await get().joinGroupCall(incoming.conversationId, incoming.groupInfo, incoming.callId);
+        },
+        declineIncomingCall: () => set({ incomingCall: null }),
+        removeConversationCalls: (conversationId) => {
+            if (get().currentConversationId === conversationId) get().leaveGroupCall();
+            set(state => {
+                const activeGroupCalls = { ...state.activeGroupCalls };
+                delete activeGroupCalls[conversationId];
+                return { activeGroupCalls, incomingCall: state.incomingCall?.conversationId === conversationId ? null : state.incomingCall };
+            });
+        },
 
         // Group Call Socket Subscriptions
         subscribeToGroupCallEvents: () => {
@@ -144,6 +167,10 @@ export const useGroupCallStore = create((set, get) => {
             socket.off("groupCallUserLeft");
             socket.off("groupCallEnded");
             socket.off("groupCallError");
+            socket.off("incomingGroupCall");
+            socket.on("incomingGroupCall", incoming => {
+                if (incoming?.conversationId && !get().isInCall) set({ incomingCall: incoming });
+            });
 
             socket.on("groupCallError", ({ message }) => {
                 toast.error(message || "Cuộc gọi đã kết thúc.");
@@ -153,6 +180,10 @@ export const useGroupCallStore = create((set, get) => {
             // 1. Status of active calls in conversations
             socket.on("groupCallStatusChanged", (data) => {
                 if (!data?.conversationId) return;
+                const incoming = get().incomingCall;
+                if (!data.isActive && incoming?.conversationId === data.conversationId && (!data.callId || incoming.callId === data.callId)) {
+                    set({ incomingCall: null });
+                }
                 set((state) => {
                     const newMap = { ...state.activeGroupCalls };
                     if (data.isActive) {
@@ -180,7 +211,7 @@ export const useGroupCallStore = create((set, get) => {
                                     try {
                                         peersRef.current[sid].peer.destroy();
                                     } catch (error) {
-                                        console.warn("Failed to destroy group peer", error);
+                                        console.error("Failed to destroy stale group call peer", error);
                                     }
                                 }
                                 delete peersRef.current[sid];
@@ -197,6 +228,7 @@ export const useGroupCallStore = create((set, get) => {
 
             // Handle when group call ends
             socket.on("groupCallEnded", ({ conversationId }) => {
+                if (get().incomingCall?.conversationId === conversationId) set({ incomingCall: null });
                 const { currentConversationId, isInCall } = get();
                 if (isInCall && currentConversationId === conversationId) {
                     toast.info("Cuộc gọi nhóm đã kết thúc");
@@ -219,6 +251,7 @@ export const useGroupCallStore = create((set, get) => {
                 participants.forEach((participant) => {
                     const peer = new Peer({
                         initiator: true,
+                        config: peerConfig,
                         trickle: false,
                         stream: stream || undefined,
                     });
@@ -298,6 +331,7 @@ export const useGroupCallStore = create((set, get) => {
                     const stream = localStreamRef.current;
                     const peer = new Peer({
                         initiator: false,
+                        config: peerConfig,
                         trickle: false,
                         stream: stream || undefined,
                     });
@@ -405,6 +439,8 @@ export const useGroupCallStore = create((set, get) => {
             socket.off("groupCallUserLeft");
             socket.off("groupCallEnded");
             socket.off("groupCallError");
+            socket.off("incomingGroupCall");
+            set({ incomingCall: null });
         },
 
         // Join Voice Channel / Room

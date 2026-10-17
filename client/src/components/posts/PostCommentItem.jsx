@@ -1,24 +1,38 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
 import { usePostStore } from '../../stores/usePostStore';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useChatStore } from '../../stores/useChatStore';
 import { useNavigate } from 'react-router-dom';
 import default_avt from "../../../public/favicon.png";
+import MentionAutocomplete from '../common/MentionAutocomplete';
 import formatHashtags from '../../utils/hashtagFormatter';
 
 const cx = classNames.bind(styles);
 const EMOJIS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
 
-const PostCommentItem = ({ comment, postId }) => {
+const PostCommentItem = ({ comment, postId, mentionCandidates: parentCandidates }) => {
     const { reactToComment, replyComment, reactToReply } = usePostStore();
     const { user: currentUser } = useAuthStore();
+    const { friends } = useChatStore();
     const navigate = useNavigate();
 
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState("");
     const [showReplies, setShowReplies] = useState(true);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const replyInputRef = useRef(null);
+
+    const candidates = useMemo(() => {
+        const list = [...(parentCandidates || [])];
+        if (comment?.postedBy) list.push(comment.postedBy);
+        (comment?.replies || []).forEach((r) => {
+            if (r?.postedBy) list.push(r.postedBy);
+        });
+        if (Array.isArray(friends)) list.push(...friends);
+        return list;
+    }, [parentCandidates, comment?.postedBy, comment?.replies, friends]);
 
     // Group replies into Level 2 and Level 3 hierarchy
     const { level2Replies, level3Map } = useMemo(() => {
@@ -75,6 +89,14 @@ const PostCommentItem = ({ comment, postId }) => {
         navigate(`/feed/search?q=${encodeURIComponent('#' + tag)}`);
     };
 
+    const handleMentionClick = (username, resolvedUser) => {
+        if (resolvedUser?._id) {
+            navigate(`/feed/profile/${resolvedUser._id}`);
+        } else {
+            navigate(`/feed/search?q=${encodeURIComponent('@' + username)}`);
+        }
+    };
+
     const totalReplies = comment.replies?.length || 0;
 
     return (
@@ -98,7 +120,7 @@ const PostCommentItem = ({ comment, postId }) => {
                             {comment.postedBy?.displayName || comment.postedBy?.username || 'Người dùng'}
                         </strong>
                         <span style={{ marginLeft: '5px' }}>
-                            {formatHashtags(comment.text, handleHashtagClick)}
+                            {formatHashtags(comment.text, handleHashtagClick, handleMentionClick)}
                         </span>
                     </div>
 
@@ -149,12 +171,22 @@ const PostCommentItem = ({ comment, postId }) => {
 
             {/* Level 1 Reply input */}
             {isReplying && (
-                <form onSubmit={handleReplySubmit} className={cx('reply-input-form')}>
+                <form onSubmit={handleReplySubmit} className={cx('reply-input-form')} style={{ position: 'relative' }}>
+                    <MentionAutocomplete
+                        value={replyText}
+                        onChange={setReplyText}
+                        inputRef={replyInputRef}
+                        candidates={candidates}
+                        includeEveryone={true}
+                        everyoneDesc="Nhắc tất cả mọi người"
+                        placement="bottom"
+                    />
                     <input
+                        ref={replyInputRef}
                         type="text"
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
-                        placeholder={`Trả lời ${comment.postedBy?.displayName || 'bình luận'}...`}
+                        placeholder={`Trả lời ${comment.postedBy?.displayName || 'bình luận'}... (Gõ @ để nhắc tên)`}
                         autoFocus
                     />
                 </form>
@@ -184,6 +216,8 @@ const PostCommentItem = ({ comment, postId }) => {
                                     reactToReply={reactToReply}
                                     replyComment={replyComment}
                                     onHashtagClick={handleHashtagClick}
+                                    onMentionClick={handleMentionClick}
+                                    candidates={candidates}
                                 />
                             ))}
                             {totalReplies > 3 && (
@@ -212,11 +246,14 @@ const Level2ReplyItem = ({
     currentUser, 
     reactToReply, 
     replyComment,
-    onHashtagClick 
+    onHashtagClick,
+    onMentionClick,
+    candidates = []
 }) => {
     const [isReplying, setIsReplying] = useState(false);
     const [replyText, setReplyText] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const l2ReplyInputRef = useRef(null);
     const navigate = useNavigate();
 
     const userReaction = reply.reactions?.find(r => r.userId === currentUser?._id);
@@ -262,7 +299,7 @@ const Level2ReplyItem = ({
                             {authorName}
                         </strong>
                         <span style={{ marginLeft: '5px' }}>
-                            {formatHashtags(reply.text, onHashtagClick)}
+                            {formatHashtags(reply.text, onHashtagClick, onMentionClick)}
                         </span>
                     </div>
 
@@ -311,12 +348,22 @@ const Level2ReplyItem = ({
 
             {/* Reply Input for Level 2 */}
             {isReplying && (
-                <form onSubmit={handleReplySubmit} className={cx('reply-input-form')}>
+                <form onSubmit={handleReplySubmit} className={cx('reply-input-form')} style={{ position: 'relative' }}>
+                    <MentionAutocomplete
+                        value={replyText}
+                        onChange={setReplyText}
+                        inputRef={l2ReplyInputRef}
+                        candidates={candidates}
+                        includeEveryone={true}
+                        everyoneDesc="Nhắc tất cả mọi người"
+                        placement="bottom"
+                    />
                     <input
+                        ref={l2ReplyInputRef}
                         type="text"
                         value={replyText}
                         onChange={e => setReplyText(e.target.value)}
-                        placeholder={`Trả lời @${authorName}...`}
+                        placeholder={`Trả lời @${authorName}... (Gõ @ để nhắc tên)`}
                         autoFocus
                     />
                 </form>
@@ -334,6 +381,7 @@ const Level2ReplyItem = ({
                             currentUser={currentUser}
                             reactToReply={reactToReply}
                             onHashtagClick={onHashtagClick}
+                            onMentionClick={onMentionClick}
                         />
                     ))}
                 </div>
@@ -349,7 +397,8 @@ const Level3ReplyItem = ({
     commentId, 
     currentUser, 
     reactToReply, 
-    onHashtagClick 
+    onHashtagClick,
+    onMentionClick
 }) => {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const navigate = useNavigate();
@@ -396,7 +445,7 @@ const Level3ReplyItem = ({
                                     @{replyToName}
                                 </span>
                             )}
-                            {formatHashtags(reply.text, onHashtagClick)}
+                            {formatHashtags(reply.text, onHashtagClick, onMentionClick)}
                         </span>
                     </div>
 

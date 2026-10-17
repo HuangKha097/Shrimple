@@ -8,13 +8,13 @@ const participantSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['admin', 'member'],
+        enum: ['leader', 'admin', 'member'],
         default: 'member',
     },
     joinAt: {
         type: Date,
         default: Date.now,
-    }
+    },
 
 }, {_id: false});
 
@@ -41,8 +41,12 @@ const groupSchema = new mongoose.Schema({
     },
     inviteCode: {
         type: String,
-        default: "",
-    }
+        select: false,
+    },
+    inviteToken: {
+        type: String,
+        select: false,
+    },
 }, {
     _id: false // khong tao ra _id moi
 });
@@ -112,6 +116,7 @@ conversationSchema.index({
     "participants.userId": 1,
     lastMessageAt: -1
 })
+conversationSchema.index({ 'group.inviteToken': 1 }, { unique: true, sparse: true });
 
 const Conversation = mongoose.model("Conversation", conversationSchema)
 export default Conversation

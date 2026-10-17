@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import Peer from 'simple-peer';
 import { useCallStore } from '../../stores/useCallStore';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -9,15 +9,15 @@ import TranslationNotes from './TranslationNotes.jsx';
 const defaultAvatar = '/favicon.png';
 
 const CallModal = () => {
-    const { 
-        isCallIncoming, isCallActive, isCallEnded, 
-        callType, callerInfo, 
+    const {
+        isCallIncoming, isCallActive, isCallEnded,
+        callType, callerInfo,
         callerSignal,
-        setCallAccepted, rejectCall
+        setCallAccepted, setCallEnded, rejectCall
     } = useCallStore();
 
     const { user, socket } = useAuthStore();
-    
+
     const [stream, setStream] = useState(null);
     const [remoteStream, setRemoteStream] = useState(null);
     const [callAcceptedState, setCallAcceptedState] = useState(false);
@@ -27,26 +27,6 @@ const CallModal = () => {
     const myVideo = useRef(null);
     const userVideo = useRef(null);
     const connectionRef = useRef(null);
-    const streamRef = useRef(null);
-    const stopLocalStream = useCallback(() => {
-        streamRef.current?.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-        setStream(null);
-    }, []);
-    const leaveCall = useCallback(() => {
-        connectionRef.current?.destroy();
-        connectionRef.current = null;
-        stopLocalStream();
-        setRemoteStream(null);
-        setCallAcceptedState(false);
-
-        const { socket: currentSocket } = useAuthStore.getState();
-        const { callerInfo: currentCaller, setCallEnded } = useCallStore.getState();
-        if (currentSocket && currentCaller?.id) {
-            currentSocket.emit('endCall', { to: currentCaller.id });
-        }
-        setCallEnded();
-    }, [stopLocalStream]);
     const translationSources = useMemo(() => [
         { id: user?._id, stream, muted: !micOn },
         { id: callerInfo?.id, stream: remoteStream, muted: false },
@@ -55,31 +35,26 @@ const CallModal = () => {
     // 1. Handle user media (Camera/Mic)
     useEffect(() => {
         if (isCallIncoming || isCallActive) {
-            if (streamRef.current) return;
-            let cancelled = false;
             const hasVideo = callType === 'video';
             navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: true })
                 .then((currentStream) => {
-                    if (cancelled) {
-                        currentStream.getTracks().forEach((track) => track.stop());
-                        return;
-                    }
-                    streamRef.current = currentStream;
                     setStream(currentStream);
                 })
                 .catch(err => {
-                    if (cancelled) return;
                     console.error("Failed to get media", err);
                     toast.error("Không thể truy cập camera hoặc micro");
                     leaveCall();
                 });
-            return () => { cancelled = true; };
         } else {
-             stopLocalStream();
+             // Stop stream if call ended
+             if (stream) {
+                 stream.getTracks().forEach(track => track.stop());
+                 setStream(null);
+             }
              setRemoteStream(null);
              setCallAcceptedState(false);
         }
-    }, [isCallIncoming, isCallActive, callType, leaveCall, stopLocalStream]);
+    }, [isCallIncoming, isCallActive, callType]);
 
     // Attach local stream to myVideo
     useEffect(() => {
@@ -137,7 +112,7 @@ const CallModal = () => {
                  socket.off('callUserOffline', handleCallUserOffline);
              };
         }
-    }, [isCallActive, isCallIncoming, stream, callerInfo, socket, user, callType, leaveCall]);
+    }, [isCallActive, isCallIncoming, stream, callerInfo, socket, user, callType]);
 
     // 3. Handle Incoming Call Answer
     const answerCall = async () => {
@@ -146,12 +121,11 @@ const CallModal = () => {
             if (!activeStream) {
                 const hasVideo = callType === 'video';
                 activeStream = await navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: true });
-                streamRef.current = activeStream;
                 setStream(activeStream);
             }
 
             setCallAcceptedState(true);
-            setCallAccepted(); 
+            setCallAccepted();
 
             const peer = new Peer({ initiator: false, trickle: false, stream: activeStream });
 
@@ -172,6 +146,24 @@ const CallModal = () => {
             toast.error("Không thể kết nối micro/camera để trả lời");
             leaveCall();
         }
+    };
+
+    // 4. Handle Leaving Call
+    const leaveCall = () => {
+        if (connectionRef.current) {
+            connectionRef.current.destroy();
+            connectionRef.current = null;
+        }
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            setStream(null);
+        }
+        setRemoteStream(null);
+        setCallAcceptedState(false);
+        if (socket && callerInfo?.id) {
+            socket.emit('endCall', { to: callerInfo.id });
+        }
+        setCallEnded();
     };
 
     // Toggle Mic
@@ -214,7 +206,7 @@ const CallModal = () => {
             color: 'white',
             backdropFilter: 'blur(8px)'
         }}>
-            
+
             <div style={{display: 'flex', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap', justifyContent: 'center'}}>
                 {/* My Video / Preview */}
                 {stream && callType === 'video' && (
@@ -223,7 +215,7 @@ const CallModal = () => {
                         <p style={{ marginTop: '0.5rem', opacity: 0.8 }}>Bạn</p>
                     </div>
                 )}
-                
+
                 {/* Other User Video */}
                 {callAcceptedState && !isCallEnded && (
                     <div style={{textAlign: 'center'}}>
@@ -265,13 +257,13 @@ const CallModal = () => {
                     <h2 style={{ fontSize: '1.4rem', fontWeight: 600 }}>{callerInfo?.name || 'Người dùng'} đang gọi...</h2>
                     <p style={{ opacity: 0.7, marginTop: '0.5rem' }}>{callType === 'video' ? 'Cuộc gọi video đến' : 'Cuộc gọi thoại đến'}</p>
                     <div style={{display: 'flex', gap: '1.5rem', justifyContent: 'center', marginTop: '2rem'}}>
-                        <button 
+                        <button
                             onClick={answerCall}
                             style={{padding: '0.9rem 2rem', borderRadius: '2rem', border: 'none', background: '#2ecc71', color: 'white', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}
                         >
                             <Phone size={20} /> Trả lời
                         </button>
-                        <button 
+                        <button
                             onClick={rejectCall}
                             style={{padding: '0.9rem 2rem', borderRadius: '2rem', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}
                         >

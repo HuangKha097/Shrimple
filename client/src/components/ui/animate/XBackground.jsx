@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 /**
  * XBackground - An ambient glowing canvas inspired by Animate UI Backgrounds & X aesthetic.

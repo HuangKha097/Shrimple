@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import classNames from 'classnames/bind';
 import { useTranslation } from 'react-i18next';
@@ -63,28 +63,29 @@ const SettingContainer = () => {
         },
     ], [t]);
 
-    const initialTab = searchParams.get('tab') || 'account';
-    const [activeTab, setActiveTab] = useState(
-        tabs.some(t => t.id === initialTab) ? initialTab : 'account'
-    );
-    const [mobileView, setMobileView] = useState('menu'); // 'menu' | 'detail'
+    const tabParam = searchParams.get('tab');
+    const selectedTab = tabs.find(tab => tab.id === tabParam);
+    const activeTab = selectedTab?.id || 'account';
+    const mobileView = selectedTab ? 'detail' : 'menu';
 
     useEffect(() => {
-        const tabParam = searchParams.get('tab');
-        if (tabParam && tabs.some(t => t.id === tabParam)) {
-            setActiveTab(tabParam);
-            setMobileView('detail');
+        if (tabParam && !selectedTab) {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.delete('tab');
+            setSearchParams(nextParams, { replace: true });
         }
-    }, [searchParams, tabs]);
+    }, [tabParam, selectedTab, searchParams, setSearchParams]);
 
     const handleSelectTab = (tabId) => {
-        setActiveTab(tabId);
-        setSearchParams({ tab: tabId });
-        setMobileView('detail');
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.set('tab', tabId);
+        setSearchParams(nextParams);
     };
 
     const handleBackToMenu = () => {
-        setMobileView('menu');
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete('tab');
+        setSearchParams(nextParams, { replace: true });
     };
 
     const handleLogout = async () => {

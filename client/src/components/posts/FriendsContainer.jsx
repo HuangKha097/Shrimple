@@ -1,27 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
 import { useChatStore } from '../../stores/useChatStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
-import { 
-    ArrowLeft, 
-    Search, 
-    X, 
-    Users, 
-    UserPlus, 
-    UserCheck, 
-    UserMinus, 
-    MessageSquare, 
-    ExternalLink, 
-    Sparkles, 
-    Check, 
-    Loader2, 
-    Briefcase, 
-    GraduationCap, 
-    MapPin,
-    Clock
-} from 'lucide-react';
+import { ArrowLeft, Search, X, Users, UserPlus, UserCheck, UserMinus, MessageSquare, ExternalLink, Sparkles, Check, Loader2, Briefcase, GraduationCap, MapPin } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import TrendsWidget from './TrendsWidget';
 import WhoToFollowWidget from './WhoToFollowWidget';
@@ -642,7 +625,6 @@ const FriendsContainer = () => {
                                                             >
                                                                 <span className={cx('user-display-name')}>{sug.displayName}</span>
                                                                 <span className={cx('user-username')}>@{sug.username || 'user'}</span>
-                                                                {sug.suggestionReason && <span className={cx('user-username')}>{sug.suggestionReason}</span>}
                                                             </div>
 
                                                             <div className={cx('user-actions-right')}>

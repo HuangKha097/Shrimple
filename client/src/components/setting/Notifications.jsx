@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import classNames from 'classnames/bind';
 import { useTranslation } from 'react-i18next';
 import styles from '../../assets/css/SettingContainer.module.scss';

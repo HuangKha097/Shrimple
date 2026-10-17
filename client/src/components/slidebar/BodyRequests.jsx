@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/BodyChatList.module.scss';
 
 import FriendRequestCard from "../../components/chat/FriendRequestCard.jsx";
 import { useChatStore } from "../../stores/useChatStore.js";
 import { toast } from "sonner";
-import { UserX } from 'lucide-react';
+
 import LoadingSpin from "../common/loading/LoadingSpin.jsx";
 
 const cx = classNames.bind(styles);

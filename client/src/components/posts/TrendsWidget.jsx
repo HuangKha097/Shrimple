@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
-import { MoreHorizontal, Hash } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { usePostStore } from '../../stores/usePostStore';
 import { useNavigate } from 'react-router-dom';
 

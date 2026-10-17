@@ -7,6 +7,7 @@ import { Outlet, useLocation } from 'react-router-dom';
 
 import SlideBar from "../components/slidebar/SlideBar.jsx";
 import XNavRail from "../components/common/XNavRail.jsx";
+
 import { useAuthStore } from "../stores/useAuthStore.js";
 import { useChatStore } from "../stores/useChatStore.js";
 import AddFriendPopUp from "../components/slidebar/AddFriendPopUp.jsx";
@@ -24,7 +25,7 @@ const ChatPage = () => {
     const [isShowAddFriendPopup, setIsShowAddFriendPopup] = useState(false);
     const [isShowCreateGroupPopup, setIsShowCreateGroupPopup] = useState(false);
     const [isShowQRModal, setIsShowQRModal] = useState(false);
-    const currentUser = useAuthStore((state) => state.user);
+    const { user: currentUser } = useAuthStore();
     const location = useLocation();
     const shellRef = useRef(null);
     const contentRef = useRef(null);
@@ -79,13 +80,14 @@ const ChatPage = () => {
                                 onCloseAddFriendPopup={onCloseAddFriendPopup}
                                 onCloseCreateGroupPopup={onCloseCreateGroupPopup}
                                 onOpenQRModal={() => setIsShowQRModal(true)}
+                                onOpenNavigation={toggleFeedMenu}
                             />
                         </div>
                     </div>
                 )}
 
                 {/* Mobile Drawer for Feed */}
-                {isFeedView && isFeedMenuOpen && (
+                {isFeedMenuOpen && (
                     <>
                         <div className={cx("mobile-backdrop")} onClick={closeFeedMenu}></div>
                         <div className={cx("mobile-feed-drawer")}>

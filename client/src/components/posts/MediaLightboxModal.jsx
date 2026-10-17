@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import classNames from 'classnames/bind';

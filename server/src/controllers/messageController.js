@@ -5,6 +5,7 @@ import Friend from "../models/Friend.js";
 import {upDateConversationAfterCreateMessage} from "../utils/messageHelper.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 import { uploadToCloudinary } from "../utils/cloudinary.js";
+import { isGroupAdmin } from '../utils/conversationHelper.js';
 
 
 export const sendDirectMessage = async (req, res) => {
@@ -44,6 +45,11 @@ export const sendDirectMessage = async (req, res) => {
         // 1. Nếu Client có gửi conversationId -> Tìm theo ID
         if (conversationId) {
             conversation = await Conversation.findById(conversationId);
+            if (!conversation || conversation.isGroup ||
+                !conversation.participants.some(p => p.userId.toString() === senderId.toString()) ||
+                !conversation.participants.some(p => p.userId.toString() === recipientId.toString())) {
+                return res.status(403).json({ message: 'Bạn không có quyền gửi tin nhắn vào cuộc trò chuyện này' });
+            }
         }
 
         // 2. [QUAN TRỌNG] Nếu chưa tìm thấy (hoặc Client không gửi ID),
@@ -409,6 +415,10 @@ export const forwardMessage = async (req, res) => {
                 return res.status(404).json({ message: "Một hoặc nhiều cuộc trò chuyện không tồn tại" });
             }
 
+            if (!conversation.participants.some(p => p.userId.toString() === senderId.toString())) {
+                return res.status(403).json({ message: 'Bạn không còn là thành viên của nhóm nhận tin nhắn' });
+            }
+
             if (!conversation.isGroup) {
                 const partnerParticipant = conversation.participants.find(p => {
                     const pId = p.userId?.toString();
@@ -495,12 +505,13 @@ export const createPoll = async (req, res) => {
         const { conversationId, question, options, allowMultiple } = req.body;
         const senderId = req.user._id;
 
-        if (!conversationId || !question || !options || !Array.isArray(options) || options.length < 2) {
+        if (!conversationId || typeof question !== 'string' || !question.trim() || !Array.isArray(options) || options.length < 2 ||
+            options.some(option => typeof option !== 'string') || (allowMultiple !== undefined && typeof allowMultiple !== 'boolean')) {
             return res.status(400).json({ message: "Vui lòng nhập câu hỏi và ít nhất 2 phương án bình chọn" });
         }
 
         const conversation = await Conversation.findById(conversationId);
-        if (!conversation) {
+        if (!conversation?.isGroup) {
             return res.status(404).json({ message: "Cuộc trò chuyện không tồn tại" });
         }
 
@@ -557,6 +568,8 @@ export const votePoll = async (req, res) => {
         const { id } = req.params;
         const { optionId } = req.body;
         const userId = req.user._id;
+
+        if (typeof optionId !== 'string' || !optionId) return res.status(400).json({ message: 'Phương án bình chọn không hợp lệ' });
 
         const message = await Message.findById(id);
         if (!message || message.messageType !== 'poll' || !message.poll) {
@@ -627,9 +640,7 @@ export const closePoll = async (req, res) => {
 
         const conversation = await Conversation.findById(message.conversationId);
         const isCreator = message.poll.createdBy?.toString() === userId.toString();
-        const isGroupAdmin = conversation?.participants?.some(p => (p.userId?._id || p.userId)?.toString() === userId.toString() && p.role === 'admin');
-
-        if (!isCreator && !isGroupAdmin) {
+        if (!isCreator && !isGroupAdmin(conversation, userId)) {
             return res.status(403).json({ message: "Chỉ người tạo hoặc quản trị viên mới có thể đóng cuộc bình chọn" });
         }
 

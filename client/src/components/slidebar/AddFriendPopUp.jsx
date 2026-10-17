@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/AddFriendPopUp.module.scss';
 import { Search, UserPlus, X, Check, UserCheck, Loader2, Sparkles, Users, QrCode } from 'lucide-react';
-import { motion as Motion, AnimatePresence } from 'motion/react';
+import { motion as Motion } from 'motion/react';
 import default_avt from "../../../public/favicon.png";
 import TreeQRCodeModal from "../common/TreeQRCodeModal.jsx";
 
@@ -294,7 +294,6 @@ const AddFriendPopUp = ({ onCloseAddFriendPopup }) => {
                                 {username}
                             </span>
                         )}
-                        {user.suggestionReason && <span className={cx('username')}>{user.suggestionReason}</span>}
                         {user.bio && (
                             <p className={cx('bio')}>{user.bio}</p>
                         )}

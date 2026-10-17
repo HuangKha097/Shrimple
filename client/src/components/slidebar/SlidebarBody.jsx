@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames/bind';
 import { motion as Motion } from 'motion/react';
 import { Search } from 'lucide-react';

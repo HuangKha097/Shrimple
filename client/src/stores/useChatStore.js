@@ -3,7 +3,8 @@ import {persist} from "zustand/middleware";
 import {chatService} from "../services/chatService.js";
 import {friendService} from "../services/friendService.js";
 import {useAuthStore} from "./useAuthStore.js"; // 1. Import thêm service
-import {toast} from "sonner";
+import { useGroupCallStore } from './useGroupCallStore.js';
+import { toast } from 'sonner';
 
 
 export const useChatStore = create(
@@ -20,6 +21,63 @@ export const useChatStore = create(
             isCreatingGroup: false,
             activeReactionMessageId: null,
             setActiveReactionMessageId: (id) => set({ activeReactionMessageId: id }),
+
+            // Instagram-Style Chat Screen Draw State
+            chatDrawings: {},
+            isDrawModeOpen: false,
+            setIsDrawModeOpen: (val) => set({ isDrawModeOpen: Boolean(val) }),
+            toggleDrawMode: () => set((state) => ({ isDrawModeOpen: !state.isDrawModeOpen })),
+            setChatDrawing: (conversationId, payload) =>
+                set((state) => ({
+                    chatDrawings: {
+                        ...state.chatDrawings,
+                        [conversationId]: payload,
+                    },
+                })),
+
+            upsertConversation: (conversation) => {
+                if (!conversation?._id) return;
+                const myId = useAuthStore.getState().user?._id?.toString();
+                if (myId && conversation.isGroup && !conversation.participants?.some(member => (member?._id || member)?.toString() === myId)) {
+                    get().removeConversation(conversation._id);
+                    return;
+                }
+                set(state => ({ conversations: state.conversations.some(c => c._id === conversation._id)
+                    ? state.conversations.map(c => c._id === conversation._id ? conversation : c)
+                    : [conversation, ...state.conversations] }));
+            },
+            removeConversation: (conversationId) => {
+                useGroupCallStore.getState().removeConversationCalls(conversationId);
+                set(state => {
+                    const messages = { ...state.messages };
+                    const pinnedMessages = { ...state.pinnedMessages };
+                    delete messages[conversationId];
+                    delete pinnedMessages[conversationId];
+                    return {
+                        conversations: state.conversations.filter(c => c._id !== conversationId),
+                        messages, pinnedMessages,
+                        activeConversationId: state.activeConversationId === conversationId ? null : state.activeConversationId,
+                    };
+                });
+            },
+            updateGroup: async (id, data) => {
+                const { conversation } = await chatService.updateGroup(id, data);
+                get().upsertConversation(conversation);
+            },
+            removeGroupMember: async (id, memberId) => {
+                const { conversation } = await chatService.removeGroupMember(id, memberId);
+                get().upsertConversation(conversation);
+            },
+            deleteGroup: async (id) => {
+                await chatService.deleteGroup(id);
+                get().removeConversation(id);
+            },
+            joinGroupInvite: async (token) => {
+                const { conversation } = await chatService.joinGroupInvite(token);
+                get().upsertConversation(conversation);
+                get().setActiveConversationId(conversation._id);
+                return conversation;
+            },
 
             friends: [],
             friendRequests: [],
@@ -53,6 +111,9 @@ export const useChatStore = create(
                 try {
 
                     const {conversations} = await chatService.fetchConversations();
+                    const visibleIds = new Set(conversations.map(c => c._id));
+                    get().conversations.filter(c => c.isGroup && !visibleIds.has(c._id))
+                        .forEach(c => get().removeConversation(c._id));
                     set({
                         conversations: conversations,
                         loading: false
@@ -100,16 +161,16 @@ export const useChatStore = create(
                     await friendService.acceptRequest(requestId);
 
                     set((state) => {
-                        // 1. Remove from friendRequests 
+                        // 1. Remove from friendRequests
                         const newRequests = state.friendRequests.filter((req) => req._id !== requestId);
-                        
+
                         // 2. Optionally fetch friends to update list, or we could optimistic update if we had user data
                         // For now, just firing fetchFriends in background is safe enough without reloading app
-                        get().fetchFriends(); 
-                        
+                        get().fetchFriends();
+
                         return { friendRequests: newRequests };
                     });
-                    
+
                     return true;
                 } catch (error) {
                     console.error("Error accepting request:", error);
@@ -150,6 +211,7 @@ export const useChatStore = create(
             sendRequestAction: async (targetUserId) => {
                 try {
                     await friendService.sendRequest(targetUserId);
+                    // Optionally update state if needed, e.g. add to sent requests list
                 } catch (error) {
                     console.error("Error sending friend request:", error);
                     throw error;
@@ -192,45 +254,64 @@ export const useChatStore = create(
                 }
             },
 
-            fetchMessages: async (conversationId) => {
-                const {activeConversationId, messages} = get();
-                const {user} = useAuthStore.getState();
+            fetchMessages: async (conversationId, options = {}) => {
+                const { loadMore = false } = options;
+                const { activeConversationId, messages, messageLoading } = get();
+                const { user } = useAuthStore.getState();
 
                 const convoId = conversationId ?? activeConversationId;
                 if (!convoId) return;
 
                 const current = messages?.[convoId];
-                const nextCursor = current?.nextCursor === undefined ? "" : current?.nextCursor;
+                const isInitialized = Boolean(current?.initialized);
 
-                if (nextCursor === null) return;
+                if (!loadMore && isInitialized) {
+                    return;
+                }
 
-                set({messageLoading: true});
+                if (loadMore) {
+                    if (!isInitialized || !current?.hasMore || !current?.nextCursor || messageLoading) {
+                        return;
+                    }
+                } else if (messageLoading) {
+                    return;
+                }
+
+                const cursorToUse = loadMore ? current.nextCursor : "";
+
+                set({ messageLoading: true });
 
                 try {
-                    const {messages: fetched, cursor} = await chatService.fetchMessage(convoId, nextCursor);
+                    const { messages: fetched, cursor } = await chatService.fetchMessage(convoId, cursorToUse);
 
-                    const processed = fetched.map((m) => ({
-                        ...m,
-                        isOwn: m.senderId === user?._id,
-                    }));
+                    const myIdStr = user?._id?.toString();
+                    const processed = (fetched || []).map((m) => {
+                        const sId = (m.senderId?._id || m.senderId)?.toString();
+                        return {
+                            ...m,
+                            isOwn: Boolean(myIdStr && sId === myIdStr),
+                        };
+                    });
 
                     set((state) => {
-                        const prevItems = state.messages[convoId]?.items ?? [];
-                        
+                        if (!state.conversations.some(c => c._id === convoId)) return state;
+                        const prevItems = loadMore ? (state.messages[convoId]?.items ?? []) : [];
+
                         // Lọc bỏ tin nhắn đã tồn tại để tránh trùng key
                         const newItems = processed.filter(
                             (newItem) => !prevItems.some((prevItem) => prevItem._id === newItem._id)
                         );
 
-                        const merged = [...newItems, ...prevItems];
+                        const merged = loadMore ? [...newItems, ...prevItems] : processed;
 
                         return {
                             messages: {
                                 ...state.messages,
                                 [convoId]: {
                                     items: merged,
-                                    hasMore: !!cursor,
+                                    hasMore: Boolean(cursor),
                                     nextCursor: cursor ?? null,
+                                    initialized: true,
                                 }
                             }
                         };
@@ -238,7 +319,7 @@ export const useChatStore = create(
                 } catch (error) {
                     console.error("Error fetching messages:", error);
                 } finally {
-                    set({messageLoading: false});
+                    set({ messageLoading: false });
                 }
             },
 
@@ -417,7 +498,7 @@ export const useChatStore = create(
                         const updatedMessages = [...existingMessages];
                         const currentMessage = updatedMessages[msgIndex];
                         const currentReactions = currentMessage.reactions ? [...currentMessage.reactions] : [];
-                        
+
                         const existingReactionIndex = currentReactions.findIndex(r => {
                              const rUserId = typeof r.userId === 'object' ? r.userId._id : r.userId;
                              return rUserId.toString() === userId.toString();
@@ -438,8 +519,8 @@ export const useChatStore = create(
                             // Add
                             currentReactions.push({
                                 userId: {
-                                    _id: user._id, 
-                                    displayName: user.displayName, 
+                                    _id: user._id,
+                                    displayName: user.displayName,
                                     username: user.username
                                 }, // Optimistically use full user object with name
                                 reaction
@@ -467,12 +548,12 @@ export const useChatStore = create(
                 try {
                     // API Call
                     const { reactions } = await chatService.reactToMessage(messageId, reaction);
-                    
+
                     // Server returns standard data, update again to ensure consistency (e.g. timestamps, etc)
                      set((state) => {
                          const existingMessages = state.messages[conversationId]?.items || [];
                          const msgIndex = existingMessages.findIndex(m => m._id === messageId);
-                         
+
                          if (msgIndex !== -1) {
                              const updatedMessages = [...existingMessages];
                              updatedMessages[msgIndex] = {
@@ -498,7 +579,7 @@ export const useChatStore = create(
                     // Revert or fetch messages again could be done here
                 }
             },
-            
+
             markAsReadAction: async (conversationId) => {
                 const { user } = useAuthStore.getState();
                 try {
@@ -507,7 +588,33 @@ export const useChatStore = create(
                          const convoIndex = state.conversations.findIndex(c => c._id === conversationId);
                          if (convoIndex !== -1) {
                              const updatedConversations = [...state.conversations];
-                             
+
+                             // Reset unread count logic
+                             // Need to handle both Map and plain object structure just in case
+                             // Mongoose Maps often come as objects in JSON unless strictly typed
+
+                             // Simple approach: Just assume we receive an object map { userId: count, ... } from backend
+                             // But here we might just want to set the whole unreadCounts object/map for 'me' to 0
+
+
+                             // If it's a Map in local state (unlikely from JSON), convert or set.
+                             // Safest: clone object and set logic
+
+                             // However, since we track simple unread counts mostly effectively by just resetting:
+                             // Let's assume we refresh the conversation or just set it to 0 for current user locally.
+
+                             // But wait, the UI uses `unreadCounts` which might be the number itself or the map.
+                             // Let's check how UI renders unread count.
+
+                             // Looking at socket logic (line 500):
+                             // unreadCounts: isActive ? ... : unreadCounts + 1
+                             // It implies unreadCounts MIGHT be a number in the socket update logic?
+                             // Wait, line 498 checks `updatedConversations[conversationIndex].unreadCounts instanceof Map`
+
+                             // Let's fix the structure to be consistent.
+                             // Backend sends unreadCounts as Map-like object { "userId": 5 }.
+
+                             // If we want to reset for ME:
                              let newUnreadCounts = updatedConversations[convoIndex].unreadCounts;
                              if (newUnreadCounts && typeof newUnreadCounts === 'object') {
                                  newUnreadCounts = { ...newUnreadCounts, [user._id]: 0 };
@@ -528,7 +635,7 @@ export const useChatStore = create(
 
                     // 2. Call API
                     await chatService.markAsRead(conversationId);
-                    
+
                 } catch (error) {
                     console.error("Failed to mark as read:", error);
                 }
@@ -617,7 +724,7 @@ export const useChatStore = create(
                 set((state) => {
                     const existingMessages = state.messages[convoId]?.items || [];
                     const updatedItems = existingMessages.filter(m => m._id !== messageId);
-                    
+
                     return {
                         messages: {
                             ...state.messages,
@@ -687,9 +794,7 @@ export const useChatStore = create(
             addMembersAction: async (conversationId, memberIds) => {
                 const data = await chatService.addMembers(conversationId, memberIds);
                 if (data.conversation) {
-                    set((state) => ({
-                        conversations: state.conversations.map(c => c._id === conversationId ? data.conversation : c)
-                    }));
+                    get().upsertConversation(data.conversation);
                 }
                 return data;
             },
@@ -697,9 +802,7 @@ export const useChatStore = create(
             removeMemberAction: async (conversationId, memberId) => {
                 const data = await chatService.removeMember(conversationId, memberId);
                 if (data.conversation) {
-                    set((state) => ({
-                        conversations: state.conversations.map(c => c._id === conversationId ? data.conversation : c)
-                    }));
+                    get().upsertConversation(data.conversation);
                 }
                 return data;
             },
@@ -707,27 +810,19 @@ export const useChatStore = create(
             updateMemberRoleAction: async (conversationId, memberId, role) => {
                 const data = await chatService.updateMemberRole(conversationId, memberId, role);
                 if (data.conversation) {
-                    set((state) => ({
-                        conversations: state.conversations.map(c => c._id === conversationId ? data.conversation : c)
-                    }));
+                    get().upsertConversation(data.conversation);
                 }
                 return data;
             },
 
             leaveGroupAction: async (conversationId) => {
                 await chatService.leaveGroup(conversationId);
-                set((state) => ({
-                    conversations: state.conversations.filter(c => c._id !== conversationId),
-                    activeConversationId: state.activeConversationId === conversationId ? null : state.activeConversationId
-                }));
+                get().removeConversation(conversationId);
             },
 
             disbandGroupAction: async (conversationId) => {
                 await chatService.disbandGroup(conversationId);
-                set((state) => ({
-                    conversations: state.conversations.filter(c => c._id !== conversationId),
-                    activeConversationId: state.activeConversationId === conversationId ? null : state.activeConversationId
-                }));
+                get().removeConversation(conversationId);
             },
 
             createPollAction: async (conversationId, question, options, allowMultiple) => {
@@ -783,16 +878,18 @@ export const useChatStore = create(
                         const convoId = newMessage.conversationId;
                         const isActive = state.activeConversationId === convoId;
 
-                        // 1. Update Messages
+                        // 1. Update Messages (only append if this conversation's messages were already initialized)
                         let updatedMessagesMap = { ...state.messages };
-                        const existingItems = updatedMessagesMap[convoId]?.items || [];
-                        const isDuplicate = existingItems.some(item => item._id === newMessage._id);
+                        if (updatedMessagesMap[convoId]?.initialized) {
+                            const existingItems = updatedMessagesMap[convoId]?.items || [];
+                            const isDuplicate = existingItems.some(item => item._id === newMessage._id);
 
-                        if (!isDuplicate) {
-                            updatedMessagesMap[convoId] = {
-                                ...(updatedMessagesMap[convoId] || { hasMore: false, nextCursor: null }),
-                                items: [...existingItems, { ...newMessage, isOwn }]
-                            };
+                            if (!isDuplicate) {
+                                updatedMessagesMap[convoId] = {
+                                    ...updatedMessagesMap[convoId],
+                                    items: [...existingItems, { ...newMessage, isOwn }]
+                                };
+                            }
                         }
 
                         // 2. Update Conversations List
@@ -815,8 +912,8 @@ export const useChatStore = create(
                                 },
                                 updatedAt: new Date().toISOString(),
                                 lastMessageAt: new Date().toISOString(),
-                                unreadCounts: isActive 
-                                    ? updatedConversations[conversationIndex].unreadCounts 
+                                unreadCounts: isActive
+                                    ? updatedConversations[conversationIndex].unreadCounts
                                     : (typeof currentCounts === 'object' && myId ? { ...currentCounts, [myId]: currentVal + 1 } : currentCounts)
                             };
                             updatedConversations.splice(conversationIndex, 1);
@@ -832,12 +929,23 @@ export const useChatStore = create(
                         };
                     });
 
-                    // Thông báo tin nhắn mới nếu không đang mở hội thoại này
+                    // Thông báo tin nhắn mới & thông báo khi được nhắc tên (@mention / @everyone)
                     const state = get();
                     const convoId = newMessage.conversationId;
                     const isActive = state.activeConversationId === convoId;
-                    if (!isOwn && !isActive) {
-                        toast.info("Tin nhắn mới: " + (newMessage.content || "Đã gửi một tệp/ảnh"));
+                    const currentUser = useAuthStore.getState().user;
+                    const rawContent = newMessage.content || "";
+                    const myUsername = currentUser?.username;
+                    const isEveryoneTagged = /(?:^|\s)@(?:everyone|all)\b/i.test(rawContent);
+                    const isMeTagged = myUsername
+                        ? new RegExp(`(?:^|\\s)@${myUsername.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}\\b`, 'i').test(rawContent)
+                        : false;
+
+                    if (!isOwn && (isEveryoneTagged || isMeTagged)) {
+                        const senderName = newMessage.senderId?.displayName || newMessage.senderId?.username || "Ai đó";
+                        toast.info(`📣 ${senderName} đã nhắc đến bạn: "${rawContent.slice(0, 80)}"`);
+                    } else if (!isOwn && !isActive) {
+                        toast.info("Tin nhắn mới: " + (rawContent || "Đã gửi một tệp/ảnh"));
                     }
                 });
 
@@ -885,26 +993,18 @@ export const useChatStore = create(
 
                 socket.on("conversationUpdated", (updatedConvo) => {
                     if (!updatedConvo?._id) return;
-                    set((state) => ({
-                        conversations: state.conversations.map(c => c._id === updatedConvo._id ? updatedConvo : c)
-                    }));
+                    get().upsertConversation(updatedConvo);
                 });
 
                 socket.on("conversationRemoved", ({ conversationId }) => {
                     if (!conversationId) return;
-                    set((state) => ({
-                        conversations: state.conversations.filter(c => c._id !== conversationId),
-                        activeConversationId: state.activeConversationId === conversationId ? null : state.activeConversationId
-                    }));
+                    get().removeConversation(conversationId);
                 });
 
                 socket.on("groupDisbanded", ({ conversationId, groupName }) => {
                     if (!conversationId) return;
                     toast.info(`Nhóm "${groupName || ""}" đã được giải tán bởi quản trị viên.`);
-                    set((state) => ({
-                        conversations: state.conversations.filter(c => c._id !== conversationId),
-                        activeConversationId: state.activeConversationId === conversationId ? null : state.activeConversationId
-                    }));
+                    get().removeConversation(conversationId);
                 });
 
                 socket.on("messageReaction", ({ messageId, reactions, conversationId }) => {
@@ -1023,7 +1123,7 @@ export const useChatStore = create(
                     if (friendObj) {
                         set((state) => {
                             const friendId = friendObj._id?.toString();
-                            const cleanRequests = (state.friendRequests || []).filter(r => 
+                            const cleanRequests = (state.friendRequests || []).filter(r =>
                                 r._id !== requestId && r.from?._id?.toString() !== friendId && r.from?.toString() !== friendId
                             );
                             const exists = (state.friends || []).some(f => f._id?.toString() === friendId);
@@ -1050,6 +1150,17 @@ export const useChatStore = create(
                         }));
                     }
                 });
+
+                socket.off("chatScreenDrawingUpdated");
+                socket.on("chatScreenDrawingUpdated", (payload) => {
+                    if (!payload?.conversationId) return;
+                    set((state) => ({
+                        chatDrawings: {
+                            ...state.chatDrawings,
+                            [payload.conversationId]: payload,
+                        },
+                    }));
+                });
             },
 
             unsubscribeFromMessages: () => {
@@ -1067,6 +1178,7 @@ export const useChatStore = create(
                     socket.off("newFriendRequest");
                     socket.off("friendRequestAccepted");
                     socket.off("friendRequestDeclined");
+                    socket.off("chatScreenDrawingUpdated");
                 }
             },
 
@@ -1079,6 +1191,7 @@ export const useChatStore = create(
                 friends: state.friends,
                 friendRequests: state.friendRequests,
                 activeConversationId: state.activeConversationId,
+                chatDrawings: state.chatDrawings,
             }),
         }
     )

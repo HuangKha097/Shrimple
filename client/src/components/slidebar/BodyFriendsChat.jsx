@@ -1,17 +1,25 @@
-import ChatCard from '../chat/ChatCard.jsx';
 
-export default function BodyFriendsChat({ convo }) {
-    const friendConversations = convo.filter((conversation) => !conversation.isGroup);
+import ChatCard from "../chat/ChatCard.jsx";
+
+const BodyFriendsChat = ({convo}) => {
+
+    const friendConversations = convo.filter(c => !c.isGroup);
 
     if (friendConversations.length === 0) {
-        return <div style={{ padding: 20, textAlign: 'center', color: '#888' }}>No friend yet!</div>;
+        return <div style={{padding: 20, textAlign: 'center', color: '#888'}}>No friend yet!</div>;
     }
 
     return (
         <div className="chat-list">
-            {friendConversations.map((conversation) => (
-                <ChatCard key={conversation._id} props={conversation} />
-            ))}
+            {convo.length > 0 &&convo.map((c) =>
+                <ChatCard
+                    key={c._id}
+                    props={c}
+                />
+            )}
+
         </div>
     );
-}
+};
+
+export default BodyFriendsChat;

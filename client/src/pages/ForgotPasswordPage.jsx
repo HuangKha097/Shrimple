@@ -1,356 +1,193 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { motion as Motion, useReducedMotion } from 'motion/react';
+import { ArrowLeft, Check, Mail, KeyRound, LockKeyhole } from 'lucide-react';
 import { useAuthStore } from '../stores/useAuthStore';
+import authStyles from '../assets/css/SignInPage.module.scss';
 import styles from '../assets/css/ForgotPasswordPage.module.scss';
-import { Loader2, ArrowLeft, Key, Mail, Lock, Eye, EyeOff, Check, ShieldAlert } from 'lucide-react';
-import { toast } from 'sonner';
-import OTPInput from "@/components/lightswind-pro/otp-input";
+import SideRays from '../components/ui/animate/SideRays';
+import XInput from '../components/ui/animate/XInput';
+import XButton from '../components/ui/animate/XButton';
+import OTPInput from '@/components/lightswind-pro/otp-input';
+
+const footerLinks = ['about', 'download', 'help', 'terms', 'privacy', 'cookies', 'accessibility', 'advertising'];
 
 const ForgotPasswordPage = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
+    const reducedMotion = useReducedMotion();
     const { forgotPassword, verifyOtp, resetPassword, loading } = useAuthStore();
-
-    // Flow State: 1 = Email, 2 = OTP, 3 = New Password
+    const headingRef = useRef(null);
     const [step, setStep] = useState(1);
     const [email, setEmail] = useState('');
     const [otp, setOtp] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
-    // Resend OTP timer state
     const [resendTimer, setResendTimer] = useState(60);
     const [isResendDisabled, setIsResendDisabled] = useState(true);
+    const [error, setError] = useState('');
 
-    // Live password checklist validation
-    const passwordRequirements = {
+    const requirements = {
         minLength: newPassword.length >= 6,
         hasNumber: /\d/.test(newPassword),
         hasLetter: /[a-zA-Z]/.test(newPassword),
     };
+    const score = Object.values(requirements).filter(Boolean).length
+        + Number(newPassword.length >= 10 && /[A-Z]/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword));
+    const strength = ['empty', 'weak', 'fair', 'good', 'strong'][score];
+    const title = t(`recovery.title${step}`);
+    const submitLabel = t(`recovery.submit${step}`);
 
-    // Calculate password strength
-    const getPasswordStrength = () => {
-        let score = 0;
-        if (passwordRequirements.minLength) score += 1;
-        if (passwordRequirements.hasNumber) score += 1;
-        if (passwordRequirements.hasLetter) score += 1;
-        if (newPassword.length >= 10 && /[A-Z]/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword)) score += 1;
-
-        if (score === 0) return { text: 'Empty', class: '' };
-        if (score <= 1) return { text: 'Weak', class: 'weak' };
-        if (score === 2) return { text: 'Fair', class: 'fair' };
-        if (score === 3) return { text: 'Good', class: 'good' };
-        return { text: 'Strong', class: 'strong' };
-    };
-
-    const passwordStrength = getPasswordStrength();
-
-    // Timer countdown effect for OTP Resend
     useEffect(() => {
-        let interval = null;
-        if (step === 2 && isResendDisabled) {
-            interval = setInterval(() => {
-                setResendTimer((prev) => {
-                    if (prev <= 1) {
-                        setIsResendDisabled(false);
-                        clearInterval(interval);
-                        return 0;
-                    }
-                    return prev - 1;
-                });
-            }, 1000);
-        }
-        return () => {
-            if (interval) clearInterval(interval);
-        };
+        if (step !== 2 || !isResendDisabled) return;
+        const interval = setInterval(() => {
+            setResendTimer((previous) => Math.max(0, previous - 1));
+        }, 1000);
+        return () => clearInterval(interval);
     }, [step, isResendDisabled]);
 
-    // Submit Action for Phase 1: Send OTP
-    const handleSendOtp = async (e) => {
-        e.preventDefault();
-        if (!email) {
-            toast.error('Please enter a valid email.');
-            return;
-        }
+    useEffect(() => {
+        if (resendTimer === 0) setIsResendDisabled(false);
+    }, [resendTimer]);
 
-        const res = await forgotPassword(email);
-        if (res?.success) {
+    useEffect(() => {
+        // Announce a new step without taking focus on the initial page load.
+        if (step > 1) headingRef.current?.focus();
+    }, [step]);
+
+    const restartTimer = () => {
+        setResendTimer(60);
+        setIsResendDisabled(true);
+    };
+
+    const handleSendOtp = async (event) => {
+        event.preventDefault();
+        setError('');
+        const result = await forgotPassword(email);
+        if (result?.success) {
             setStep(2);
-            setResendTimer(60);
-            setIsResendDisabled(true);
-        }
+            restartTimer();
+        } else setError('sendError');
     };
 
-    // Resend OTP Action
     const handleResendOtp = async () => {
-        const res = await forgotPassword(email);
-        if (res?.success) {
-            setResendTimer(60);
-            setIsResendDisabled(true);
+        setError('');
+        const result = await forgotPassword(email);
+        if (result?.success) {
+            restartTimer();
             setOtp('');
-        }
+        } else setError('sendError');
     };
 
-    // Submit Action for Phase 2: Verify OTP
-    const handleVerifyOtp = async (e) => {
-        if (e) e.preventDefault();
-        if (otp.length < 6) {
-            toast.error('Please enter the complete 6-digit OTP code.');
+    const handleVerifyOtp = async (event) => {
+        event.preventDefault();
+        setError('');
+        if (otp.length !== 6) {
+            setError('incompleteCode');
             return;
         }
-
-        const res = await verifyOtp(email, otp);
-        if (res?.success) {
-            setStep(3);
-        }
+        const result = await verifyOtp(email, otp);
+        if (result?.success) setStep(3);
+        else setError('verifyError');
     };
 
-    // Submit Action for Phase 3: Reset Password
-    const handleResetPassword = async (e) => {
-        e.preventDefault();
-        if (!passwordRequirements.minLength || !passwordRequirements.hasNumber || !passwordRequirements.hasLetter) {
-            toast.error('Password does not meet the security requirements.');
+    const handleResetPassword = async (event) => {
+        event.preventDefault();
+        setError('');
+        if (!Object.values(requirements).every(Boolean)) {
+            setError('requirementsError');
             return;
         }
-
         if (newPassword !== confirmPassword) {
-            toast.error('Passwords do not match.');
+            setError('mismatch');
             return;
         }
+        const result = await resetPassword(email, otp, newPassword);
+        if (result?.success) navigate('/signin');
+        else setError('resetError');
+    };
 
-        const res = await resetPassword(email, otp, newPassword);
-        if (res?.success) {
-            navigate('/signin');
+    const goBack = () => {
+        setError('');
+        if (step === 2) setOtp('');
+        if (step === 3) {
+            setNewPassword('');
+            setConfirmPassword('');
         }
+        setStep((previous) => previous - 1);
     };
 
     return (
-        <div className={styles['page-wrapper']}>
-            {/* Left Brand Section */}
-            <div className={styles['hero-section']}>
-                <img 
-                    src="/shrimple_brand_hero_image.png" 
-                    alt="Shrimple Life" 
-                    className={styles['hero-image']}
-                />
-                <div className={styles.branding}>
-                    <h1 className={styles['logo-text']}>Shrimple</h1>
-                    <p className={styles.tagline}>Socializing made simple.</p>
+        <div className={`${authStyles['page-wrapper']} ${reducedMotion ? styles['static-background'] : ''}`}>
+            {!reducedMotion && <SideRays origin="top-left" speed={1.6} rayColor1="#f97316" rayColor2="#fb923c" intensity={1.8} spread={2.2} opacity={0.65} falloff={1.5} />}
+            <main className={authStyles['main-content']}>
+                <div className={authStyles['brand-column']}>
+                    <Motion.div className={authStyles['brand-content']} initial={reducedMotion ? false : { opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6 }}>
+                        <Motion.img src="/logo_remove_bg.png" alt="Shrimple" className={authStyles['brand-logo']} animate={reducedMotion ? undefined : { y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }} />
+                    </Motion.div>
                 </div>
-            </div>
-
-            {/* Right Authentication Section */}
-            <div className={styles['auth-section']}>
-                <div className={styles['form-container']}>
-                    {/* Header Details based on step */}
-                    {step === 1 && (
-                        <>
-                            <h2 className={styles.title}>Forgot Password?</h2>
-                            <p className={styles.subtitle}>Enter your email to receive a 6-digit verification code.</p>
-                        </>
-                    )}
-                    {step === 2 && (
-                        <>
-                            <h2 className={styles.title}>Enter OTP Code</h2>
-                            <p className={styles.subtitle}>A 6-digit code has been sent to <strong>{email}</strong>.</p>
-                        </>
-                    )}
-                    {step === 3 && (
-                        <>
-                            <h2 className={styles.title}>Reset Password</h2>
-                            <p className={styles.subtitle}>Create a strong, new secure password for your Shrimple account.</p>
-                        </>
-                    )}
-
-                    {/* Progress Step Dot Indicators */}
-                    <div className={styles['step-indicator']}>
-                        <div className={`${styles['step-dot']} ${step >= 1 ? styles.active : ''}`}></div>
-                        <div className={`${styles['step-dot']} ${step >= 2 ? styles.active : ''}`}></div>
-                        <div className={`${styles['step-dot']} ${step >= 3 ? styles.active : ''}`}></div>
+                <div className={authStyles['auth-column']}>
+                    <div className={authStyles['mobile-logo-wrapper']}>
+                        <img src="/logo_remove_bg.png" alt="Shrimple" className={authStyles['mobile-logo']} />
                     </div>
-
-                    {/* Form Layout rendering based on active step */}
-                    {step === 1 && (
-                        <form onSubmit={handleSendOtp}>
-                            <div className={styles['form-group']}>
-                                <label>Email Address</label>
-                                <div className={styles['input-wrapper']}>
-                                    <input
-                                        type="email"
-                                        placeholder="name@example.com"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        required
-                                    />
+                    <Motion.div className={authStyles['auth-card']} initial={reducedMotion ? false : { opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}>
+                        <p className={styles.eyebrow}>{t('recovery.eyebrow')}</p>
+                        <h1 ref={headingRef} tabIndex={-1} className={`${authStyles['hero-heading']} ${styles.title}`}>{title}</h1>
+                        <p className={styles.subtitle}>
+                            {step === 2 ? <>{t('recovery.subtitle2')} <strong>{email}</strong>.</> : t(`recovery.subtitle${step}`)}
+                        </p>
+                        <ol className={styles.steps} aria-label={t('recovery.progress')}>
+                            {[1, 2, 3].map((number) => (
+                                <li key={number} className={number <= step ? styles.active : ''} aria-current={number === step ? 'step' : undefined}>
+                                    <span aria-hidden="true">{number < step ? <Check size={14} /> : number}</span>
+                                    <span>{t(`recovery.step${number}`)}</span>
+                                </li>
+                            ))}
+                        </ol>
+                        <form className={authStyles['auth-form']} onSubmit={step === 1 ? handleSendOtp : step === 2 ? handleVerifyOtp : handleResetPassword} aria-busy={loading}>
+                            {step === 1 && <XInput id="recovery-email" name="email" type="email" label={t('recovery.email')} value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required disabled={loading} />}
+                            {step === 2 && <>
+                                <div className={styles['code-group']} role="group" aria-label={t('recovery.code')}>
+                                    <p>{t('recovery.code')}</p>
+                                    <OTPInput length={6} value={otp} onChange={setOtp} disabled={loading} className={styles.otp} slotClassName={styles['otp-slot']} error={Boolean(error)} />
                                 </div>
-                            </div>
-
-                            <button type="submit" className={styles['submit-btn']} disabled={loading}>
-                                {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                                    <>
-                                        <span>Send Verification Code</span>
-                                        <Mail size={18} />
-                                    </>
-                                )}
-                            </button>
+                                <div className={styles.resend}>
+                                    <span>{isResendDisabled ? t('recovery.resendIn', { seconds: resendTimer }) : t('recovery.noCode')}</span>
+                                    <button type="button" disabled={isResendDisabled || loading} onClick={handleResendOtp}>{t('recovery.resend')}</button>
+                                </div>
+                            </>}
+                            {step === 3 && <>
+                                <XInput id="new-password" name="newPassword" type="password" label={t('recovery.newPassword')} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} autoComplete="new-password" required disabled={loading} aria-describedby="password-requirements" />
+                                <XInput id="confirm-password" name="confirmPassword" type="password" label={t('recovery.confirmPassword')} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" required disabled={loading} />
+                                <div className={styles.strength}>
+                                    <div className={styles['strength-bar']} aria-hidden="true">
+                                        {[1, 2, 3, 4].map((number) => <span key={number} className={number <= score ? styles[strength] : ''} />)}
+                                    </div>
+                                    <p>{t('recovery.strength')}: <strong>{t(`recovery.${strength}`)}</strong></p>
+                                    <ul id="password-requirements">
+                                        {Object.entries(requirements).map(([name, met]) => <li key={name} className={met ? styles.met : ''}><Check size={14} aria-hidden="true" />{t(`recovery.${name}`)}</li>)}
+                                    </ul>
+                                </div>
+                            </>}
+                            {error && <p className={styles.error} role="alert">{t(`recovery.${error}`)}</p>}
+                            <XButton type="submit" size="lg" loading={loading} aria-label={submitLabel} shimmer={!reducedMotion} className={styles.submit}>
+                                {submitLabel}{step === 1 ? <Mail size={18} /> : step === 2 ? <KeyRound size={18} /> : <LockKeyhole size={18} />}
+                            </XButton>
+                            <span className={styles['sr-only']} role="status">{loading ? t('common.loading') : ''}</span>
                         </form>
-                    )}
-
-                    {step === 2 && (
-                        <form onSubmit={handleVerifyOtp}>
-                            <div className={styles['form-group']}>
-                                <label>6-Digit Code</label>
-                                <div style={{ margin: '1.6rem 0 1.2rem' }}>
-                                    <OTPInput
-                                        length={6}
-                                        value={otp}
-                                        onChange={setOtp}
-                                        disabled={loading}
-                                        autoFocus={step === 2}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className={styles['timer-container']}>
-                                <div>
-                                    {isResendDisabled ? (
-                                        <span>Resend code in: <strong className={styles['timer-text']}>{resendTimer}s</strong></span>
-                                    ) : (
-                                        <span>Didn't receive code?</span>
-                                    )}
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleResendOtp}
-                                    disabled={isResendDisabled || loading}
-                                    className={styles['resend-btn']}
-                                >
-                                    Resend OTP
-                                </button>
-                            </div>
-
-                            <button type="submit" className={styles['submit-btn']} disabled={loading}>
-                                {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                                    <>
-                                        <span>Verify OTP Code</span>
-                                        <Key size={18} />
-                                    </>
-                                )}
-                            </button>
-                        </form>
-                    )}
-
-                    {step === 3 && (
-                        <form onSubmit={handleResetPassword}>
-                            {/* New Password field */}
-                            <div className={styles['form-group']}>
-                                <label>New Password</label>
-                                <div className={styles['input-wrapper']}>
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="••••••••"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        required
-                                    />
-                                    <button 
-                                        type="button"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className={styles['eye-btn']}
-                                    >
-                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Confirm Password field */}
-                            <div className={styles['form-group']}>
-                                <label>Confirm New Password</label>
-                                <div className={styles['input-wrapper']}>
-                                    <input
-                                        type={showConfirmPassword ? "text" : "password"}
-                                        placeholder="••••••••"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        required
-                                    />
-                                    <button 
-                                        type="button"
-                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                        className={styles['eye-btn']}
-                                    >
-                                        {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Password strength checklist display */}
-                            <div className={styles['strength-container']}>
-                                <div className={styles['strength-bar']}>
-                                    <div className={`${styles['strength-segment']} ${newPassword ? styles[passwordStrength.class] : ''}`}></div>
-                                    <div className={`${styles['strength-segment']} ${newPassword && ['fair', 'good', 'strong'].includes(passwordStrength.class) ? styles[passwordStrength.class] : ''}`}></div>
-                                    <div className={`${styles['strength-segment']} ${newPassword && ['good', 'strong'].includes(passwordStrength.class) ? styles[passwordStrength.class] : ''}`}></div>
-                                    <div className={`${styles['strength-segment']} ${newPassword && passwordStrength.class === 'strong' ? styles[passwordStrength.class] : ''}`}></div>
-                                </div>
-                                <div className={styles['strength-text']}>
-                                    <span>Password Security: <strong>{passwordStrength.text}</strong></span>
-                                </div>
-                                
-                                <ul className={styles['requirement-list']}>
-                                    <li className={`${styles['requirement-item']} ${passwordRequirements.minLength ? styles.met : ''}`}>
-                                        <span className={styles.bullet}></span>
-                                        <span>At least 6 characters</span>
-                                    </li>
-                                    <li className={`${styles['requirement-item']} ${passwordRequirements.hasNumber ? styles.met : ''}`}>
-                                        <span className={styles.bullet}></span>
-                                        <span>Contains at least one number</span>
-                                    </li>
-                                    <li className={`${styles['requirement-item']} ${passwordRequirements.hasLetter ? styles.met : ''}`}>
-                                        <span className={styles.bullet}></span>
-                                        <span>Contains at least one letter</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <button type="submit" className={styles['submit-btn']} disabled={loading}>
-                                {loading ? <Loader2 className="animate-spin" size={20} /> : (
-                                    <>
-                                        <span>Reset Password</span>
-                                        <Lock size={18} />
-                                    </>
-                                )}
-                            </button>
-                        </form>
-                    )}
-
-                    {/* Step Controls / Back Option */}
-                    <p className={styles['footer-text']}>
-                        {step > 1 ? (
-                            <button 
-                                onClick={() => {
-                                    setStep(step - 1);
-                                    if (step === 2) setOtp(Array(6).fill(''));
-                                    if (step === 3) {
-                                        setNewPassword('');
-                                        setConfirmPassword('');
-                                    }
-                                }}
-                                style={{ background: 'none', border: 'none', color: 'var(--primary-color)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 auto', fontSize: '1.5rem', fontWeight: 700 }}
-                            >
-                                <ArrowLeft size={16} />
-                                Back to previous step
-                            </button>
-                        ) : (
-                            <Link to="/signin" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                                <ArrowLeft size={16} />
-                                Back to Sign In
-                            </Link>
-                        )}
-                    </p>
+                        <div className={styles.back}>
+                            {step > 1 ? <button type="button" onClick={goBack} disabled={loading}><ArrowLeft size={16} />{t('recovery.back')}</button> : <Link to="/signin"><ArrowLeft size={16} />{t('recovery.signIn')}</Link>}
+                        </div>
+                    </Motion.div>
                 </div>
-            </div>
+            </main>
+            <footer className={authStyles['x-footer']}>
+                <nav className={authStyles['footer-nav']}>
+                    {footerLinks.map((name) => <a key={name} href={`#${name}`} onClick={(event) => event.preventDefault()}>{t(`recovery.footer.${name}`)}</a>)}
+                    <span>© 2026 Shrimple Corp.</span>
+                </nav>
+            </footer>
         </div>
     );
 };

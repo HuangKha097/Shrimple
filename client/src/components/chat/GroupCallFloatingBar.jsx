@@ -1,8 +1,8 @@
-import React from 'react';
+
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/GroupCall.module.scss';
 import { useGroupCallStore } from '../../stores/useGroupCallStore';
-import { Mic, MicOff, PhoneOff, Radio } from 'lucide-react';
+import { Mic, MicOff, PhoneOff } from 'lucide-react';
 
 const cx = classNames.bind(styles);
 

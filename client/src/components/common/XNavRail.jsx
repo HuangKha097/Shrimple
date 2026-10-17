@@ -1,18 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { 
-    MessageSquare, 
-    Newspaper, 
-    Video, 
-    Bookmark, 
-    Users, 
-    User, 
-    Settings, 
-    LogOut,
-    SquarePen,
-    Feather,
-    MoreHorizontal
-} from 'lucide-react';
+import { User, LogOut, Feather, MoreHorizontal } from 'lucide-react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/XNavRail.module.scss';
 import { useTranslation } from 'react-i18next';
@@ -21,6 +9,7 @@ import { useChatStore } from '../../stores/useChatStore';
 import { motion as Motion } from 'motion/react';
 import defaultAvatar from '../../../public/favicon.png';
 import { ASSET_BASE_URL } from '../../config/env';
+import { getNavigationItems, hasUnreadMessages as checkUnreadMessages, isNavigationActive, openPostComposer } from '../../config/navigation.js';
 
 const cx = classNames.bind(styles);
 
@@ -33,18 +22,7 @@ export default function XNavRail({ onOpenPostModal }) {
     const location = useLocation();
     const [showUserMenu, setShowUserMenu] = useState(false);
 
-    const hasUnreadMessages = conversations.some(c => {
-        if (!c || !c.unreadCounts) return false;
-        let count = 0;
-        if (c.unreadCounts instanceof Map) {
-            count = c.unreadCounts.get(user?._id) || 0;
-        } else if (typeof c.unreadCounts === 'object') {
-            count = c.unreadCounts[user?._id] || 0;
-        } else if (typeof c.unreadCounts === 'number') {
-            count = c.unreadCounts;
-        }
-        return count > 0;
-    });
+    const hasUnreadMessages = checkUnreadMessages(conversations, user?._id);
 
     const getAvatarSrc = (url) => {
         if (!url) return defaultAvatar;
@@ -58,24 +36,13 @@ export default function XNavRail({ onOpenPostModal }) {
         }
     };
 
-    const navItems = [
-        { path: '/feed', icon: <Newspaper size={24} strokeWidth={2} />, label: t('nav.feed') },
-        { path: '/chat', icon: <MessageSquare size={24} strokeWidth={2} />, label: t('nav.chat') },
-        { path: '/video', icon: <Video size={24} strokeWidth={2} />, label: t('nav.video') },
-        { path: '/feed/friends', icon: <Users size={24} strokeWidth={2} />, label: t('nav.friends') },
-        { path: user?._id ? `/feed/profile/${user._id}` : '/feed', icon: <User size={24} strokeWidth={2} />, label: t('nav.profile') },
-    ];
+    const navItems = getNavigationItems(user?._id);
 
     const handlePostClick = () => {
         if (onOpenPostModal) {
             onOpenPostModal();
         } else {
-            navigate('/feed');
-            setTimeout(() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                const textarea = document.querySelector('textarea[data-composer-input]');
-                if (textarea) textarea.focus();
-            }, 100);
+            openPostComposer(navigate);
         }
     };
 
@@ -103,19 +70,20 @@ export default function XNavRail({ onOpenPostModal }) {
             {/* Middle: Navigation Links */}
             <nav className={cx('nav-links')}>
                 {navItems.map((item) => {
-                    const isActive = item.path === '/chat' 
-                        ? location.pathname.startsWith('/chat') 
-                        : (item.path === '/feed' ? location.pathname === '/feed' : location.pathname.startsWith(item.path));
+                    const isActive = isNavigationActive(item, location.pathname);
+                    const Icon = item.icon;
+                    const label = t(item.labelKey);
                     return (
                         <NavLink
-                            key={item.path}
+                            key={item.id}
                             to={item.path}
+                            end={item.id === 'feed'}
                             className={cx('nav-item', { active: isActive })}
-                            title={item.label}
-                            aria-label={item.label}
+                            title={label}
+                            aria-label={label}
                         >
                             <div className={cx('icon-wrapper')}>
-                                {item.icon}
+                                <Icon size={24} strokeWidth={2} />
                                 {item.path === '/chat' && hasUnreadMessages && (
                                     <span className={cx('unread-red-dot')} />
                                 )}
@@ -123,23 +91,10 @@ export default function XNavRail({ onOpenPostModal }) {
                                     <span className={cx('unread-red-dot')} />
                                 )}
                             </div>
-                            <span className={cx('nav-label')}>{item.label}</span>
+                            <span className={cx('nav-label')}>{label}</span>
                         </NavLink>
                     );
                 })}
-
-                {/* Settings Item */}
-                <NavLink
-                    to="/setting"
-                    className={({ isActive }) => cx('nav-item', { active: isActive || location.pathname.startsWith('/setting') })}
-                    title={t('nav.settings')}
-                    aria-label={t('nav.settings')}
-                >
-                    <div className={cx('icon-wrapper')}>
-                        <Settings size={24} strokeWidth={2} />
-                    </div>
-                    <span className={cx('nav-label')}>{t('nav.settings')}</span>
-                </NavLink>
 
                 {/* Post Action Button */}
                 <Motion.button

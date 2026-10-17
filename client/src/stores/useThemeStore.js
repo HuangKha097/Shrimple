@@ -1,12 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { animateThemeChange } from '../lib/motion';
 
-function applyTheme({ isLight, primaryColor }) {
+function applyTheme({ primaryColor }) {
     const root = document.documentElement;
-    root.classList.toggle('light', isLight);
-    root.classList.toggle('dark', !isLight);
-    root.style.colorScheme = isLight ? 'light' : 'dark';
+    root.classList.remove('light');
+    root.classList.add('dark');
+    root.style.colorScheme = 'dark';
     const color = /^#[0-9a-f]{6}$/i.test(primaryColor) ? primaryColor : '#e56d32';
     const rgb = color.slice(1).match(/../g).map(value => parseInt(value, 16));
     const luminance = rgb.map(value => {
@@ -19,21 +18,20 @@ function applyTheme({ isLight, primaryColor }) {
 }
 
 export const useThemeStore = create(persist((set, get) => ({
-    isLight: true,
+    isLight: false,
     primaryColor: '#e56d32',
-    toggleTheme: () => get().setTheme(!get().isLight),
-    setTheme: (isLight) => {
-        const next = Boolean(isLight);
-        if (next === get().isLight) return;
-        set({ isLight: next });
-        animateThemeChange(() => applyTheme(get()));
-    },
     setPrimaryColor: (primaryColor) => {
         if (!/^#[0-9a-f]{6}$/i.test(primaryColor)) return;
         set({ primaryColor }); applyTheme(get());
     },
 }), {
     name: 'theme-storage',
+    partialize: (state) => ({ primaryColor: state.primaryColor }),
+    merge: (persisted, current) => ({
+        ...current,
+        primaryColor: /^#[0-9a-f]{6}$/i.test(persisted?.primaryColor) ? persisted.primaryColor : current.primaryColor,
+        isLight: false,
+    }),
     onRehydrateStorage: () => state => { if (state) applyTheme(state); },
 }));
 

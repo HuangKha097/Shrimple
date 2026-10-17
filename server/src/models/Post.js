@@ -133,9 +133,5 @@ const postSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-postSchema.index({ author: 1, privacy: 1, createdAt: -1 });
-postSchema.index({ likes: 1, privacy: 1, createdAt: -1 });
-postSchema.index({ "comments.postedBy": 1, privacy: 1, createdAt: -1 });
-
 const Post = mongoose.model("Post", postSchema);
 export default Post;

@@ -1,5 +1,6 @@
 import './polyfills';
 import './i18n';
+import './stores/useThemeStore.js';
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './reset.css'

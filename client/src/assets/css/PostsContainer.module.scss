@@ -168,6 +168,11 @@
   width: fit-content;
   align-self: center;
 
+  @media (max-width: 768px) {
+    // Leave room for the 48px mobile bar and the 53px tabs.
+    top: 112px;
+  }
+
   &:hover:not(:disabled) {
     background-color: #ea580c;
     transform: scale(1.05);

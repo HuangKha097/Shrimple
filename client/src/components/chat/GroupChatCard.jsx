@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from "react-router-dom";
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/ChatCard.module.scss';
@@ -6,7 +5,7 @@ import default_avt from "../../../public/favicon.png";
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { ASSET_BASE_URL } from "../../config/env.js";
-import { Image, Mic, Video, FileText, MapPin, PhoneCall } from 'lucide-react';
+import { Image, Mic, Video, FileText, MapPin, PhoneCall, BarChart2 } from 'lucide-react';
 
 const cx = classNames.bind(styles);
 
@@ -156,6 +155,12 @@ const GroupChatCard = ({ props }) => {
                 return (
                     <span className={cx('msg-preview-inline')}>
                         {senderName}: <PhoneCall size={13} className={cx('preview-icon')} /> Cuộc gọi nhóm
+                    </span>
+                );
+            case 'poll':
+                return (
+                    <span className={cx('msg-preview-inline')}>
+                        {senderName}: <BarChart2 size={13} className={cx('preview-icon')} /> Bình chọn: {lastMsg.poll?.question || lastMsg.content || ""}
                     </span>
                 );
             case 'text':

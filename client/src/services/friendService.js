@@ -1,7 +1,7 @@
 import api from "../lib/axios.js";
 
 export const friendService = {
-    // 1. Tìm kiếm (Sau này nên chuyển qua userService, nhưng tạm để đây ok)
+    // Tìm người dùng theo tên tài khoản.
     findUserByUsername: async (username) => {
         const res = await api.get("/api/users/get-user-by-username", {
             params: { username },

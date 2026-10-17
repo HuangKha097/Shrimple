@@ -1,4 +1,4 @@
-import React from 'react';
+
 import classNames from 'classnames/bind';
 import { useTranslation } from 'react-i18next';
 import styles from '../../assets/css/SettingContainer.module.scss';

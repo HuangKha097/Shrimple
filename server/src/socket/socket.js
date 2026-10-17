@@ -4,6 +4,8 @@ import http from "http";
 import express from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { isConversationMember } from "../utils/conversationHelper.js";
+import User from "../models/User.js";
 
 const CLIENT_ORIGINS = (process.env.CLIENT_ORIGINS || "http://localhost:5173,https://shrimplechat.netlify.app")
     .split(",")
@@ -51,14 +53,16 @@ export const isTranslationParticipant = (kind, sessionId, viewerId, speakerId) =
     return false;
 };
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
     try {
         const decoded = jwt.verify(socket.handshake.auth?.token, process.env.ACCESS_TOKEN_SECRET);
-        socket.data.userId = decoded.userId?.toString();
-        if (!socket.data.userId) throw new Error("Missing user ID");
-        next();
+        const user = await User.findById(decoded.userId).select('_id displayName username avatarURL');
+        if (!user) return next(new Error('Người dùng không tồn tại'));
+        socket.data.user = user;
+        socket.data.userId = user._id.toString();
+        return next();
     } catch {
-        next(new Error("Authentication required"));
+        return next(new Error('Vui lòng đăng nhập để kết nối'));
     }
 });
 
@@ -194,6 +198,10 @@ const terminateGroupCall = async (conversationId, socket, reason = "ended") => {
 
     // Update original call message to ended state, or create ended message if not found
     try {
+        if (!await Conversation.exists({ _id: conversationId })) {
+            if (call.callMessageId) await Message.deleteOne({ _id: call.callMessageId });
+            return;
+        }
         let finalMessage = null;
         if (call.callMessageId) {
             finalMessage = await Message.findByIdAndUpdate(
@@ -240,6 +248,16 @@ const terminateGroupCall = async (conversationId, socket, reason = "ended") => {
         }
     } catch (msgErr) {
         console.error("Error updating group call ended message:", msgErr);
+    }
+};
+
+export const removeUsersFromGroupCall = async (conversationId, userIds) => {
+    const call = activeGroupCalls.get(conversationId);
+    if (!call) return;
+    for (const participant of [...call.participants.values()]) {
+        if (!userIds.includes(participant.userId.toString())) continue;
+        const socket = io.sockets.sockets.get(participant.socketId);
+        if (socket) await leaveParticipantFromGroupCall(conversationId, socket, "removed");
     }
 };
 
@@ -341,144 +359,130 @@ io.on("connection", (socket) => {
     // --- DISCORD-LIKE GROUP CALLING (Mesh WebRTC & Voice Channels) ---
 
     // 1. Join Group Call Room
-    socket.on("joinGroupCall", async ({ conversationId, user, callId }) => {
-        if (!mongoose.isValidObjectId(conversationId) || user?._id?.toString() !== userId) return;
-        const membership = await Conversation.exists({ _id: conversationId, "participants.userId": userId });
-        if (!membership) return;
-        
-        let call = activeGroupCalls.get(conversationId);
+    socket.on("joinGroupCall", async ({ conversationId, callId } = {}) => {
+        let call;
+        let pending = false;
+        try {
+            if (!mongoose.isObjectIdOrHexString(conversationId)) return;
+            conversationId = new mongoose.Types.ObjectId(conversationId).toString();
+            const conversation = await Conversation.findById(conversationId);
+            if (!conversation?.isGroup || !isConversationMember(conversation, userId)) {
+                socket.emit("groupCallError", { message: "Bạn không còn là thành viên của nhóm" });
+                return;
+            }
+            const user = socket.data.user;
+            call = activeGroupCalls.get(conversationId);
+            if (callId && (!call || call.callId !== callId)) {
+                socket.emit("groupCallError", { message: "Cuộc gọi này đã kết thúc." });
+                return;
+            }
 
-        // If a call is active, but the user requested a specific old callId that doesn't match
-        if (call && callId && call.callId !== callId) {
-            socket.emit("groupCallError", { message: "Cuộc gọi này đã kết thúc." });
-            return;
-        }
-
-        // If no call is currently active, but the user is clicking an old ended call's link
-        if (!call && callId) {
-            socket.emit("groupCallError", { message: "Cuộc gọi này đã kết thúc." });
-            return;
-        }
-
-        const isNewCall = !call;
-
-        if (!call) {
-            const newCallId = new mongoose.Types.ObjectId().toString();
-            const startedAt = new Date();
-            const startTimeStr = formatCallTime(startedAt);
-            call = {
-                callId: newCallId,
-                conversationId,
-                startedBy: {
-                    _id: user._id,
-                    name: user.displayName || user.username || "User",
-                    avatar: user.avatarURL || "",
-                },
-                startedAt,
-                participants: new Map(),
-                callMessageId: null,
-            };
-            activeGroupCalls.set(conversationId, call);
-
-            // Create in-group notification message for the group call
-            try {
-                const startContent = "Cuộc gọi nhóm đã bắt đầu • " + startTimeStr;
-                const callMessage = await Message.create({
+            if (!call) {
+                call = {
+                    callId: new mongoose.Types.ObjectId().toString(),
                     conversationId,
-                    senderId: user._id,
-                    content: startContent,
-                    messageType: "group_call",
-                    callId: newCallId,
-                    callStatus: "active",
-                    startedAt,
+                    startedBy: { _id: user._id, name: user.displayName || user.username || "User", avatar: user.avatarURL || "" },
+                    startedAt: new Date(),
+                    participants: new Map(),
+                    callMessageId: null,
+                    pendingJoins: 0,
+                    announced: false,
+                };
+                activeGroupCalls.set(conversationId, call);
+                // All concurrent joins await one initialization; no participant can terminate a half-created call.
+                call.initialization = (async () => {
+                    const message = await Message.create({
+                        conversationId,
+                        senderId: user._id,
+                        content: "Cuộc gọi nhóm đã bắt đầu • " + formatCallTime(call.startedAt),
+                        messageType: "group_call",
+                        callId: call.callId,
+                        callStatus: "active",
+                        startedAt: call.startedAt,
+                    });
+                    call.callMessageId = message._id.toString();
+                    const populatedMessage = await Message.findById(message._id)
+                        .populate("senderId", "username displayName avatarURL");
+                    const current = await Conversation.findById(conversationId);
+                    if (!current || !populatedMessage) return;
+                    upDateConversationAfterCreateMessage(current, populatedMessage, user._id);
+                    await current.save();
+                    call.message = populatedMessage;
+                })();
+            }
+
+            call.pendingJoins += 1;
+            pending = true;
+            await call.initialization;
+
+            // Async history creation may overlap removal, deletion, disconnect or call termination.
+            // Keep this fresh check immediately adjacent to admission, with no await between them.
+            const current = await Conversation.findById(conversationId);
+            if (!current?.isGroup || !isConversationMember(current, userId)) {
+                socket.emit("groupCallError", { message: "Bạn không còn là thành viên của nhóm" });
+                return;
+            }
+            if (!socket.connected || activeGroupCalls.get(conversationId) !== call) {
+                if (socket.connected) socket.emit("groupCallError", { message: "Cuộc gọi này đã kết thúc." });
+                return;
+            }
+            const newParticipant = {
+                userId: user._id,
+                socketId: socket.id,
+                name: user.displayName || user.username || "User",
+                avatar: user.avatarURL || "",
+                isMuted: false,
+                isCameraOn: false,
+                isScreenSharing: false,
+                joinedAt: new Date(),
+            };
+            const existingParticipants = Array.from(call.participants.values()).filter(p => p.socketId !== socket.id);
+            call.participants.set(socket.id, newParticipant);
+            socket.join(`group-call-${conversationId}`);
+            socket.emit("groupCallExistingUsers", { conversationId, participants: existingParticipants });
+            socket.to(`group-call-${conversationId}`).emit("groupCallUserJoined", { conversationId, user: newParticipant });
+
+            if (!call.announced) {
+                call.announced = true;
+                current.participants.forEach(p => {
+                    const uid = (p.userId?._id || p.userId)?.toString();
+                    if (!uid) return;
+                    if (call.message) io.to(uid).emit("newMessage", call.message);
+                    if (uid !== userId) io.to(uid).emit("incomingGroupCall", {
+                        callId: call.callId,
+                        conversationId,
+                        caller: { _id: user._id, name: user.displayName || user.username || "Thành viên", avatar: user.avatarURL || "" },
+                        groupInfo: { _id: current._id, name: current.group.name, avatarURL: current.group.avatarURL || "", participantsCount: current.participants.length },
+                    });
                 });
-                call.callMessageId = callMessage._id.toString();
-
-                const populatedMessage = await Message.findById(callMessage._id)
-                    .populate("senderId", "username displayName avatarURL");
-
-                const convo = await Conversation.findById(conversationId);
-                if (convo) {
-                    upDateConversationAfterCreateMessage(convo, populatedMessage, user._id);
-                    await convo.save();
-
-                    // Broadcast newMessage to all participants in this conversation
-                    convo.participants.forEach((p) => {
-                        const uid = (p.userId?._id || p.userId)?.toString();
-                        if (uid) {
-                            io.to(uid).emit("newMessage", populatedMessage);
-                        }
-                    });
-
-                    // Emit incomingGroupCall to other participants so their call screen / modal pops up
-                    convo.participants.forEach((p) => {
-                        const uid = (p.userId?._id || p.userId)?.toString();
-                        if (uid && uid !== userId) {
-                            io.to(uid).emit("incomingGroupCall", {
-                                callId: newCallId,
-                                conversationId,
-                                caller: {
-                                    _id: user._id,
-                                    name: user.displayName || user.username || "Thành viên",
-                                    avatar: user.avatarURL || "",
-                                },
-                                groupInfo: {
-                                    _id: convo._id,
-                                    name: convo.group?.name || convo.name || "Nhóm",
-                                    avatarURL: convo.group?.avatarURL || convo.avatarURL || "",
-                                    participantsCount: convo.participants.length,
-                                }
-                            });
-                        }
-                    });
+            }
+            await broadcastGroupCallStatus(conversationId, formatCallPayload(conversationId, call));
+        } catch (error) {
+            console.error("Cannot join group call", error);
+            socket.emit("groupCallError", { message: "Không thể tham gia cuộc gọi nhóm" });
+        } finally {
+            if (pending) {
+                call.pendingJoins -= 1;
+                if (call.pendingJoins === 0 && call.participants.size === 0 && activeGroupCalls.get(conversationId) === call) {
+                    await terminateGroupCall(conversationId, socket, "cancelled");
                 }
-            } catch (msgErr) {
-                console.error("Error creating group call notification message:", msgErr);
             }
         }
-
-        const newParticipant = {
-            userId: user._id,
-            socketId: socket.id,
-            name: user.displayName || user.username || "User",
-            avatar: user.avatarURL || "",
-            isMuted: false,
-            isCameraOn: false,
-            isScreenSharing: false,
-            joinedAt: new Date(),
-        };
-
-        // Existing participants currently in the call
-        const existingParticipants = Array.from(call.participants.values());
-
-        // Add user to call
-        call.participants.set(socket.id, newParticipant);
-        socket.join(`group-call-${conversationId}`);
-
-        // Send existing participants list to newly joined user
-        socket.emit("groupCallExistingUsers", {
-            conversationId,
-            participants: existingParticipants,
-        });
-
-        // Notify other participants in the room that a new user joined
-        socket.to(`group-call-${conversationId}`).emit("groupCallUserJoined", {
-            conversationId,
-            user: newParticipant,
-        });
-
-        // Broadcast active status to all conversation members (updates live banner in chat)
-        const payload = formatCallPayload(conversationId, call);
-        await broadcastGroupCallStatus(conversationId, payload);
     });
 
     // 2. WebRTC Mesh Signaling (Offer / Answer / ICE)
-    socket.on("groupCallSignal", ({ to, signal, fromSocketId, fromUser }) => {
-        if (to) {
+    socket.on("groupCallSignal", ({ to, signal }) => {
+        const sharedCall = [...activeGroupCalls.values()].some(call =>
+            call.participants.has(socket.id) && call.participants.has(to));
+        if (to && sharedCall) {
             io.to(to).emit("groupCallSignal", {
                 signal,
                 fromSocketId: socket.id,
-                fromUser,
+                fromUser: {
+                    _id: socket.data.user._id,
+                    name: socket.data.user.displayName || socket.data.user.username,
+                    avatar: socket.data.user.avatarURL,
+                },
             });
         }
     });
@@ -519,8 +523,14 @@ io.on("connection", (socket) => {
     });
 
     // 5. Query Call Status for a Conversation
-    socket.on("getGroupCallStatus", ({ conversationId }, callback) => {
-        const call = activeGroupCalls.get(conversationId);
+    socket.on("getGroupCallStatus", async ({ conversationId }, callback) => {
+        let call;
+        try {
+            if (mongoose.isObjectIdOrHexString(conversationId)) {
+                const conversation = await Conversation.findById(conversationId).select('participants');
+                if (isConversationMember(conversation, userId)) call = activeGroupCalls.get(conversationId);
+            }
+        } catch (error) { console.error('Cannot read group call status', error); }
         const payload = formatCallPayload(conversationId, call);
         if (typeof callback === "function") {
             callback(payload);
@@ -530,20 +540,113 @@ io.on("connection", (socket) => {
     });
 
     // 6. Query All Active Group Calls
-    socket.on("getAllActiveGroupCalls", (callback) => {
+    socket.on("getAllActiveGroupCalls", async (callback) => {
         const allCalls = {};
+        let allowedIds = new Set();
+        try {
+            const conversations = await Conversation.find({ _id: { $in: [...activeGroupCalls.keys()] }, 'participants.userId': userId }).select('_id');
+            allowedIds = new Set(conversations.map(c => c._id.toString()));
+        } catch (error) { console.error('Cannot read active group calls', error); }
         for (const [convoId, call] of activeGroupCalls.entries()) {
+            if (!allowedIds.has(convoId)) continue;
             if (call.participants.size > 0) {
                 allCalls[convoId] = formatCallPayload(convoId, call);
             }
-        }
-        for (const [key, call] of directCalls.entries()) {
-            if (call.users.includes(userId)) directCalls.delete(key);
         }
         if (typeof callback === "function") {
             callback(allCalls);
         } else {
             socket.emit("allActiveGroupCalls", allCalls);
+        }
+    });
+
+    // --- 7. Instagram-Style Chat Screen Draw / Doodle Sync ---
+    socket.on("getChatScreenDrawing", async ({ conversationId }, callback) => {
+        try {
+            if (!mongoose.isObjectIdOrHexString(conversationId)) return;
+            const convo = await Conversation.findById(conversationId).select("participants");
+            if (!isConversationMember(convo, userId)) return;
+
+            const existing = global.__chatScreenDrawings?.get(conversationId) || {
+                conversationId,
+                strokes: [],
+                updatedBy: null,
+                updatedAt: null,
+            };
+            if (typeof callback === "function") {
+                callback(existing);
+            } else {
+                socket.emit("chatScreenDrawingUpdated", existing);
+            }
+        } catch (err) {
+            console.error("Error in getChatScreenDrawing:", err);
+        }
+    });
+
+    socket.on("updateChatScreenDrawing", async ({ conversationId, strokes, authorName }) => {
+        try {
+            if (!mongoose.isObjectIdOrHexString(conversationId)) return;
+            const convo = await Conversation.findById(conversationId).select("participants");
+            if (!isConversationMember(convo, userId)) return;
+
+            if (!global.__chatScreenDrawings) {
+                global.__chatScreenDrawings = new Map();
+            }
+
+            const safeStrokes = Array.isArray(strokes) ? strokes.slice(-250) : [];
+            const payload = {
+                conversationId,
+                strokes: safeStrokes,
+                updatedBy: {
+                    _id: userId,
+                    name: authorName || socket.data?.user?.displayName || socket.data?.user?.username || "Thành viên",
+                },
+                updatedAt: new Date().toISOString(),
+            };
+
+            if (safeStrokes.length === 0) {
+                global.__chatScreenDrawings.delete(conversationId);
+            } else {
+                global.__chatScreenDrawings.set(conversationId, payload);
+            }
+
+            (convo.participants || []).forEach((p) => {
+                const uid = (p.userId?._id || p.userId)?.toString();
+                if (uid) {
+                    io.to(uid).emit("chatScreenDrawingUpdated", payload);
+                }
+            });
+        } catch (err) {
+            console.error("Error in updateChatScreenDrawing:", err);
+        }
+    });
+
+    socket.on("clearChatScreenDrawing", async ({ conversationId, authorName }) => {
+        try {
+            if (!mongoose.isObjectIdOrHexString(conversationId)) return;
+            const convo = await Conversation.findById(conversationId).select("participants");
+            if (!isConversationMember(convo, userId)) return;
+
+            if (global.__chatScreenDrawings) {
+                global.__chatScreenDrawings.delete(conversationId);
+            }
+
+            const payload = {
+                conversationId,
+                strokes: [],
+                updatedBy: null,
+                clearedBy: authorName || socket.data?.user?.displayName || socket.data?.user?.username || "Thành viên",
+                updatedAt: new Date().toISOString(),
+            };
+
+            (convo.participants || []).forEach((p) => {
+                const uid = (p.userId?._id || p.userId)?.toString();
+                if (uid) {
+                    io.to(uid).emit("chatScreenDrawingUpdated", payload);
+                }
+            });
+        } catch (err) {
+            console.error("Error in clearChatScreenDrawing:", err);
         }
     });
 

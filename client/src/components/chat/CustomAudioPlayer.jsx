@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/CustomAudioPlayer.module.scss';
 import { Play, Pause, Volume2, VolumeX } from 'lucide-react';

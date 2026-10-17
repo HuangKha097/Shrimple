@@ -2,14 +2,34 @@ import api from '../lib/axios.js'
 
 
 export const chatService = {
+    async updateGroup(id, data) {
+        return (await api.patch(`/api/conversations/${id}/group`, data)).data;
+    },
+    async removeGroupMember(id, memberId) {
+        return (await api.delete(`/api/conversations/${id}/members/${memberId}`)).data;
+    },
+    async deleteGroup(id) {
+        return (await api.delete(`/api/conversations/${id}/group`)).data;
+    },
+    async getGroupInvite(id) {
+        return (await api.get(`/api/conversations/${id}/invite`)).data;
+    },
+    async rotateGroupInvite(id) {
+        return (await api.post(`/api/conversations/${id}/invite`)).data;
+    },
+    async previewGroupInvite(token) {
+        return (await api.get(`/api/conversations/invites/${encodeURIComponent(token)}`)).data;
+    },
+    async joinGroupInvite(token) {
+        return (await api.post(`/api/conversations/invites/${encodeURIComponent(token)}/join`)).data;
+    },
     async fetchConversations() {
         const res = await api.get("/api/conversations");
         return res.data;
     },
-    async fetchMessage(id, cursor) {
-
+    async fetchMessage(id, cursor, limit = 20) {
         const cursorParam = cursor ? `&cursor=${encodeURIComponent(cursor)}` : '';
-        const res = await api.get(`/api/conversations/${id}/messages?limit=50${cursorParam}`);
+        const res = await api.get(`/api/conversations/${id}/messages?limit=${limit}${cursorParam}`);
         return {messages: res.data.messages, cursor: res.data.nextCursor};
     },
     async sendDirectMessage(recipientId, content, conversationId, image, file, type) {
@@ -91,12 +111,8 @@ export const chatService = {
         const res = await api.delete(`/api/conversations/${conversationId}`);
         return res.data;
     },
-    async getGroupInvite(conversationId) {
-        const res = await api.get(`/api/conversations/${conversationId}/invite`);
-        return res.data;
-    },
     async joinGroupByInvite(inviteCode) {
-        const res = await api.post(`/api/conversations/join/${inviteCode}`);
+        const res = await api.post(`/api/conversations/join/${encodeURIComponent(inviteCode)}`);
         return res.data;
     },
     async createPoll(conversationId, question, options, allowMultiple) {

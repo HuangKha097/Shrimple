@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { MailCheck, X } from "lucide-react";
 import { motion as Motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "../../stores/useAuthStore";

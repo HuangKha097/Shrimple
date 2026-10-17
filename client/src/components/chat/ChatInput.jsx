@@ -1,13 +1,14 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import classNames from 'classnames/bind';
 import { motion as Motion } from 'motion/react';
 import styles from '../../assets/css/ChatInput.module.scss';
-import { Image as ImageIcon, Smile, Mic, Plus, Send, X, File, MapPin, BarChart2 } from 'lucide-react';
+import { Image as ImageIcon, Smile, Mic, Plus, Send, X, File, MapPin, BarChart2, AtSign, PenTool } from 'lucide-react';
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import EmojiPicker from 'emoji-picker-react';
-import { useThemeStore } from '../../stores/useThemeStore';
 import CreatePollModal from './CreatePollModal.jsx';
+import MentionAutocomplete from '../common/MentionAutocomplete.jsx';
+import { insertAtTrigger } from '../../utils/mention.js';
 import { toast } from 'sonner';
 import api from '../../lib/axios.js';
 
@@ -28,8 +29,7 @@ const resolveRecipientId = (currentConvo, currentUser) => {
     return null;
 };
 
-const ChatInput = () => {
-    const isLight = useThemeStore(state => state.isLight);
+const ChatInput = ({ onOpenDrawTool }) => {
     const [text, setText] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -39,6 +39,7 @@ const ChatInput = () => {
 
     const fileInputRef = useRef(null);
     const fileAttachmentInputRef = useRef(null);
+    const textInputRef = useRef(null);
 
     const [isRecording, setIsRecording] = useState(false);
     const [recordingTime, setRecordingTime] = useState(0);
@@ -356,6 +357,17 @@ const ChatInput = () => {
         }
     };
 
+    const currentConvo = useMemo(() => {
+        const safeConvos = Array.isArray(conversations) ? conversations : [];
+        return safeConvos.find(c => c && c._id === activeConversationId);
+    }, [conversations, activeConversationId]);
+
+    const mentionCandidates = useMemo(() => {
+        const parts = currentConvo?.participants || [];
+        const friendList = Array.isArray(friends) ? friends : [];
+        return [...parts, ...friendList];
+    }, [currentConvo, friends]);
+
     if (!chatStatus.allowed) {
         return (
             <div className={cx('container')}>
@@ -370,11 +382,21 @@ const ChatInput = () => {
 
     return (
         <div className={cx('container')}>
+            <MentionAutocomplete
+                value={text}
+                onChange={setText}
+                inputRef={textInputRef}
+                candidates={mentionCandidates}
+                includeEveryone={true}
+                everyoneDesc={currentConvo?.isGroup ? "Nhắc tất cả thành viên trong nhóm" : "Nhắc mọi người trong cuộc trò chuyện"}
+                placement="top"
+            />
+
             {showEmojiPicker && (
                 <div className={cx('emoji-picker-container')}>
                     <EmojiPicker 
                         onEmojiClick={onEmojiClick} 
-                        theme={isLight ? "light" : "dark"} 
+                        theme="dark"
                         width={320} 
                         height={400} 
                     />
@@ -449,6 +471,15 @@ const ChatInput = () => {
                             <button
                                 type="button"
                                 className={cx('tool-btn')}
+                                onClick={() => insertAtTrigger(text, setText, textInputRef)}
+                                title="Nhắc đến bạn bè (@mention / @everyone)"
+                            >
+                                <AtSign size={19} />
+                            </button>
+
+                            <button
+                                type="button"
+                                className={cx('tool-btn')}
                                 onClick={startRecording}
                                 title="Ghi âm giọng nói"
                             >
@@ -467,6 +498,16 @@ const ChatInput = () => {
                             {/* Actions Popup Menu */}
                             {showActionsMenu && (
                                 <div className={cx('actions-menu')}>
+                                    {onOpenDrawTool && (
+                                        <button
+                                            type="button"
+                                            className={cx('action-menu-btn')}
+                                            onClick={() => { onOpenDrawTool(); setShowActionsMenu(false); }}
+                                            title="Cây bút vẽ lên màn hình chat (Instagram Draw)"
+                                        >
+                                            <PenTool size={18} />
+                                        </button>
+                                    )}
                                     <button
                                         type="button"
                                         className={cx('action-menu-btn')}
@@ -483,7 +524,7 @@ const ChatInput = () => {
                                     >
                                         <MapPin size={18} />
                                     </button>
-                                    {Boolean((conversations || []).find(c => c && c._id === activeConversationId)?.isGroup) && (
+                                    {Boolean(currentConvo?.isGroup) && (
                                         <button
                                             type="button"
                                             className={cx('action-menu-btn')}
@@ -499,8 +540,9 @@ const ChatInput = () => {
 
                         {/* Borderless Input Field */}
                         <input
+                            ref={textInputRef}
                             type="text"
-                            placeholder="Bắt đầu tin nhắn mới..."
+                            placeholder="Bắt đầu tin nhắn mới... (Gõ @ để nhắc tên)"
                             className={cx('input-field')}
                             value={text}
                             onChange={(e) => setText(e.target.value)}

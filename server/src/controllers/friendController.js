@@ -3,7 +3,6 @@ import Friend from "../models/Friend.js";
 import FriendRequest from "../models/FriendRequest.js";
 import Conversation from "../models/Conversation.js";
 import { io } from "../socket/socket.js";
-import { getFriendRecommendations } from "../services/friendRecommendations.js";
 
 export const sendFriendRequest = async (req, res) => {
     try {
@@ -71,7 +70,7 @@ export const acceptFriendRequest = async (req, res) => {
             return res.status(403).json({message: "Can not accept this request"});
         }
 
-        const friend = await Friend.create({
+        await Friend.create({
             userA: request.from, userB: request.to,
         });
         await FriendRequest.findByIdAndDelete(requestId);
@@ -93,7 +92,7 @@ export const acceptFriendRequest = async (req, res) => {
                 unreadCounts: new Map()
             });
         }
-        
+
         const [from, toUser] = await Promise.all([
             User.findById(request.from).select('_id displayName avatarURL username').lean(),
             User.findById(request.to).select('_id displayName avatarURL username').lean()
@@ -209,8 +208,8 @@ export const getAllFriends = async (req, res) => {
                 userB: userId
             }]
         })
-            .populate('userA', "_id displayName avatarURL ")
-            .populate('userB', "_id displayName avatarURL ")
+            .populate('userA', "_id username displayName avatarURL")
+            .populate('userB', "_id username displayName avatarURL")
             .lean()
         if (!friendships || friendships.length === 0) {
             return res.status(200).json({friends: []});
@@ -247,8 +246,37 @@ export const getFriendRequests = async (req, res) => {
 
 export const getSuggestedFriends = async (req, res) => {
     try {
-        const suggestions = await getFriendRecommendations(req.user._id);
-        return res.status(200).json(suggestions);
+        const userId = req.user._id;
+
+        // 1. Get all friends
+        const friendships = await Friend.find({
+            $or: [{ userA: userId }, { userB: userId }]
+        });
+
+        const friendIds = friendships.map(f =>
+            f.userA.toString() === userId.toString() ? f.userB.toString() : f.userA.toString()
+        );
+
+        // 2. Get all pending requests
+        const requests = await FriendRequest.find({
+            $or: [{ from: userId }, { to: userId }]
+        });
+
+        const requestIds = requests.map(r =>
+            r.from.toString() === userId.toString() ? r.to.toString() : r.from.toString()
+        );
+
+        // 3. Exclude self, friends, and pending requests
+        const excludeIds = [userId, ...friendIds, ...requestIds];
+
+        const suggestions = await User.find({
+            _id: { $nin: excludeIds }
+        })
+        .limit(20)
+        .select('_id displayName avatarURL username') // Select only needed fields
+        .lean();
+
+        res.status(200).json(suggestions);
     } catch (err) {
         console.log("Error getting suggested friends", err);
         return res.status(500).json({message: "System error"});

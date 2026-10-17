@@ -1,23 +1,57 @@
-import React from "react";
+import { useChatStore } from "../stores/useChatStore.js";
+import { useAuthStore } from "../stores/useAuthStore.js";
 
 /**
- * Format text content containing #hashtags, @mentions, and URLs into clickable elements
- * @param {string} text - Raw post or comment text
+ * Resolve a username (without @) to a user object from friends or conversation participants
+ */
+export const resolveUserByUsername = (username) => {
+    if (!username) return null;
+    const lower = username.toLowerCase();
+
+    const currentUser = useAuthStore.getState().user;
+    if (currentUser?.username?.toLowerCase() === lower) {
+        return currentUser;
+    }
+
+    const { friends = [], conversations = [] } = useChatStore.getState();
+    const matchedFriend = friends.find(
+        (f) => f?.username?.toLowerCase() === lower
+    );
+    if (matchedFriend?._id) return matchedFriend;
+
+    for (const convo of conversations) {
+        const parts = convo?.participants || [];
+        for (const p of parts) {
+            const u = p?.userId || p;
+            if (u?.username?.toLowerCase() === lower && u?._id) {
+                return u;
+            }
+        }
+    }
+    return null;
+};
+
+/**
+ * Format text content containing #hashtags, @mentions (@everyone & @username), and URLs into clickable elements
+ * @param {string} text - Raw post, comment, or chat message text
  * @param {function} onHashtagClick - Optional handler when hashtag is clicked, receives (tagWithoutHash)
- * @param {function} onMentionClick - Optional handler when @mention is clicked, receives (usernameWithoutAt)
+ * @param {function} onMentionClick - Optional handler when @mention is clicked, receives (usernameWithoutAt, resolvedUser)
+ * @param {object} options - Optional styling options (e.g., { isOwnMessage: false })
  * @returns {React.ReactNode}
  */
-export const formatHashtags = (text, onHashtagClick, onMentionClick) => {
+export const formatHashtags = (text, onHashtagClick, onMentionClick, options = {}) => {
     if (!text || typeof text !== "string") return text || "";
 
+    const currentUsername = useAuthStore.getState().user?.username?.toLowerCase();
+    const { isOwnMessage = false } = options;
+
     // Regex matching URLs, #hashtags (with VN unicode), and @mentions
-    const tokenRegex = /(https?:\/\/[^\s]+)|#([A-Za-z0-9_À-ỹ]+)|@([A-Za-z0-9_]+)/gi;
+    const tokenRegex = /(https?:\/\/[^\s]+)|#([A-Za-z0-9_À-ỹ]+)|@([A-Za-z0-9_À-ỹ.]+)/gi;
     const parts = [];
     let lastIndex = 0;
     let match;
 
     while ((match = tokenRegex.exec(text)) !== null) {
-        // Plain text before token
         if (match.index > lastIndex) {
             parts.push(text.substring(lastIndex, match.index));
         }
@@ -25,7 +59,6 @@ export const formatHashtags = (text, onHashtagClick, onMentionClick) => {
         const [fullMatch, urlMatch, hashtagMatch, mentionMatch] = match;
 
         if (urlMatch) {
-            // URL Link
             parts.push(
                 <a
                     key={`url-${match.index}`}
@@ -33,9 +66,10 @@ export const formatHashtags = (text, onHashtagClick, onMentionClick) => {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                        color: "var(--primary-color, #f97316)",
+                        color: isOwnMessage ? "#ffffff" : "var(--primary-color, #f97316)",
                         textDecoration: "underline",
-                        wordBreak: "break-all"
+                        wordBreak: "break-all",
+                        fontWeight: 600,
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >
@@ -43,12 +77,11 @@ export const formatHashtags = (text, onHashtagClick, onMentionClick) => {
                 </a>
             );
         } else if (hashtagMatch) {
-            // Hashtag
             parts.push(
                 <span
                     key={`hashtag-${match.index}`}
                     style={{
-                        color: "var(--primary-color, #f97316)",
+                        color: isOwnMessage ? "#fde047" : "var(--primary-color, #f97316)",
                         cursor: "pointer",
                         fontWeight: 600,
                         textDecoration: "none",
@@ -59,7 +92,7 @@ export const formatHashtags = (text, onHashtagClick, onMentionClick) => {
                         if (onHashtagClick) {
                             onHashtagClick(hashtagMatch);
                         } else {
-                            window.location.href = `/feed/search?q=${encodeURIComponent('#' + hashtagMatch)}`;
+                            window.location.href = `/feed/search?q=${encodeURIComponent("#" + hashtagMatch)}`;
                         }
                     }}
                     onMouseEnter={(e) => {
@@ -73,30 +106,66 @@ export const formatHashtags = (text, onHashtagClick, onMentionClick) => {
                 </span>
             );
         } else if (mentionMatch) {
-            // Mention
+            const lowerMention = mentionMatch.toLowerCase();
+            const isEveryone = lowerMention === "everyone" || lowerMention === "all";
+            const isMe = currentUsername && lowerMention === currentUsername;
+
             parts.push(
                 <span
                     key={`mention-${match.index}`}
                     style={{
-                        color: "var(--primary-color, #f97316)",
-                        cursor: "pointer",
-                        fontWeight: 600,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        padding: isEveryone || isMe ? "1px 7px" : "0 4px",
+                        margin: "0 1px",
+                        borderRadius: "6px",
+                        backgroundColor: isEveryone
+                            ? isOwnMessage
+                                ? "rgba(255, 255, 255, 0.24)"
+                                : "rgba(249, 115, 22, 0.22)"
+                            : isMe
+                            ? isOwnMessage
+                                ? "rgba(255, 255, 255, 0.24)"
+                                : "rgba(250, 204, 21, 0.2)"
+                            : isOwnMessage
+                            ? "rgba(255, 255, 255, 0.16)"
+                            : "rgba(249, 115, 22, 0.12)",
+                        border: isEveryone
+                            ? isOwnMessage
+                                ? "1px solid rgba(255, 255, 255, 0.45)"
+                                : "1px solid rgba(249, 115, 22, 0.45)"
+                            : isMe
+                            ? "1px solid rgba(250, 204, 21, 0.45)"
+                            : "none",
+                        color: isOwnMessage
+                            ? "#ffffff"
+                            : isEveryone
+                            ? "#fb923c"
+                            : isMe
+                            ? "#fde047"
+                            : "var(--primary-color, #f97316)",
+                        cursor: isEveryone ? "default" : "pointer",
+                        fontWeight: 700,
                         textDecoration: "none",
+                        transition: "all 0.15s ease",
                     }}
                     className="mention-link"
+                    title={
+                        isEveryone
+                            ? "Nhắc tất cả mọi người"
+                            : `Xem trang cá nhân của @${mentionMatch}`
+                    }
                     onClick={(e) => {
                         e.stopPropagation();
+                        if (isEveryone) return;
+                        const resolvedUser = resolveUserByUsername(mentionMatch);
                         if (onMentionClick) {
-                            onMentionClick(mentionMatch);
+                            onMentionClick(mentionMatch, resolvedUser);
+                        } else if (resolvedUser?._id) {
+                            window.location.href = `/feed/profile/${resolvedUser._id}`;
                         } else {
-                            window.location.href = `/feed/search?q=${encodeURIComponent('@' + mentionMatch)}`;
+                            window.location.href = `/feed/search?q=${encodeURIComponent("@" + mentionMatch)}`;
                         }
-                    }}
-                    onMouseEnter={(e) => {
-                        e.currentTarget.style.textDecoration = "underline";
-                    }}
-                    onMouseLeave={(e) => {
-                        e.currentTarget.style.textDecoration = "none";
                     }}
                 >
                     {fullMatch}
@@ -107,7 +176,6 @@ export const formatHashtags = (text, onHashtagClick, onMentionClick) => {
         lastIndex = tokenRegex.lastIndex;
     }
 
-    // Remaining text
     if (lastIndex < text.length) {
         parts.push(text.substring(lastIndex));
     }

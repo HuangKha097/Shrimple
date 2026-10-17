@@ -36,26 +36,26 @@
   }
 
   .block-right {
-    width: 320px;
+    width: 340px;
     height: 100%;
     border-left: 1px solid rgba(255, 255, 255, 0.08);
     background-color: #000000;
     flex-shrink: 0;
-    z-index: 15;
+    z-index: 25;
 
-    @media (max-width: 900px) {
+    @media (max-width: 1200px) {
       position: absolute;
       top: 0;
       right: 0;
       width: 100%;
-      max-width: 340px;
-      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.8);
+      max-width: 350px;
+      box-shadow: -12px 0 32px rgba(0, 0, 0, 0.85);
     }
 
     .chat-info-wrapper {
       height: 100%;
       width: 100%;
-      overflow-y: auto;
+      overflow: hidden;
     }
   }
 }

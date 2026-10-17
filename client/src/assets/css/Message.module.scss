@@ -1,20 +1,37 @@
 .message-wrapper {
-  padding: 3px 0;
+  padding: 2px 0;
   display: flex;
   gap: 10px;
   width: 100%;
   position: relative;
   box-sizing: border-box;
 
+  &.first-in-group {
+    margin-top: 10px;
+  }
+
+  &.grouped {
+    padding-top: 1px;
+  }
+
+  &:not(.last-in-group) {
+    padding-bottom: 1px;
+  }
+
   .avatar {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     object-fit: cover;
     align-self: flex-end;
     margin-bottom: 18px;
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .avatar-spacer {
+    width: 34px;
+    flex-shrink: 0;
   }
 
   .message-content {
@@ -22,7 +39,7 @@
     flex-direction: column;
     max-width: 68%;
     min-width: 0;
-    
+
     @media (max-width: 768px) {
       max-width: 86%;
     }
@@ -43,10 +60,12 @@
   }
 
   .sender-name {
-    font-size: 1.25rem;
-    color: #71767b;
-    margin: 0 0 3px 8px;
+    font-size: 1.22rem;
+    color: #94a3b8;
+    margin: 0 0 4px 6px;
     font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1.25;
   }
 
   .message-container {
@@ -61,8 +80,8 @@
   .message-bubble {
     background-color: #2f3336;
     border: 1px solid transparent;
-    padding: 10px 16px;
-    border-radius: 20px 20px 20px 4px;
+    padding: 9px 15px;
+    border-radius: 18px 18px 18px 5px;
     min-width: 0;
     word-break: break-word;
     transition: all 0.2s ease;
@@ -82,9 +101,14 @@
       background-color: rgba(249, 115, 22, 0.08);
     }
 
+    &.mentioned-me-bubble {
+      border: 1px solid rgba(249, 115, 22, 0.55);
+      box-shadow: 0 0 14px rgba(249, 115, 22, 0.18);
+    }
+
     .message-text {
       line-height: 1.45;
-      font-size: 1.5rem;
+      font-size: 1.48rem;
       color: #e7e9ea;
       margin: 0;
       white-space: pre-wrap;
@@ -93,17 +117,22 @@
     }
   }
 
+  &.grouped:not(.me) .message-bubble {
+    border-top-left-radius: 6px;
+  }
+
   // Timestamp placed BELOW the bubble (X style)
   .message-time-meta {
     display: flex;
     align-items: center;
     gap: 4px;
     margin-top: 3px;
+    margin-bottom: 2px;
     padding: 0 4px;
 
     .meta-time {
-      font-size: 1.15rem;
-      color: #71767b;
+      font-size: 1.12rem;
+      color: #64748b;
     }
 
     .meta-pin {
@@ -111,15 +140,17 @@
     }
 
     .meta-status {
-      font-size: 1.15rem;
-      color: #71767b;
+      font-size: 1.12rem;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
     }
   }
 
   // Reaction Picker
   .reaction-picker {
     position: fixed;
-    background-color: rgba(0, 0, 0, 0.94); 
+    background-color: rgba(0, 0, 0, 0.94);
     backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.14);
     padding: 6px 12px;
@@ -148,7 +179,7 @@
       font-size: 2rem;
       cursor: pointer;
       transition: transform 0.15s ease;
-      
+
       &:hover {
         transform: scale(1.25);
       }
@@ -742,16 +773,134 @@
     .message-bubble {
       background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
       border: none;
-      border-radius: 20px 20px 4px 20px;
+      border-radius: 18px 18px 5px 18px;
       box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
-      
+
       .message-text {
         color: #ffffff;
       }
     }
 
+    &.grouped .message-bubble {
+      border-top-right-radius: 6px;
+    }
+
     .message-time-meta {
       justify-content: flex-end;
+    }
+  }
+}
+
+// Top-level Reaction Picker (portaled to document.body)
+.reaction-picker {
+  position: fixed;
+  background-color: rgba(11, 14, 19, 0.96);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 16px rgba(249, 115, 22, 0.18);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 99999;
+  user-select: none;
+  animation: pickerPop 0.16s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: transparent;
+    pointer-events: auto;
+  }
+
+  .emoji-btn {
+    font-size: 1.9rem;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    line-height: 1;
+
+    &:hover {
+      transform: scale(1.25);
+    }
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  .more-actions-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    padding: 4px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    cursor: pointer;
+
+    &:hover, &.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: #f97316;
+    }
+  }
+
+  .actions-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    background: #0b0e13;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 6px;
+    width: 156px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+    z-index: 100000;
+
+    &.dropdown-me {
+      left: auto;
+      right: 0;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: #e7e9ea;
+      font-size: 1.3rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      width: 100%;
+      text-align: left;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: #f97316;
+      }
+
+      .icon {
+        flex-shrink: 0;
+        color: #94a3b8;
+      }
+
+      &.recall-item:hover, &.delete-item:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+        .icon {
+          color: #ef4444;
+        }
+      }
     }
   }
 }

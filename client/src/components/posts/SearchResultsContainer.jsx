@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';

@@ -4,31 +4,20 @@ import styles from '../../assets/css/PostsContainer.module.scss';
 import { usePostStore } from '../../stores/usePostStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useChatStore } from '../../stores/useChatStore';
+
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { 
-    Image, 
-    Video, 
-    Menu, 
-    Search, 
-    Globe, 
-    Users,
-    Lock,
-    ChevronDown,
-    Check,
-    X,
-    Smile,
-    Loader2,
-    Bell,
-    ArrowUp
-} from 'lucide-react';
+import { Image, Video, Search, Globe, Users, Lock, ChevronDown, Check, X, Loader2, ArrowUp, AtSign } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import PostItem from './PostItem';
 import WhoToFollowWidget from './WhoToFollowWidget';
 import TrendsWidget from './TrendsWidget';
 import LoadingSpin from '../common/loading/LoadingSpin';
 import NotificationDropdown from '../common/NotificationDropdown';
+import MentionAutocomplete from '../common/MentionAutocomplete';
+import { insertAtTrigger } from '../../utils/mention.js';
 import { useTranslation } from 'react-i18next';
 import default_avt from '../../../public/favicon.png';
+
 import { toast } from 'sonner';
 
 const cx = classNames.bind(styles);
@@ -37,7 +26,7 @@ const PostsContainer = () => {
     const { t } = useTranslation();
     const { posts, fetchPosts, createPost, likePost, addComment, deletePost, isLoading, hasMorePosts } = usePostStore();
     const { user } = useAuthStore();
-    const { friends } = useChatStore();
+    const { friends, fetchFriends } = useChatStore();
     const outletContext = useOutletContext() || {};
     const { toggleSidebar, onOpenNewChat } = outletContext;
     const navigate = useNavigate();
@@ -102,6 +91,13 @@ const PostsContainer = () => {
     useEffect(() => {
         fetchPosts(true);
     }, [fetchPosts]);
+
+    const friendCount = friends?.length || 0;
+    useEffect(() => {
+        if (friendCount === 0 && fetchFriends) {
+            fetchFriends();
+        }
+    }, [friendCount, fetchFriends]);
 
     const handleCreatePost = async () => {
         if ((!newPostContent.trim() && newPostImages.length === 0 && !newPostVideo) || isCreating) return;
@@ -231,6 +227,7 @@ const PostsContainer = () => {
                 {/* 2. X Tweet Composer */}
                 <XPostComposer
                     user={user}
+                    friends={friends}
                     content={newPostContent}
                     setContent={setNewPostContent}
                     images={newPostImages}
@@ -343,6 +340,7 @@ const PostsContainer = () => {
 /* --- X Post Composer Component --- */
 const XPostComposer = ({ 
     user, 
+    friends = [],
     content, 
     setContent, 
     images = [], 
@@ -460,17 +458,28 @@ const XPostComposer = ({
             </div>
 
             <div className={cx('composer-right')}>
-                {/* Textarea */}
-                <textarea
-                    ref={textareaRef}
-                    data-composer-input="true"
-                    placeholder={t('feed.whatHappening')}
-                    value={content}
-                    onChange={handleTextChange}
-                    rows={2}
-                    className={cx('composer-textarea')}
-                    disabled={isCreating}
-                />
+                {/* Textarea + Mention Autocomplete */}
+                <div style={{ position: 'relative', width: '100%' }}>
+                    <textarea
+                        ref={textareaRef}
+                        data-composer-input="true"
+                        placeholder={`${t('feed.whatHappening')} (Gõ @ để nhắc tên bạn bè)`}
+                        value={content}
+                        onChange={handleTextChange}
+                        rows={2}
+                        className={cx('composer-textarea')}
+                        disabled={isCreating}
+                    />
+                    <MentionAutocomplete
+                        value={content}
+                        onChange={setContent}
+                        inputRef={textareaRef}
+                        candidates={friends}
+                        includeEveryone={true}
+                        everyoneDesc="Nhắc tất cả bạn bè của bạn"
+                        placement="bottom"
+                    />
+                </div>
 
                 {/* Multiple Images Preview Grid */}
                 {imagePreviews.length > 0 && (
@@ -581,6 +590,16 @@ const XPostComposer = ({
                             disabled={isCreating || !!video}
                         >
                             <Video size={19} />
+                        </button>
+
+                        <button
+                            type="button"
+                            className={cx('toolbar-btn')}
+                            onClick={() => insertAtTrigger(content, setContent, textareaRef)}
+                            title="Nhắc tên bạn bè (@mention / @everyone)"
+                            disabled={isCreating}
+                        >
+                            <AtSign size={19} />
                         </button>
 
                         <input

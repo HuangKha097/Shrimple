@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePostStore } from '../../stores/usePostStore';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -6,25 +6,8 @@ import { useChatStore } from '../../stores/useChatStore';
 import { authService } from '../../services/authService';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
-import { 
-    ArrowLeft, 
-    Calendar, 
-    MapPin, 
-    Briefcase, 
-    GraduationCap, 
-    BookOpen,
-    Cake,
-    Lock, 
-    MessageSquare, 
-    UserPlus, 
-    UserCheck, 
-    X,
-    FileText,
-    Repeat,
-    Video,
-    Bookmark
-} from 'lucide-react';
-import { motion as Motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, Calendar, MapPin, Briefcase, GraduationCap, BookOpen, Cake, Lock, MessageSquare, UserPlus, UserCheck, FileText, Repeat, Video, Bookmark } from 'lucide-react';
+import { motion as Motion } from 'motion/react';
 import PostItem from './PostItem';
 import TrendsWidget from './TrendsWidget';
 import WhoToFollowWidget from './WhoToFollowWidget';
@@ -181,12 +164,12 @@ const ProfileContainer = () => {
     };
 
     // Format Joined Date
+    const joinedAt = (profileUser || currentUser)?.createdAt;
     const joinedDateText = useMemo(() => {
-        const u = profileUser || currentUser;
-        if (!u?.createdAt) return '';
-        const d = new Date(u.createdAt);
+        if (!joinedAt) return '';
+        const d = new Date(joinedAt);
         return `Đã tham gia tháng ${d.getMonth() + 1} năm ${d.getFullYear()}`;
-    }, [profileUser, currentUser]);
+    }, [joinedAt]);
 
     // Format Birthday respecting privacy settings
     const birthdayText = useMemo(() => {

@@ -62,6 +62,62 @@ export const removePostFromHashtags = async (postId) => {
     }
 };
 
+export const notifyMentionedUsers = async (text, senderId, postId, commentId = null, excludeIds = []) => {
+    try {
+        if (!text || typeof text !== "string") return;
+        const matches = text.match(/(?:^|\s)@([A-Za-z0-9_À-ỹ.]+)/gi) || [];
+        if (matches.length === 0) return;
+
+        const rawTokens = [...new Set(matches.map(m => m.trim().replace(/^@/, "").toLowerCase()))].filter(Boolean);
+        if (rawTokens.length === 0) return;
+
+        const senderIdStr = senderId.toString();
+        const excludedSet = new Set([senderIdStr, ...(excludeIds || []).filter(Boolean).map(id => id.toString())]);
+        const targetUserIds = new Set();
+
+        // Check @everyone / @all -> notify sender's friends
+        if (rawTokens.includes("everyone") || rawTokens.includes("all")) {
+            const friendships = await Friend.find({
+                $or: [{ userA: senderId }, { userB: senderId }]
+            }).lean();
+            friendships.forEach(f => {
+                const fId = f.userA.toString() === senderIdStr ? f.userB.toString() : f.userA.toString();
+                if (!excludedSet.has(fId)) targetUserIds.add(fId);
+            });
+        }
+
+        const usernames = rawTokens.filter(t => t !== "everyone" && t !== "all");
+        if (usernames.length > 0) {
+            const regexes = usernames.map(u => new RegExp(`^${u.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, "i"));
+            const mentionedUsers = await User.find({ username: { $in: regexes } }).select("_id").lean();
+            mentionedUsers.forEach(u => {
+                const uId = u._id.toString();
+                if (!excludedSet.has(uId)) targetUserIds.add(uId);
+            });
+        }
+
+        for (const recipientId of targetUserIds) {
+            const notif = await Notification.create({
+                recipient: recipientId,
+                sender: senderId,
+                type: "mention",
+                post: postId,
+                commentId,
+                text: text.trim().slice(0, 100),
+            });
+
+            const populatedNotif = await Notification.findById(notif._id)
+                .populate("sender", "displayName username avatarURL")
+                .populate("post", "content image images video")
+                .lean();
+
+            io.to(recipientId).emit("newNotification", populatedNotif);
+        }
+    } catch (err) {
+        console.error("Error notifying mentioned users:", err);
+    }
+};
+
 const checkFakeNews = (text) => {
     return new Promise((resolve, reject) => {
         // Path to python script relative to server root
@@ -224,6 +280,7 @@ export const createPost = async (req, res) => {
 
         await newPost.save();
         await syncHashtags(newPost._id, content);
+        await notifyMentionedUsers(content, req.user._id, newPost._id);
         
         // Populate author and comments details to return immediately
         await newPost.populate(postPopulateOptions);
@@ -543,6 +600,8 @@ export const addComment = async (req, res) => {
                 console.error("Error creating comment notification:", notifErr);
             }
         }
+
+        await notifyMentionedUsers(text, req.user._id, post._id, null, [post.author]);
         
         const updatedPost = await Post.findById(postId).populate(postPopulateOptions);
 
@@ -644,6 +703,8 @@ export const replyComment = async (req, res) => {
                 console.error("Error creating reply notification:", notifErr);
             }
         }
+
+        await notifyMentionedUsers(text, userId, post._id, comment._id, [recipientId]);
 
         const updatedPost = await Post.findById(postId).populate(postPopulateOptions);
 

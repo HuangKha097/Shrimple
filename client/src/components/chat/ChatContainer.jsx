@@ -1,32 +1,33 @@
 import MotionPresence from '../common/MotionPresence';
 import React from 'react';
-import { motion as Motion } from 'motion/react';
+
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/ChatContainer.module.scss';
 import ChatHeader from "./ChatHeader.jsx";
 import ChatBody from "./ChatBody.jsx";
 import ChatInput from "./ChatInput.jsx";
 import ChatInfo from "./ChatInfo.jsx";
+import ChatDrawOverlay from "./ChatDrawOverlay.jsx";
 import { useChatStore } from "../../stores/useChatStore.js";
-import { useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 
 const cx = classNames.bind(styles);
 
 const ChatContainer = ({ onCloseChatInfo, isShowChatInfo }) => {
-    const { activeConversationId, setActiveConversationId, conversations, fetchConversations } = useChatStore();
+    const { activeConversationId, setActiveConversationId, conversations, fetchConversations, setIsDrawModeOpen } = useChatStore();
     const [searchParams] = useSearchParams();
 
     // Đồng bộ URL -> Store
     React.useEffect(() => {
         const idFromUrl = searchParams.get('id');
-        if (idFromUrl) {
+        if (idFromUrl && conversations.some(c => c._id === idFromUrl)) {
             if (idFromUrl !== activeConversationId) {
                 setActiveConversationId(idFromUrl);
             }
         } else if (activeConversationId) {
             setActiveConversationId(null);
         }
-    }, [searchParams, activeConversationId, setActiveConversationId]);
+    }, [searchParams, activeConversationId, setActiveConversationId, conversations]);
 
     // Nếu có activeConversationId nhưng chưa có trong conversations (vd: reload trang), fetch conversations
     React.useEffect(() => {
@@ -37,6 +38,11 @@ const ChatContainer = ({ onCloseChatInfo, isShowChatInfo }) => {
 
     // Logic tìm conversation
     const selectedConvo = (conversations || []).find(conversation => conversation && conversation._id === activeConversationId);
+
+    const invite = searchParams.get('invite');
+    if (searchParams.has('joinGroup') && /^(?:[a-f0-9]{64}|[a-f0-9]{24})$/i.test(invite || '')) {
+        return <Navigate to={`/groups/join/${invite}`} replace />;
+    }
 
     // X-Style Empty State: "Select a message"
     if (!selectedConvo) {
@@ -60,17 +66,18 @@ const ChatContainer = ({ onCloseChatInfo, isShowChatInfo }) => {
                 </div>
 
                 <div className={cx("body")}>
+                    <ChatDrawOverlay key={`draw-${selectedConvo._id}`} conversationId={selectedConvo._id} />
                     <ChatBody />
                 </div>
 
                 <div className={cx("footer")}>
-                    <ChatInput />
+                    <ChatInput onOpenDrawTool={() => setIsDrawModeOpen(true)} />
                 </div>
             </div>
 
             <MotionPresence open={isShowChatInfo} className={cx("block-right")}>
                 <div className={cx("chat-info-wrapper")}>
-                    <ChatInfo chat={selectedConvo} onClose={onCloseChatInfo} />
+                    <ChatInfo key={selectedConvo._id} chat={selectedConvo} onClose={onCloseChatInfo} />
                 </div>
             </MotionPresence>
         </div>

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import classNames from 'classnames/bind';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import styles from '../../assets/css/AddMemberModal.module.scss';
@@ -59,7 +60,9 @@ const AddMemberModal = ({ conversationId, existingParticipantIds = [], onClose }
         }
     };
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <AnimatePresence>
             <div className={cx('overlay')} onClick={onClose}>
                 <Motion.div 
@@ -151,7 +154,8 @@ const AddMemberModal = ({ conversationId, existingParticipantIds = [], onClose }
                     </div>
                 </Motion.div>
             </div>
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 };
 

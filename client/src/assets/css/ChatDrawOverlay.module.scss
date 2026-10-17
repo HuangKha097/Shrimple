@@ -1,0 +1,407 @@
+/* --- Scroll-Anchored Drawing Surface inside .messages-inner-container --- */
+.scroll-draw-layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+    overflow: hidden;
+    transition: opacity 0.2s ease;
+
+    &.interactive {
+        pointer-events: auto;
+        cursor: crosshair;
+        touch-action: pan-y;
+        background: rgba(249, 115, 22, 0.015);
+    }
+
+    &.hidden-layer {
+        opacity: 0;
+    }
+}
+
+.scroll-draw-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    pointer-events: none;
+}
+
+/* --- Pinned Top Pill (Toolbar stays accessible at top of chat viewport) --- */
+.pinned-top-bar {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    z-index: 38;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(15, 17, 21, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+    &.has-drawing {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        border-color: rgba(249, 115, 22, 0.4);
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65), 0 0 16px rgba(249, 115, 22, 0.18);
+    }
+}
+
+.pinned-pen-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+    color: #fb923c;
+    font-size: 1.22rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+
+    &:hover {
+        background: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+    }
+}
+
+.pinned-status-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 6px;
+    font-size: 1.2rem;
+    color: #e7e9ea;
+    font-weight: 600;
+    white-space: nowrap;
+
+    .pulse-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #f97316;
+        box-shadow: 0 0 8px #f97316;
+    }
+
+    .author-sub {
+        color: #94a3b8;
+        font-weight: 500;
+        font-size: 1.12rem;
+    }
+}
+
+.pinned-mini-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.14);
+        color: #ffffff;
+    }
+
+    &.danger:hover {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.45);
+        color: #f87171;
+    }
+}
+
+/* --- Expanded Instagram Draw Studio Toolbar (Pinned at Top) --- */
+.draw-studio-dock {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    pointer-events: auto;
+    width: min(96%, 680px);
+    background: rgba(14, 16, 20, 0.94);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border: 1px solid rgba(249, 115, 22, 0.35);
+    border-radius: 20px;
+    padding: 10px 14px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.8), 0 0 24px rgba(249, 115, 22, 0.16);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    animation: studioSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.studio-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.studio-brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #ffffff;
+
+    .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #f97316 0%, #ec4899 55%, #8b5cf6 100%);
+        color: #ffffff;
+        box-shadow: 0 3px 10px rgba(236, 72, 153, 0.35);
+    }
+
+    .live-pill {
+        font-size: 1.02rem;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: rgba(34, 197, 94, 0.16);
+        color: #4ade80;
+        border: 1px solid rgba(34, 197, 94, 0.35);
+    }
+}
+
+.brush-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 3px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.brush-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 1.15rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    &.active {
+        background: rgba(249, 115, 22, 0.22);
+        color: #fb923c;
+        box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.45);
+    }
+}
+
+.studio-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.action-icon-btn {
+    width: 31px;
+    height: 31px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.12);
+        color: #ffffff;
+    }
+
+    &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    &.danger:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.45);
+        color: #f87171;
+    }
+}
+
+.action-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.07);
+    color: #f8fafc;
+    font-size: 1.16rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.16s ease;
+
+    &:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.14);
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    &.primary {
+        background: linear-gradient(135deg, #f97316 0%, #ec4899 100%);
+        border-color: transparent;
+        color: #ffffff;
+
+        &:hover:not(:disabled) {
+            filter: brightness(1.08);
+            box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+        }
+    }
+}
+
+.studio-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.palette-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.color-swatch {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+        transform: scale(1.14);
+    }
+
+    &.active {
+        transform: scale(1.22);
+        border-color: #ffffff;
+        box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.55);
+    }
+}
+
+.custom-color-label {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: conic-gradient(red, yellow, lime, aqua, blue, magenta, red);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+        position: absolute;
+    }
+}
+
+.size-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .size-label {
+        font-size: 1.12rem;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+}
+
+.size-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+
+    .size-dot {
+        border-radius: 50%;
+        background: #e2e8f0;
+    }
+
+    &.active {
+        border-color: #f97316;
+        background: rgba(249, 115, 22, 0.18);
+
+        .size-dot {
+            background: #fb923c;
+        }
+    }
+}
+
+@keyframes studioSlideDown {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -10px) scale(0.97);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0) scale(1);
+    }
+}

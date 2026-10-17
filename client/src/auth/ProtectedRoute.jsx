@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import { useEffect, useState } from 'react';
 import {useAuthStore} from "../stores/useAuthStore.js";
 import {Navigate, Outlet} from "react-router";
 
@@ -7,29 +7,28 @@ import LoadingSpin from "../components/common/loading/LoadingSpin.jsx";
 const ProtectedRoute = () => {
     const {accessToken, user} = useAuthStore()
     const [starting, setStarting] = useState(true);
-    const initPromiseRef = useRef(null);
 
     useEffect(() => {
-        let active = true;
-        if (!initPromiseRef.current) {
-            initPromiseRef.current = (async () => {
-                const auth = useAuthStore.getState();
-                if (!auth.accessToken) await auth.refresh();
-
-                const latest = useAuthStore.getState();
-                if (latest.accessToken && !latest.user) await latest.fetchMe();
-                if (useAuthStore.getState().user) useAuthStore.getState().connectSocket();
-            })();
-        }
-        initPromiseRef.current.then(
-            () => { if (active) setStarting(false); },
-            (error) => {
-                console.error('Failed to initialize session', error);
-                if (active) setStarting(false);
+        let alive = true;
+        if (/^\/groups\/join\/(?:[a-f0-9]{64}|[a-f0-9]{24})$/.test(window.location.pathname)) {
+            sessionStorage.setItem('shrimple-group-invite', window.location.pathname);
+        } else if (window.location.pathname === '/chat') {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('invite');
+            if (params.has('joinGroup') && /^(?:[a-f0-9]{64}|[a-f0-9]{24})$/.test(token || '')) {
+                sessionStorage.setItem('shrimple-group-invite', `/groups/join/${token}`);
             }
-        );
-        return () => { active = false; };
-    }, []);
+        }
+        const init = async () => {
+            if (!useAuthStore.getState().accessToken) await useAuthStore.getState().refresh();
+            const current = useAuthStore.getState();
+            if (current.accessToken && !current.user) await current.fetchMe();
+            else if (current.user) current.connectSocket();
+            if (alive) setStarting(false);
+        };
+        init();
+        return () => { alive = false; };
+    }, [])
     if (starting) {
         return (
             <div style={{

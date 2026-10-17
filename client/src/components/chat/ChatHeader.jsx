@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/ChatHeader.module.scss';
 import defaultAvatar from "../../../public/favicon.png";
-import { Info, Phone, Video, ChevronLeft, MoreVertical, Pin, PinOff, ChevronDown, ChevronUp, X, PhoneCall } from 'lucide-react';
+import { Info, Phone, Video, ChevronLeft, MoreVertical, Pin, PinOff, ChevronDown, ChevronUp, X, PenTool } from 'lucide-react';
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useCallStore } from '../../stores/useCallStore';
@@ -15,7 +15,7 @@ const cx = classNames.bind(styles);
 
 const ChatHeader = ({ onCloseChatInfo, chat }) => {
     const { user: currentUser, onlineUsers } = useAuthStore();
-    const { friends, setActiveConversationId, pinnedMessages, fetchPinnedMessages, togglePinMessageAction } = useChatStore();
+    const { friends, setActiveConversationId, pinnedMessages, fetchPinnedMessages, togglePinMessageAction, isDrawModeOpen, toggleDrawMode, chatDrawings } = useChatStore();
     const { initiateCall } = useCallStore();
     const { activeGroupCalls, isInCall, currentConversationId, joinGroupCall, setModalOpen } = useGroupCallStore();
     const navigate = useNavigate();
@@ -54,24 +54,33 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
     }
 
     if (isGroup) {
-        displayName = chat.name || groupInfo?.name || "Unnamed Group";
-        statusText = `${participants.length} members`;
+        displayName = chat.name || groupInfo?.name || "Nhóm chưa đặt tên";
+        statusText = `${participants.length} thành viên`;
     } else if (partner) {
-        displayName = partner.displayName || partner.username || "User";
+        displayName = partner.displayName || partner.username || "Người dùng";
         isOnline = onlineUsers.includes(partner._id);
-        statusText = isOnline ? "Active now" : "Offline";
+        statusText = isOnline ? "Đang hoạt động" : "Ngoại tuyến";
         partnerId = partner._id;
     }
 
-    const isAllowedToCall = isGroup || Boolean(partner && friends.some(
-        f => f._id.toString() === partner._id.toString()
-    ));
+    const isAllowedToCall = isGroup || Boolean(
+        partner && friends.some(f => f._id.toString() === partner._id.toString())
+    );
 
     const renderAvatar = () => {
         const getAvatarSrc = (url) => {
             if (!url) return defaultAvatar;
             if (url.startsWith('http') || url.startsWith('data:')) return url;
             return `${ASSET_BASE_URL}${url}`;
+        };
+
+        const resolveParticipantAvatar = (p) => {
+            if (!p) return null;
+            if (p.avatarURL) return p.avatarURL;
+            const pId = (p._id || p.userId || p)?.toString();
+            if (pId && currentUser && pId === currentUser._id?.toString()) return currentUser.avatarURL;
+            const f = Array.isArray(friends) ? friends.find(fr => fr?._id?.toString() === pId) : null;
+            return f?.avatarURL || null;
         };
 
         if (isGroup) {
@@ -89,14 +98,14 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
                 return (
                     <div className={cx('group-avatar-stack')}>
                         <img
-                            src={getAvatarSrc(participants[0]?.avatarURL)}
+                            src={getAvatarSrc(resolveParticipantAvatar(participants[0]))}
                             alt="mem1"
                             className={cx('stack-avatar', 'first')}
                             onError={(e) => { e.target.src = defaultAvatar }}
                         />
                         {participants.length > 1 && (
                             <img
-                                src={getAvatarSrc(participants[1]?.avatarURL)}
+                                src={getAvatarSrc(resolveParticipantAvatar(participants[1]))}
                                 alt="mem2"
                                 className={cx('stack-avatar', 'second')}
                                 onError={(e) => { e.target.src = defaultAvatar }}
@@ -121,6 +130,8 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
     const handleProfileClick = () => {
         if (!isGroup && partnerId) {
             navigate(`/feed/profile/${partnerId}`);
+        } else if (isGroup && onCloseChatInfo) {
+            onCloseChatInfo();
         }
     };
 
@@ -142,6 +153,8 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
                 return "[Vị trí chia sẻ]";
             case 'group_call':
                 return "[Cuộc gọi nhóm]";
+            case 'poll':
+                return `[Bình chọn] ${pin.poll?.question || pin.content || ""}`;
             default:
                 return "Tin nhắn ghim";
         }
@@ -183,7 +196,7 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
                 >
                     <ChevronLeft size={30} />
                 </button>
-                <div className={cx('user-info')} onClick={handleProfileClick} style={{ cursor: !isGroup ? 'pointer' : 'default' }}>
+                <div className={cx('user-info')} onClick={handleProfileClick} style={{ cursor: 'pointer' }} title={isGroup ? "Xem thông tin nhóm" : "Xem trang cá nhân"}>
                     <div className={cx('avatar-container')}>
                         {renderAvatar()}
                     </div>
@@ -228,7 +241,7 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
                             <button
                                 className={cx('btn')}
                                 disabled={!isAllowedToCall}
-                                title={!isAllowedToCall ? 'You are not friends' : 'Voice Call'}
+                                title={!isAllowedToCall ? 'Chưa kết bạn' : 'Gọi thoại'}
                                 onClick={() => {
                                     if (!partnerId) {
                                         toast.error('Không tìm thấy thông tin người nhận');
@@ -242,7 +255,7 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
                             <button
                                 className={cx('btn')}
                                 disabled={!isAllowedToCall}
-                                title={!isAllowedToCall ? 'You are not friends' : 'Video Call'}
+                                title={!isAllowedToCall ? 'Chưa kết bạn' : 'Gọi video'}
                                 onClick={() => {
                                     if (!partnerId) {
                                         toast.error('Không tìm thấy thông tin người nhận');
@@ -256,19 +269,60 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
                         </>
                     )}
 
+                    <button
+                        type="button"
+                        className={cx('btn', { active: isDrawModeOpen })}
+                        title="Cây bút vẽ đính trên màn hình chat (Instagram Draw)"
+                        onClick={toggleDrawMode}
+                        style={{
+                            position: 'relative',
+                            color: isDrawModeOpen || (chatDrawings?.[chat._id]?.strokes?.length > 0) ? '#f97316' : undefined,
+                        }}
+                    >
+                        <PenTool size={19} />
+                        {chatDrawings?.[chat._id]?.strokes?.length > 0 && (
+                            <span
+                                style={{
+                                    position: 'absolute',
+                                    top: '6px',
+                                    right: '6px',
+                                    width: '7px',
+                                    height: '7px',
+                                    borderRadius: '50%',
+                                    backgroundColor: '#f97316',
+                                    boxShadow: '0 0 6px #f97316',
+                                }}
+                            />
+                        )}
+                    </button>
+
+                    <button
+                        type="button"
+                        className={cx('btn')}
+                        title={isGroup ? "Thông tin nhóm" : "Thông tin hội thoại"}
+                        onClick={onCloseChatInfo}
+                    >
+                        <Info size={20} />
+                    </button>
+
                     <div className={cx('more-menu-container')}>
                         <button
                             className={cx('btn', { active: showMenu })}
                             onClick={() => setShowMenu(!showMenu)}
+                            title="Tùy chọn khác"
                         >
                             <MoreVertical size={20} />
                         </button>
 
                         {showMenu && (
                             <div className={cx('dropdown-menu')}>
+                                <button className={cx('menu-item')} onClick={() => { toggleDrawMode(); setShowMenu(false); }}>
+                                    <PenTool size={18} />
+                                    <span>{isDrawModeOpen ? "Đóng bút vẽ màn hình" : "Vẽ lên màn hình chat"}</span>
+                                </button>
                                 <button className={cx('menu-item')} onClick={() => { onCloseChatInfo(); setShowMenu(false); }}>
                                     <Info size={18} />
-                                    <span>Chat Info</span>
+                                    <span>{isGroup ? "Thông tin nhóm" : "Thông tin hội thoại"}</span>
                                 </button>
                             </div>
                         )}
