@@ -62,7 +62,7 @@
     position: absolute;
     z-index: 35;
     right: 16px;
-    top: 76px;
+    top: 80px;
     bottom: 16px;
     width: min(336px, calc(100vw - 32px));
     display: flex;

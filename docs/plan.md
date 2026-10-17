@@ -89,6 +89,8 @@ Scripts này có thật trong package.json. Backend phải dùng cwd `server/` v
 | `compose.yaml` | client/.env.development, server/.env; ai-service/init-env.ps1 tạo ai-service/.env dùng chung cho backend+ai; ports5173/5001/loopback8001; ai/whisper/qwen, Mongo bên ngoài |
 | `compose.gpu.yaml` | Override NVIDIA cho Whisper; mặc định compose.yaml dùng CPU, không cần CUDA/GPU reservation |
 
+Compose local override ba VITE URL thành `http://localhost:5001`, backend development/cổng5001 và CLIENT_ORIGINS=`http://localhost:5173`; giá trị Render/HTTPS trong env client không điều khiển các URL khi chạy Compose. Google OAuth vẫn cần đăng ký origin local tại Google Cloud Console. [Kiểm tra local HTTP/CORS](./validation/2026-10-17-local-http.md).
+
 Development API/socket mặc định localhost:5001. Production API fallback là cùng origin (config chuyển `/` thành chuỗi rỗng), còn socket/assets có fallback host Render trong code. Cần đặt env production rõ; không giả định REST và socket tự cùng host nếu thiếu cấu hình. Hai Google Client ID frontend/backend phải khớp audience.
 
 ### 3.3. Lệnh xác minh

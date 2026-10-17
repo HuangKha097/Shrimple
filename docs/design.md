@@ -151,6 +151,7 @@ Node ESM: Express + Socket.IO trên cùng HTTP server
 | --- | --- | --- |
 | Bootstrap server | `server/server.js`, `src/socket/socket.js` | Express/Socket cùng server; DB connect trước listen; default 5001 |
 | Bootstrap client | `client/src/main.jsx`, `App.jsx` | StrictMode, i18n, Google provider, AntiPeepProvider, router/call modals |
+| Compose local | `compose.yaml`, `client/src/config/env.js` | Browser ở http://localhost:5173; API/socket/assets được override thành http://localhost:5001; backend development/5001, CORS đúng origin local; không cấu hình TLS hoặc OAuth origins tại Google |
 | REST client | `client/src/services/`, `lib/axios.js` | Credentials + Bearer, optional globalLoading; refresh 401 tối đa 4 retries |
 | State | `client/src/stores/` | Auth, chat, post, notifications, individual/group call, theme, UI |
 | Auth server | `authMiddleware.js`, `authController.js` | JWT + User lookup; Session refresh và OTP riêng collection |

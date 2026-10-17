@@ -196,9 +196,8 @@
 .call-stage {
   flex: 1;
   min-height: 0;
-  padding: 16px 16px 46px 16px;
+  padding: 16px 16px 26px 16px;
   display: flex;
-  position: relative;
   background: #0e1014;
   border-radius: 0 0 22px 22px;
   transition: padding-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
@@ -675,11 +674,10 @@
 // 4. Bottom Floating Control Dock (Pill Bar)
 // ------------------------------------------
 .call-dock {
-  position: absolute;
-  bottom: -14px;
-  left: 50%;
-  transform: translateX(-50%);
+  align-self: center;
+  margin: -34px auto -14px auto;
   z-index: 45;
+  flex-shrink: 0;
   padding: 10px 22px;
   display: inline-flex;
   align-items: center;

@@ -61,6 +61,8 @@ docker compose up -d --build
 
 Script tạo `ai-service/.env` với khóa ngẫu nhiên, không in khóa và không ghi đè tệp đã có. Compose nạp tệp này vào **cả backend và ai**, sau `server/.env`, nên `TRANSLATION_AI_KEY` trong đó được dùng chung cho Docker. Không dùng `docker compose config` không có `--quiet` để chia sẻ output vì nó có thể chứa secrets. FastAPI trả 503 khi chưa cấu hình khóa và 401 khi khóa không đúng.
 
+Compose này dành cho local: mở `http://localhost:5173`; API, Socket.IO và media đều dùng `http://localhost:5001`. Các URL này được Compose ưu tiên hơn giá trị trong env client, tránh gọi nhầm Render hoặc HTTPS vào backend HTTP. Backend dùng cổng 5001, chế độ development và CORS cho `http://localhost:5173`. Khi sửa cấu hình Compose, áp dụng bằng `docker compose up -d --no-deps frontend backend`; không cần tải lại model.
+
 Compose mặc định chạy **CPU**, phù hợp máy không có NVIDIA GPU; `whisper` build từ `ai-service/whisper/Dockerfile`, không tải CUDA. Vẫn dùng whisper.cpp v1.9.4 và model `ggml-medium-q5_0.bin` (khoảng 539 MB), kiểm tra SHA-256 và giữ model trong volume `whisper-model-cache`. Service `qwen` chạy Qwen3 1.7B GGUF Q8_0 bằng llama.cpp, giữ model trong volume `qwen-model-cache`. Lần đầu vẫn cần mạng để tải các package/model. Medium trên CPU có thể không theo kịp clip 6 giây; cần đo thực tế, hàng chờ vẫn bỏ clip cũ và cảnh báo khi xử lý chậm.
 
 Máy có NVIDIA GPU và Docker Desktop WSL2 GPU support có thể dùng cấu hình riêng:
@@ -209,6 +211,8 @@ Các khóa được khai báo trong <code>server/.env.example</code>; giá trị
 | <code>EMAIL_SECURE</code> | Không | Chế độ kết nối SMTP bảo mật |
 
 Trong cấu hình một Google Web Client hiện tại, <code>VITE_GOOGLE_CLIENT_ID</code> và <code>GOOGLE_CLIENT_ID</code> phải khớp chính xác. Sau khi đổi env server, hãy khởi động lại backend; sau khi đổi env client, hãy khởi động lại Vite hoặc rebuild frontend.
+
+Nếu Google báo `The given origin is not allowed for the given client ID`, thêm `http://localhost` và `http://localhost:5173` vào **Authorized JavaScript origins** của đúng OAuth Web Client trong Google Cloud Console. Đây là cấu hình tại Google, không phải CORS của Express; xem [hướng dẫn Google Identity Services](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid). Không dùng `https://localhost:5001` cho API local khi backend chưa có TLS.
 
 Các tệp env thật được Git bỏ qua. Hai tệp <code>.env.example</code> chỉ chứa placeholder và được commit để mô tả cấu hình cần thiết.
 
