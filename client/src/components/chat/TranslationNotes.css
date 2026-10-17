@@ -1,71 +1,92 @@
-/* Translation Toggle Button in Call Dock - Style X */
+/* Translation Toggle Button in Call Dock */
 .translation-toggle {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
-    gap: 8px;
-    padding: 0 16px;
-    height: 48px;
-    border-radius: 9999px;
-    border: 1px solid rgba(255, 255, 255, 0.16);
-    background: #16181c;
-    color: #e7e9ea;
+    justify-content: center;
+    gap: 6px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #9ca3af;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
     user-select: none;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.translation-toggle:hover {
-    background: #202327;
-    border-color: rgba(255, 255, 255, 0.3);
+.translation-toggle-pill {
+    width: 62px;
+    height: 40px;
+    border-radius: 9999px;
+    background: #23262f;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    color: #e5e7eb;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.translation-toggle-label {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: #9ca3af;
+    line-height: 1.1;
+    transition: color 0.2s ease;
+}
+
+.translation-toggle:hover .translation-toggle-pill {
+    background: #2d313c;
+    border-color: rgba(255, 255, 255, 0.16);
     color: #ffffff;
     transform: translateY(-1px);
 }
 
-.translation-toggle.active {
-    background: #ffffff;
-    color: #0f1419;
-    border-color: #ffffff;
-    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
+.translation-toggle:hover .translation-toggle-label {
+    color: #e5e7eb;
 }
 
-.translation-toggle.active svg {
-    color: #0f1419;
+.translation-toggle.active .translation-toggle-pill {
+    background: #2c303b;
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
-/* Translation Panel - Style X (Wider & Modern) */
+.translation-toggle.active .translation-toggle-label {
+    color: #f3f4f6;
+}
+
+/* Translation Panel - Right Column Sidebar */
 .translation-panel {
     position: absolute;
-    z-index: 50;
-    right: 20px;
-    top: 72px;
-    width: min(440px, calc(100vw - 36px));
-    max-height: calc(100% - 130px);
+    z-index: 35;
+    right: 16px;
+    top: 76px;
+    bottom: 16px;
+    width: min(336px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
-    background: #000000;
-    border: 1px solid #2f3336;
-    border-radius: 20px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 1px rgba(255, 255, 255, 0.2);
-    color: #e7e9ea;
+    background: #13151a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+    color: #e6edf3;
     padding: 16px;
     text-align: left;
-    backdrop-filter: blur(20px);
     box-sizing: border-box;
     font-family: inherit;
-    animation: translationSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: translationSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes translationSlideIn {
     from {
         opacity: 0;
-        transform: translateY(8px) scale(0.98);
+        transform: translateX(8px);
     }
     to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateX(0);
     }
 }
 
@@ -74,8 +95,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #2f3336;
+    padding-bottom: 14px;
+    flex-shrink: 0;
 }
 
 .translation-title-area {
@@ -91,22 +112,23 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #16181c;
-    border: 1px solid #2f3336;
-    color: #1d9bf0;
+    background: #1e2129;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e5e7eb;
+    flex-shrink: 0;
 }
 
 .translation-title {
-    font-size: 15px;
+    font-size: 14.5px;
     font-weight: 700;
-    color: #e7e9ea;
+    color: #f3f4f6;
     letter-spacing: -0.01em;
 }
 
 .translation-header-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
 }
 
 .translation-action-btn,
@@ -114,154 +136,177 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
     background: transparent;
     border: none;
-    color: #71767b;
+    color: #8b949e;
     cursor: pointer;
     transition: all 0.18s ease;
 }
 
 .translation-action-btn:hover,
 .translation-close-btn:hover {
-    background: rgba(239, 243, 244, 0.1);
-    color: #e7e9ea;
+    background: rgba(255, 255, 255, 0.07);
+    color: #f3f4f6;
 }
 
 .translation-action-btn:hover {
-    color: #f4212e;
+    color: #ef4444;
 }
 
-/* Direction Setting Card - Style X */
+/* Language Selector Row */
 .translation-setting-card {
-    margin: 12px 0 10px 0;
-    background: #16181c;
-    border: 1px solid #2f3336;
-    border-radius: 14px;
-    padding: 10px 12px;
+    margin: 0 0 12px 0;
+    flex-shrink: 0;
 }
 
 .translation-direction-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
 }
 
 .translation-lang-box {
     flex: 1;
+    min-width: 0;
     display: flex;
-    flex-direction: column;
-    gap: 3px;
-    background: #000000;
-    border: 1px solid #2f3336;
-    border-radius: 10px;
-    padding: 8px 10px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    background: #181b22;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 8px 12px;
     cursor: pointer;
     text-align: left;
     transition: all 0.2s ease;
 }
 
 .translation-lang-box:hover {
-    border-color: #38444d;
-    background: #0f1419;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: #1d2028;
+}
+
+.translation-lang-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
 }
 
 .translation-lang-role {
     font-size: 11px;
-    font-weight: 600;
-    color: #71767b;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-}
-
-.translation-lang-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.translation-flag {
-    font-size: 16px;
-    line-height: 1;
+    font-weight: 500;
+    color: #8b949e;
+    line-height: 1.2;
 }
 
 .translation-lang-name {
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #e7e9ea;
+    font-size: 13px;
+    font-weight: 700;
+    color: #f3f4f6;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.translation-lang-chevron {
+    color: #8b949e;
+    flex-shrink: 0;
 }
 
 .translation-swap-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: #202327;
-    border: 1px solid #38444d;
-    color: #1d9bf0;
+    background: #1d2028;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #9ca3af;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     flex-shrink: 0;
 }
 
 .translation-swap-btn:hover {
-    background: #1d9bf0;
+    background: #282c37;
     color: #ffffff;
-    border-color: #1d9bf0;
-    transform: rotate(180deg) scale(1.06);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: rotate(180deg);
 }
 
-.translation-swap-btn:active {
-    transform: rotate(180deg) scale(0.94);
-}
-
-/* Status Bar */
+/* Status Card */
 .translation-status-bar {
-    margin-bottom: 8px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
 }
 
-.translation-warning {
-    color: #a45500;
-    font-size: 12px;
-    padding: 4px 6px;
+.translation-status-card {
+    background: #171a21;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.translation-status-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
 }
 
 .translation-state {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.translation-state-title {
     font-size: 12.5px;
-    color: #71767b;
-    padding: 4px 6px;
+    font-weight: 600;
+    color: #4ade80;
+    line-height: 1.2;
+}
+
+.translation-state-sub {
+    font-size: 12px;
+    color: #8b949e;
+    padding-left: 16px;
+    line-height: 1.3;
 }
 
 .translation-pulse-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
 }
 
 .translation-pulse-dot.live {
-    background: #00ba7c;
-    box-shadow: 0 0 8px #00ba7c;
+    background: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
     animation: statusPulse 1.8s infinite;
 }
 
 .translation-pulse-dot.processing {
-    background: #f97316;
-    box-shadow: 0 0 8px #f97316;
+    background: #22c55e;
+    box-shadow: 0 0 10px #22c55e;
     animation: statusPulse 0.8s infinite;
 }
 
 .translation-pulse-dot.loading {
-    background: #1d9bf0;
-    box-shadow: 0 0 8px #1d9bf0;
+    background: #38bdf8;
+    box-shadow: 0 0 8px #38bdf8;
     animation: statusPulse 1s infinite;
 }
 
@@ -271,22 +316,64 @@
         transform: scale(1);
     }
     50% {
-        opacity: 0.4;
-        transform: scale(1.25);
+        opacity: 0.45;
+        transform: scale(1.2);
     }
+}
+
+/* Audio Waveform Equalizer Icon */
+.translation-waveform {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.translation-waveform span {
+    width: 2.5px;
+    border-radius: 999px;
+    background: #6e7681;
+    transition: height 0.2s ease, background 0.2s ease;
+}
+
+.translation-waveform span:nth-child(1) { height: 7px; }
+.translation-waveform span:nth-child(2) { height: 14px; }
+.translation-waveform span:nth-child(3) { height: 18px; }
+.translation-waveform span:nth-child(4) { height: 11px; }
+.translation-waveform span:nth-child(5) { height: 6px; }
+
+.translation-waveform.active span {
+    background: #9ca3af;
+    animation: waveBounce 0.9s ease-in-out infinite;
+}
+
+.translation-waveform.active span:nth-child(2) { animation-delay: 0.15s; }
+.translation-waveform.active span:nth-child(3) { animation-delay: 0.3s; }
+.translation-waveform.active span:nth-child(4) { animation-delay: 0.45s; }
+.translation-waveform.active span:nth-child(5) { animation-delay: 0.2s; }
+
+@keyframes waveBounce {
+    0%, 100% { transform: scaleY(0.6); }
+    50% { transform: scaleY(1.25); }
+}
+
+.translation-warning {
+    color: #f59e0b;
+    font-size: 11.5px;
+    padding: 6px 4px 0 4px;
 }
 
 .translation-error {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(244, 33, 46, 0.1);
-    border: 1px solid rgba(244, 33, 46, 0.25);
-    color: #f4212e;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    color: #f87171;
     font-size: 12px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    margin: 4px 0;
+    padding: 10px 12px;
+    border-radius: 12px;
 }
 
 .translation-error-icon {
@@ -296,27 +383,26 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: #f4212e;
+    background: #ef4444;
     color: #ffffff;
     font-size: 11px;
     font-weight: 700;
     flex-shrink: 0;
 }
 
-/* Translation Feed / List */
+/* Translation Feed / Note Cards List */
 .translation-list {
     flex: 1;
     overflow-y: auto;
-    min-height: 180px;
-    max-height: 380px;
+    min-height: 160px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding: 4px 6px 4px 0;
+    padding-right: 2px;
 }
 
 .translation-list::-webkit-scrollbar {
-    width: 5px;
+    width: 4px;
 }
 
 .translation-list::-webkit-scrollbar-track {
@@ -324,12 +410,8 @@
 }
 
 .translation-list::-webkit-scrollbar-thumb {
-    background: #2f3336;
+    background: rgba(255, 255, 255, 0.14);
     border-radius: 9999px;
-}
-
-.translation-list::-webkit-scrollbar-thumb:hover {
-    background: #536471;
 }
 
 .translation-empty {
@@ -338,8 +420,8 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 32px 16px;
-    color: #71767b;
+    padding: 32px 14px;
+    color: #8b949e;
     gap: 8px;
     margin: auto 0;
 }
@@ -348,192 +430,129 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
     border-radius: 50%;
-    background: #16181c;
-    border: 1px solid #2f3336;
-    color: #1d9bf0;
+    background: #181b22;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #9ca3af;
     margin-bottom: 4px;
 }
 
 .translation-empty-title {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 600;
-    color: #e7e9ea;
+    color: #e6edf3;
 }
 
 .translation-empty-desc {
-    font-size: 12.5px;
+    font-size: 12px;
     line-height: 1.45;
-    color: #71767b;
-    max-width: 300px;
+    color: #8b949e;
+    max-width: 260px;
 }
 
 .translation-empty-desc strong {
-    color: #e7e9ea;
+    color: #e6edf3;
 }
 
-/* Synchronized Chat Message Box Styling */
+/* Individual Translation Note Card */
 .translation-msg-wrapper {
-    display: flex;
-    gap: 8px;
     width: 100%;
-    position: relative;
     box-sizing: border-box;
-    padding: 2px 0;
-}
-
-.translation-msg-wrapper.me {
-    justify-content: flex-end;
-}
-
-.translation-msg-wrapper.other {
-    justify-content: flex-start;
-}
-
-.translation-msg-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    align-self: flex-end;
-    margin-bottom: 16px;
-    flex-shrink: 0;
-    background: #2f3336;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #1d9bf0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    user-select: none;
 }
 
 .translation-msg-content {
     display: flex;
     flex-direction: column;
-    max-width: 82%;
-    min-width: 0;
+    width: 100%;
+    background: #181b22;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease;
 }
 
-.translation-msg-wrapper.me .translation-msg-content {
-    align-items: flex-end;
+.translation-msg-content:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.translation-note-header {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
 }
 
 .translation-msg-sender {
-    font-size: 12px;
-    color: #71767b;
-    margin: 0 0 3px 6px;
-    font-weight: 600;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #fbbf24;
 }
 
-/* Message Bubble */
+.translation-msg-sender.speaker-amber {
+    color: #fbbf24;
+}
+
+.translation-msg-sender.speaker-blue {
+    color: #38bdf8;
+}
+
+.translation-msg-time {
+    font-size: 11.5px;
+    color: #6e7681;
+    font-weight: 500;
+}
+
 .translation-msg-bubble {
-    padding: 9px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     min-width: 0;
     word-break: break-word;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
 }
 
-/* Received bubble (Dark Graphite #2f3336 - synchronized with chat) */
-.translation-msg-wrapper.other .translation-msg-bubble {
-    background-color: #2f3336;
-    border-radius: 18px 18px 18px 4px;
-    color: #e7e9ea;
-}
-
-/* Sent by me bubble (Orange gradient - synchronized with chat) */
-.translation-msg-wrapper.me .translation-msg-bubble {
-    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-    border-radius: 18px 18px 4px 18px;
-    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.25);
-    color: #ffffff;
-}
-
-.translation-msg-text {
+.translation-msg-original {
+    font-size: 13px;
     line-height: 1.45;
-    font-size: 14px;
+    color: #e6edf3;
+    font-weight: 500;
     white-space: pre-wrap;
     word-wrap: break-word;
 }
 
-.translation-msg-wrapper.me .translation-msg-text {
-    color: #ffffff;
+.translation-msg-text {
+    font-size: 12.5px;
+    line-height: 1.42;
+    color: #8b949e;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
-.translation-msg-wrapper.other .translation-msg-text {
-    color: #e7e9ea;
+.translation-msg-text.primary-only {
+    font-size: 13px;
+    color: #e6edf3;
+    font-weight: 500;
 }
 
-/* Original Transcription Quote */
-.translation-msg-original {
-    margin-top: 5px;
-    padding-top: 4px;
-    font-size: 12px;
-    line-height: 1.35;
-    font-style: italic;
-    word-break: break-word;
-}
-
-.translation-msg-wrapper.other .translation-msg-original {
-    color: #949ba4;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.translation-msg-wrapper.me .translation-msg-original {
-    color: rgba(255, 255, 255, 0.85);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.translation-original-prefix {
-    font-style: normal;
-    font-weight: 600;
-    margin-right: 4px;
-    opacity: 0.85;
-}
-
-/* Time metadata below bubble */
-.translation-msg-meta {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-top: 3px;
-    padding: 0 4px;
-}
-
-.translation-msg-time {
-    font-size: 11px;
-    color: #71767b;
-}
-
-/* Layout shift for group call when panel is visible */
+/* Reserve right column space in Group Call when Translation Notes panel is open */
 div[class*="group-call-container"]:has(.translation-panel) > div[class*="call-stage"] {
-    padding-right: 470px;
+    padding-right: 368px;
 }
 
 /* Responsive / Small Screens */
-@media (max-width: 768px) {
+@media (max-width: 960px) {
     div[class*="group-call-container"]:has(.translation-panel) > div[class*="call-stage"] {
-        padding-right: 0;
+        padding-right: 16px;
     }
     .translation-panel {
-        top: 64px;
+        top: 68px;
         right: 12px;
         left: 12px;
+        bottom: 92px;
         width: auto;
-        max-height: calc(100% - 146px);
         border-radius: 16px;
-        padding: 12px;
-    }
-    .translation-toggle span {
-        display: none;
-    }
-    .translation-toggle {
-        padding: 0;
-        width: 48px;
-        justify-content: center;
+        padding: 14px;
     }
 }

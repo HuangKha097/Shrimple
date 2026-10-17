@@ -100,6 +100,10 @@ Docker CLI/Compose có sẵn nhưng `docker info` và `docker ps` ngoài sandbox
 `compose up --build`, không tải model, không chạy live `test:ai`. Không tìm thấy
 nvidia-smi trên PATH; không kết luận máy có/không GPU chỉ từ kết quả này.
 
+Follow-up cùng ngày: Docker Engine đã hoạt động; AI image build và18 tests Linux
+đã qua sau khi sửa dependency/entrypoint. Xem [AI Docker build](./2026-10-17-ai-docker-build.md).
+Kết quả engine500 ở trên là của lần review trước; model/GPU thực vẫn chưa nghiệm thu.
+
 Sau khi Docker Desktop Linux Engine hoạt động, chạy hướng dẫn trong
 [README](../../README.md#chạy-dịch-thuật-cục-bộ). Compose mặc định cần NVIDIA GPU;
 máy CPU dùng hướng dẫn đổi Dockerfile/reservation trong README. Sau đó mới

@@ -1,6 +1,6 @@
 // ==========================================
-// Discord-style Group Voice & Video Room
-// Modern Pure Monochromatic & Minimalist Luxury
+// Group Voice & Video Workspace
+// Dark Sleek Studio Layout (Speaker / Grid + Translation Notes)
 // ==========================================
 
 // ------------------------------------------
@@ -9,29 +9,29 @@
 .group-call-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
+  background: rgba(5, 6, 8, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 16px 16px 28px 16px;
   animation: fadeIn 0.2s ease-out;
 }
 
 .group-call-container {
   width: 100%;
-  max-width: 1080px;
+  max-width: 1260px;
   height: 86vh;
-  max-height: 780px;
-  background: #111214; // Discord-dark tone
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  max-height: 820px;
+  background: #0e1014;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+  overflow: visible;
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.85);
   position: relative;
 }
 
@@ -39,59 +39,57 @@
 // 2. Top Header Bar
 // ------------------------------------------
 .call-header {
-  height: 60px;
-  padding: 0 24px;
+  height: 64px;
+  padding: 0 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(18, 19, 22, 0.95);
+  background: #111318;
+  border-radius: 22px 22px 0 0;
   flex-shrink: 0;
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 
-    .live-badge {
-      display: inline-flex;
+    .group-icon-box {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: #1a1d24;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #d1d5db;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 9999px;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #22c55e;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-
-      .pulse-dot {
-        width: 8px;
-        height: 8px;
-        background-color: #22c55e;
-        border-radius: 50%;
-        box-shadow: 0 0 8px #22c55e;
-        animation: pulse 1.8s infinite;
-      }
+      justify-content: center;
+      flex-shrink: 0;
     }
 
     .group-meta {
       display: flex;
       flex-direction: column;
+      gap: 2px;
 
       .group-name {
-        font-size: 1.6rem;
+        font-size: 1.5rem;
         font-weight: 700;
-        color: #ffffff;
+        color: #f3f4f6;
         margin: 0;
         line-height: 1.2;
       }
 
       .participant-count {
         font-size: 1.2rem;
-        color: #86868b;
+        color: #8b949e;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+
+        .meta-dot {
+          opacity: 0.65;
+        }
       }
     }
   }
@@ -101,21 +99,91 @@
     align-items: center;
     gap: 8px;
 
-    .icon-btn {
-      width: 36px;
+    .view-mode-wrapper {
+      position: relative;
+    }
+
+    .view-mode-btn {
       height: 36px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
+      padding: 0 12px;
+      border-radius: 10px;
+      background: #1a1d24;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e5e7eb;
+      font-size: 1.25rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+
+      &:hover {
+        background: #222630;
+        border-color: rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+      }
+    }
+
+    .view-mode-menu {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      min-width: 156px;
+      background: #171a21;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 5px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .view-mode-option {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
       border: none;
-      color: #e7e9ea;
+      background: transparent;
+      color: #d1d5db;
+      font-size: 1.25rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.06);
+        color: #ffffff;
+      }
+
+      &.selected {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        font-weight: 600;
+      }
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background: transparent;
+      border: none;
+      color: #9ca3af;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.18s ease;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.08);
         color: #ffffff;
       }
     }
@@ -123,94 +191,277 @@
 }
 
 // ------------------------------------------
-// 3. Main Stage / Participant Grid
+// 3. Main Workspace Stage
 // ------------------------------------------
 .call-stage {
   flex: 1;
-  padding: 20px;
+  min-height: 0;
+  padding: 16px 16px 46px 16px;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
   position: relative;
-  background: radial-gradient(circle at 50% 50%, #17181c 0%, #0d0e11 100%);
-
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: 3px;
-  }
+  background: #0e1014;
+  border-radius: 0 0 22px 22px;
+  transition: padding-right 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
 }
 
-// Screen Sharing Theater Layout
-.theater-layout {
+.speaker-workspace {
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  min-height: 0;
+}
 
-  .theater-screen-box {
-    flex: 1;
-    background: #000000;
-    border-radius: 18px;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+// Left Column: Participants Strip + Invite Card
+.participants-sidebar {
+  width: 158px;
+  flex-shrink: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  padding-right: 2px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+  }
+
+  .participant-card {
+    width: 100%;
+    height: 150px;
+    flex-shrink: 0;
+  }
+}
+
+.invite-card {
+  width: 100%;
+  height: 150px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.015);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  .invite-icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #1c1f27;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #d1d5db;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    .theater-screen-badge {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    transition: all 0.2s ease;
   }
 
-  .theater-strip {
-    height: 110px;
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-    flex-shrink: 0;
+  .invite-label {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+  }
 
-    .participant-card {
-      width: 140px;
-      height: 100%;
-      flex-shrink: 0;
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.035);
+
+    .invite-icon-circle {
+      background: #252934;
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+
+    .invite-label {
+      color: #f3f4f6;
     }
   }
 }
 
-// Standard Dynamic Grid Layout
+// Center Column: Main Stage Card (Screen Share / Active Speaker)
+.main-stage-card {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: #13151a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+}
+
+.stage-topbar {
+  height: 48px;
+  padding: 0 16px;
+  background: #171920;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+
+  .stage-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #e5e7eb;
+    min-width: 0;
+
+    span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stage-title-icon {
+      color: #9ca3af;
+      flex-shrink: 0;
+    }
+  }
+
+  .stage-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    .zoom-btn {
+      height: 30px;
+      padding: 0 10px;
+      border-radius: 8px;
+      background: #21242d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e5e7eb;
+      font-size: 1.2rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+
+      &:hover {
+        background: #2a2e39;
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+    }
+
+    .expand-stage-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: #21242d;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #d1d5db;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+
+      &:hover {
+        background: #2a2e39;
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.16);
+      }
+    }
+  }
+}
+
+.stage-viewport {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  background: #0b0d11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  .stage-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+
+    &.camera-cover {
+      object-fit: cover;
+    }
+  }
+
+  .stage-spotlight {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    text-align: center;
+
+    .spotlight-avatar-ring {
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #1b1e26;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+      transition: all 0.25s ease;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+
+    &.speaking .spotlight-avatar-ring {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.22), 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .spotlight-name {
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #f3f4f6;
+      margin: 4px 0 0 0;
+    }
+
+    .spotlight-status {
+      font-size: 1.25rem;
+      color: #8b949e;
+    }
+  }
+}
+
+// Standard Dynamic Grid Layout (when switched to Grid view)
 .participants-grid {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: 8px;
   box-sizing: border-box;
+  overflow-y: auto;
 
   &.grid-1 {
     display: flex;
@@ -218,18 +469,18 @@
     align-items: center;
 
     .participant-card {
-      width: min(720px, 100%);
+      width: min(680px, 100%);
       aspect-ratio: 16 / 10;
-      max-height: min(520px, calc(100vh - 240px));
+      max-height: min(480px, calc(100vh - 260px));
     }
   }
 
   &.grid-2 {
     display: grid;
-    grid-template-columns: repeat(2, minmax(280px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    gap: 16px;
     width: 100%;
-    max-width: 1100px;
+    max-width: 1040px;
     align-content: center;
     justify-content: center;
     margin: auto;
@@ -237,28 +488,21 @@
     .participant-card {
       width: 100%;
       aspect-ratio: 16 / 10;
-      max-height: min(440px, calc(100vh - 240px));
+      max-height: min(400px, calc(100vh - 260px));
     }
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
-      grid-template-rows: repeat(2, auto);
-      gap: 12px;
-      max-width: 480px;
-
-      .participant-card {
-        max-height: 240px;
-      }
     }
   }
 
   &.grid-3,
   &.grid-4 {
     display: grid;
-    grid-template-columns: repeat(2, minmax(240px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    gap: 14px;
     width: 100%;
-    max-width: 1100px;
+    max-width: 1040px;
     align-content: center;
     justify-content: center;
     margin: auto;
@@ -266,22 +510,19 @@
     .participant-card {
       width: 100%;
       aspect-ratio: 16 / 10;
-      max-height: min(340px, calc((100vh - 260px) / 2));
+      max-height: min(310px, calc((100vh - 280px) / 2));
     }
 
     @media (max-width: 768px) {
       grid-template-columns: 1fr;
-      gap: 10px;
-      max-width: 440px;
     }
   }
 
   &.grid-many {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 14px;
     width: 100%;
-    max-width: 1280px;
     align-content: center;
     justify-content: center;
     margin: auto;
@@ -289,33 +530,42 @@
     .participant-card {
       width: 100%;
       aspect-ratio: 16 / 10;
-      max-height: 280px;
+      max-height: 250px;
     }
   }
 }
 
 // Participant Card Tile
 .participant-card {
-  background: #1e1f22; // Discord tile background
-  border-radius: 18px;
-  border: 2px solid transparent;
+  background: #16181f;
+  border-radius: 14px;
+  border: 1.5px solid rgba(255, 255, 255, 0.06);
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-sizing: border-box;
 
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background: #1a1d25;
+  }
+
+  &.active {
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  }
+
   &.speaking {
-    border-color: #23a55a; // Discord speaking green
-    box-shadow: 0 0 20px rgba(35, 165, 90, 0.45);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
 
     .avatar-wrapper {
-      box-shadow: 0 0 0 3px #23a55a, 0 0 16px rgba(35, 165, 90, 0.6);
-      animation: speakingPulse 1.2s infinite alternate;
+      box-shadow: 0 0 0 2px #22c55e;
     }
   }
 
@@ -333,18 +583,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    padding: 20px;
+    padding-bottom: 16px;
   }
 
   .avatar-wrapper {
-    width: 88px;
-    height: 88px;
+    width: 68px;
+    height: 68px;
     border-radius: 50%;
     overflow: hidden;
-    background: #2b2d31;
-    border: 2px solid rgba(255, 255, 255, 0.1);
-    transition: all 0.2s;
+    background: #23262f;
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
 
     img {
       width: 100%;
@@ -353,173 +602,207 @@
     }
   }
 
-  // Name Tag & Status Indicators
+  // Bottom Name Tag & 3-dots Icon
   .participant-tag {
     position: absolute;
-    bottom: 12px;
+    bottom: 10px;
     left: 12px;
-    background: rgba(0, 0, 0, 0.72);
-    backdrop-filter: blur(10px);
-    padding: 5px 12px;
-    border-radius: 8px;
+    right: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    max-width: calc(100% - 24px);
+    justify-content: space-between;
+    gap: 6px;
 
     .tag-name {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
       font-weight: 600;
-      color: #ffffff;
+      color: #e5e7eb;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    .you-pill {
-      font-size: 1rem;
-      background: rgba(255, 255, 255, 0.2);
-      padding: 1px 6px;
-      border-radius: 4px;
-      color: #ffffff;
-      text-transform: uppercase;
+    .tile-more-icon {
+      color: #8b949e;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
   }
 
+  // Top-right Microphone Badge
   .status-badges {
     position: absolute;
-    top: 12px;
-    right: 12px;
+    top: 10px;
+    right: 10px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     z-index: 5;
 
     .badge-icon {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      backdrop-filter: blur(8px);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
       transition: all 0.2s ease;
 
       &.muted {
-        background: rgba(239, 68, 68, 0.9);
-        color: #ffffff;
+        background: rgba(239, 68, 68, 0.16);
+        border: 1px solid rgba(239, 68, 68, 0.32);
+        color: #ef4444;
       }
 
       &.unmuted {
-        background: rgba(0, 0, 0, 0.65);
-        color: #22c55e;
-        border: 1px solid rgba(34, 197, 94, 0.35);
+        background: rgba(16, 185, 129, 0.16);
+        border: 1px solid rgba(16, 185, 129, 0.32);
+        color: #10b981;
 
         &.speaking {
-          background: #22c55e;
+          background: #10b981;
           color: #ffffff;
-          box-shadow: 0 0 10px rgba(34, 197, 94, 0.6);
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.55);
         }
-      }
-
-      &.cam-off {
-        background: rgba(239, 68, 68, 0.9);
-        color: #ffffff;
-      }
-
-      &.cam-on {
-        background: rgba(0, 0, 0, 0.65);
-        color: #22c55e;
-        border: 1px solid rgba(34, 197, 94, 0.35);
-      }
-
-      &.live {
-        background: #5865f2;
-        color: #ffffff;
       }
     }
   }
 }
 
 // ------------------------------------------
-// 4. Discord Bottom Floating Control Dock
+// 4. Bottom Floating Control Dock (Pill Bar)
 // ------------------------------------------
 .call-dock {
-  height: 80px;
-  padding: 0 24px;
-  display: flex;
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 45;
+  padding: 10px 22px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  background: rgba(18, 19, 22, 0.95);
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-  flex-shrink: 0;
+  gap: 16px;
+  background: #14161c;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
 
-  .dock-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: #2b2d31; // Discord button gray
-    border: none;
-    color: #dbdee1;
+  .dock-divider {
+    width: 1px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 0 2px;
+    flex-shrink: 0;
+  }
+
+  .dock-control {
     display: inline-flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 6px;
+    padding: 0;
+    background: transparent;
+    border: none;
     cursor: pointer;
+    user-select: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
+
+    .dock-pill {
+      width: 62px;
+      height: 40px;
+      border-radius: 9999px;
+      background: #23262f;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      color: #e5e7eb;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .dock-label {
+      font-size: 1.15rem;
+      font-weight: 500;
+      color: #9ca3af;
+      line-height: 1.1;
+      transition: color 0.2s ease;
+    }
 
     &:hover {
-      background: #35373c;
-      color: #ffffff;
-      transform: translateY(-2px);
-    }
+      .dock-pill {
+        background: #2d313c;
+        border-color: rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+        transform: translateY(-1px);
+      }
 
-    &:active {
-      transform: translateY(0);
-    }
-
-    // Active state (e.g. camera on / screen sharing)
-    &.active {
-      background: #ffffff;
-      color: #000000;
-
-      &:hover {
-        background: #e5e5e5;
+      .dock-label {
+        color: #e5e7eb;
       }
     }
 
-    // Muted / Off state (Red highlight)
-    &.muted {
-      background: rgba(239, 68, 68, 0.2);
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.4);
+    // Active state (e.g. Share active / Camera active -> White Pill)
+    &.active {
+      .dock-pill {
+        background: #ffffff;
+        border-color: #ffffff;
+        color: #0b0c0e;
+        box-shadow: 0 4px 16px rgba(255, 255, 255, 0.22);
+      }
 
-      &:hover {
+      .dock-label {
+        color: #f3f4f6;
+        font-weight: 600;
+      }
+
+      &:hover .dock-pill {
+        background: #f3f4f6;
+        color: #000000;
+      }
+    }
+
+    // Muted state
+    &.muted {
+      .dock-pill {
+        background: rgba(239, 68, 68, 0.18);
+        border-color: rgba(239, 68, 68, 0.38);
+        color: #ef4444;
+      }
+
+      &:hover .dock-pill {
         background: #ef4444;
         color: #ffffff;
       }
     }
 
-    // Leave Call Red Button
+    // End Call Red Pill Button
     &.disconnect {
-      width: 56px;
-      height: 48px;
-      border-radius: 24px;
-      background: #da373c; // Discord red
-      color: #ffffff;
+      .dock-pill {
+        width: 66px;
+        background: #e11d48;
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        box-shadow: 0 4px 16px rgba(225, 29, 72, 0.35);
+      }
 
-      &:hover {
-        background: #b82e33;
-        transform: translateY(-2px);
+      .dock-label {
+        color: #e5e7eb;
+      }
+
+      &:hover .dock-pill {
+        background: #be123c;
+        transform: translateY(-1px);
       }
     }
   }
 }
 
 // ------------------------------------------
-// 5. Minimized Voice Floating Widget (Discord style)
+// 5. Minimized Voice Floating Widget
 // ------------------------------------------
 .minimized-voice-bar {
   position: fixed;
@@ -700,7 +983,7 @@
     }
 
     .join-call-btn {
-      background: #23a55a; // Discord Join green
+      background: #23a55a;
       color: #ffffff;
       border: none;
       border-radius: 9999px;
@@ -733,6 +1016,40 @@
 }
 
 // ------------------------------------------
+// 7. Responsive Adjustments
+// ------------------------------------------
+@media (max-width: 768px) {
+  .speaker-workspace {
+    flex-direction: column-reverse;
+  }
+
+  .participants-sidebar {
+    width: 100%;
+    height: 120px;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    .participant-card,
+    .invite-card {
+      width: 124px;
+      height: 100%;
+    }
+  }
+
+  .call-dock {
+    padding: 8px 14px;
+    gap: 10px;
+    bottom: 8px;
+
+    .dock-control .dock-pill {
+      width: 48px;
+      height: 36px;
+    }
+  }
+}
+
+// ------------------------------------------
 // Keyframe Animations
 // ------------------------------------------
 @keyframes pulse {
@@ -747,15 +1064,6 @@
   100% {
     transform: scale(0.95);
     opacity: 0.8;
-  }
-}
-
-@keyframes speakingPulse {
-  0% {
-    box-shadow: 0 0 0 2px #23a55a, 0 0 8px rgba(35, 165, 90, 0.4);
-  }
-  100% {
-    box-shadow: 0 0 0 4px #23a55a, 0 0 20px rgba(35, 165, 90, 0.7);
   }
 }
 
@@ -786,6 +1094,5 @@
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }

@@ -155,7 +155,7 @@ Suite server cache dùng `MONGOMS_DOWNLOAD_DIR` trỏ `server/node_modules/.cach
 | ID | Ticket / AC phần đã có | FR / dependency | Priority / owner | Evidence / mức |
 | --- | --- | --- | --- | --- |
 | QS-I22 | Poll group create/vote single/multiple/toggle/close theo membership và quyền creator/admin/leader | FR-22; I07/I10 | P1 Backend + UI | `server/src/models/Message.js`; `server/src/controllers/messageController.js`; `client/src/components/chat/CreatePollModal.jsx`; `Message.jsx`; `server/test/groups.test.js` — C,T quyền; cap/concurrency/browser chưa khép |
-| QS-I23 | Note dịch vi↔en direct/group; accepted-session gate, audio proxy và AI service code | FR-23; I12/I13 | P1 Realtime + AI + UI | `server/tests/translationRoute.test.js`, `translationSession.test.js`; `ai-service/test_app.py`; [review 2026-10-17](./validation/2026-10-17-translation.md) — C,T REST/quyền/decoder/timeout; UI queue giả lập; AI output/latency chưa thử |
+| QS-I23 | Note dịch vi↔en direct/group; accepted-session gate, audio proxy và AI service code | FR-23; I12/I13 | P1 Realtime + AI + UI | [review 2026-10-17](./validation/2026-10-17-translation.md) — C,T REST/quyền/decoder/timeout, UI queue giả lập; [Docker build](./validation/2026-10-17-ai-docker-build.md) — B AI image,T18/18 Linux, HTTP smoke; AI output/GPU latency chưa thử |
 
 QS-I10/I11 cập nhật: admin được lưu, creator DTO leader; creator-only role/delete/rotate, admin add/remove ordinary member; leave chuyển successor; alias legacy24hex tra secret DB, không join bằng conversationId; rotate thu hồi cả legacy. QR mới/legacy tới preview và giữ qua onboarding; không auto-join khi scan. Quyền/cases đầy đủ ở [group-roles](./group-roles.md).
 

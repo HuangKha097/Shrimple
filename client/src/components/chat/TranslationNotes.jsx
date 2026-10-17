@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Languages, X, ArrowLeftRight, Trash2, Sparkles } from 'lucide-react';
+import { Languages, ArrowLeftRight, Trash2, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
 import api from '../../lib/axios.js';
 import { useAuthStore } from '../../stores/useAuthStore.js';
 import './TranslationNotes.css';
@@ -15,6 +15,13 @@ const errorMessage = (error, fallback) =>
     error.response?.status === 401
         ? 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.'
         : error.response?.data?.message || fallback;
+
+const formatElapsed = (startedAt) => {
+    const elapsedSec = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+    const mins = Math.floor(elapsedSec / 60);
+    const secs = elapsedSec % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
 
 export default function TranslationNotes({ active, kind, sessionId, sources }) {
     const { user } = useAuthStore();
@@ -36,6 +43,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     const recorders = useRef([]);
     const closeTimer = useRef(null);
     const notesEndRef = useRef(null);
+    const sessionStartRef = useRef(Date.now());
 
     const toggleDirection = () => {
         setNotes([]);
@@ -57,6 +65,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     useEffect(() => {
         stop();
         clearTimeout(closeTimer.current);
+        sessionStartRef.current = Date.now();
         setOpen(false);
         setNotes([]);
         setStatus('idle');
@@ -163,7 +172,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                 const response = await api.post('/api/translation/chunk', form, { signal: controller.signal });
                 const result = response.data;
                 if (!stopped && result.translated) {
-                    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const time = formatElapsed(sessionStartRef.current);
                     setNotes(previous => [...previous.slice(-49), { ...result, id: crypto.randomUUID(), time }]);
                 }
             } catch (error) {
@@ -233,8 +242,10 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                 title={open ? 'Đóng note dịch thuật' : 'Bật mic dịch thuật'}
                 aria-label={open ? 'Đóng note dịch thuật' : 'Bật mic dịch thuật'}
             >
-                <Languages size={20} />
-                <span>Mic dịch</span>
+                <span className="translation-toggle-pill">
+                    <Languages size={20} />
+                </span>
+                <span className="translation-toggle-label">Translate</span>
             </button>
 
             {open && (
@@ -243,9 +254,9 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                     <div className="translation-header">
                         <div className="translation-title-area">
                             <div className="translation-icon-badge">
-                                <Languages size={17} />
+                                <Languages size={16} />
                             </div>
-                            <span className="translation-title">Note dịch thuật</span>
+                            <span className="translation-title">Translation Notes</span>
                         </div>
                         <div className="translation-header-actions">
                             {notes.length > 0 && (
@@ -256,7 +267,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                                     title="Xóa lịch sử dịch"
                                     aria-label="Xóa lịch sử dịch"
                                 >
-                                    <Trash2 size={16} />
+                                    <Trash2 size={15} />
                                 </button>
                             )}
                             <button
@@ -266,12 +277,12 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                                 title="Đóng note dịch"
                                 aria-label="Đóng note"
                             >
-                                <X size={18} />
+                                <ChevronUp size={18} />
                             </button>
                         </div>
                     </div>
 
-                    {/* Direction Setting Card - Style X */}
+                    {/* Language Selector Row */}
                     <div className="translation-setting-card">
                         <div className="translation-direction-row">
                             <button
@@ -280,13 +291,15 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                                 onClick={toggleDirection}
                                 title="Bấm để đổi chiều dịch"
                             >
-                                <span className="translation-lang-role">Giọng nói</span>
-                                <div className="translation-lang-label">
-                                    <span className="translation-flag">{direction === 'vi-en' ? '🇻🇳' : '🇬🇧'}</span>
+                                <div className="translation-lang-info">
+                                    <span className="translation-lang-role">
+                                        {direction === 'vi-en' ? 'Vietnamese' : 'English'}
+                                    </span>
                                     <span className="translation-lang-name">
                                         {direction === 'vi-en' ? 'Tiếng Việt' : 'English'}
                                     </span>
                                 </div>
+                                <ChevronDown size={14} className="translation-lang-chevron" />
                             </button>
 
                             <button
@@ -296,7 +309,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                                 title="Đổi chiều dịch (Bấm để chuyển đổi)"
                                 aria-label="Đổi chiều dịch"
                             >
-                                <ArrowLeftRight size={17} />
+                                <ArrowLeftRight size={15} />
                             </button>
 
                             <button
@@ -305,90 +318,122 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                                 onClick={toggleDirection}
                                 title="Bấm để đổi chiều dịch"
                             >
-                                <span className="translation-lang-role">Dịch sang</span>
-                                <div className="translation-lang-label">
-                                    <span className="translation-flag">{direction === 'vi-en' ? '🇬🇧' : '🇻🇳'}</span>
+                                <div className="translation-lang-info">
+                                    <span className="translation-lang-role">
+                                        {direction === 'vi-en' ? 'English' : 'Vietnamese'}
+                                    </span>
                                     <span className="translation-lang-name">
                                         {direction === 'vi-en' ? 'English' : 'Tiếng Việt'}
                                     </span>
                                 </div>
+                                <ChevronDown size={14} className="translation-lang-chevron" />
                             </button>
                         </div>
                     </div>
 
-                    {/* Status Bar */}
+                    {/* Real-time Status Card */}
                     <div className="translation-status-bar">
-                        {status === 'loading' && (
-                            <div className="translation-state loading">
-                                <span className="translation-pulse-dot loading" />
-                                <span>Đang khởi động model dịch thuật; lần đầu có thể mất vài phút...</span>
-                            </div>
-                        )}
-                        {status === 'error' && (
+                        {status === 'error' ? (
                             <div className="translation-error" role="alert">
                                 <span className="translation-error-icon">!</span>
                                 <span>{error}</span>
                             </div>
-                        )}
-                        {status === 'ready' && (
+                        ) : (
                             <>
-                                <div className="translation-state ready">
-                                    <span className={`translation-pulse-dot ${processingCount > 0 ? 'processing' : 'live'}`} />
-                                    <span>
-                                        {processingCount > 0
-                                            ? 'Đang nhận diện giọng nói & dịch...'
-                                            : `Đang nghe cuộc gọi (${direction === 'vi-en' ? 'VI ➔ EN' : 'EN ➔ VI'})`}
-                                    </span>
+                                <div className="translation-status-card">
+                                    <div className="translation-status-copy">
+                                        <div className="translation-state">
+                                            <span
+                                                className={`translation-pulse-dot ${
+                                                    status === 'loading'
+                                                        ? 'loading'
+                                                        : processingCount > 0
+                                                        ? 'processing'
+                                                        : 'live'
+                                                }`}
+                                            />
+                                            <span className="translation-state-title">
+                                                Real-time translation
+                                            </span>
+                                        </div>
+                                        <div className="translation-state-sub">
+                                            {status === 'loading'
+                                                ? 'Starting translation model...'
+                                                : 'Converting speech to notes...'}
+                                        </div>
+                                    </div>
+                                    <div
+                                        className={`translation-waveform ${
+                                            status === 'ready' && processingCount > 0 ? 'active' : ''
+                                        }`}
+                                        aria-hidden="true"
+                                    >
+                                        <span />
+                                        <span />
+                                        <span />
+                                        <span />
+                                        <span />
+                                    </div>
                                 </div>
-                                {skippedClips && <div className="translation-warning">Máy chủ xử lý chậm; một số đoạn âm thanh đã bị bỏ qua.</div>}
+                                {skippedClips && (
+                                    <div className="translation-warning">
+                                        Máy chủ xử lý chậm; một số đoạn âm thanh đã bị bỏ qua.
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
 
-                    {/* Translation List - Synchronized with Chat Message Box */}
+                    {/* Translation Note Cards List */}
                     <div className="translation-list" aria-live="polite">
                         {notes.length === 0 ? (
                             <div className="translation-empty">
                                 <div className="translation-empty-icon">
-                                    <Sparkles size={22} />
+                                    <Sparkles size={20} />
                                 </div>
-                                <div className="translation-empty-title">Chưa có nội dung dịch</div>
+                                <div className="translation-empty-title">No translation notes yet</div>
                                 <div className="translation-empty-desc">
-                                    Âm thanh cuộc gọi sẽ được dịch tự động từ{' '}
-                                    <strong>{direction === 'vi-en' ? 'Tiếng Việt sang English' : 'English sang Tiếng Việt'}</strong>{' '}
-                                    theo thời gian thực.
+                                    Call speech will be automatically transcribed and translated from{' '}
+                                    <strong>{direction === 'vi-en' ? 'Tiếng Việt to English' : 'English to Tiếng Việt'}</strong>{' '}
+                                    in real time.
                                 </div>
                             </div>
                         ) : (
                             notes.map(note => {
                                 const isMe = Boolean(user?._id && note.speakerId === user._id);
+                                const speakerLabel =
+                                    note.speakerName ||
+                                    (isMe ? user?.displayName || user?.username || 'Bạn' : 'Thành viên');
                                 return (
                                     <div
                                         className={`translation-msg-wrapper ${isMe ? 'me' : 'other'}`}
                                         key={note.id}
                                     >
-                                        {!isMe && (
-                                            <div className="translation-msg-avatar" title={note.speakerName}>
-                                                {note.speakerName?.[0]?.toUpperCase() || 'U'}
-                                            </div>
-                                        )}
                                         <div className="translation-msg-content">
-                                            {!isMe && (
-                                                <div className="translation-msg-sender">{note.speakerName}</div>
-                                            )}
+                                            <div className="translation-note-header">
+                                                <span className={`translation-msg-sender ${isMe ? 'speaker-amber' : 'speaker-blue'}`}>
+                                                    {speakerLabel}
+                                                </span>
+                                                {note.time && (
+                                                    <span className="translation-msg-time">{note.time}</span>
+                                                )}
+                                            </div>
                                             <div className="translation-msg-bubble">
-                                                <div className="translation-msg-text">{note.translated}</div>
-                                                {note.original && note.original !== note.translated && (
-                                                    <div className="translation-msg-original">
-                                                        <span className="translation-original-prefix">Gốc:</span> {note.original}
+                                                {note.original && note.original !== note.translated ? (
+                                                    <>
+                                                        <div className="translation-msg-original">
+                                                            {note.original}
+                                                        </div>
+                                                        <div className="translation-msg-text">
+                                                            {note.translated}
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="translation-msg-text primary-only">
+                                                        {note.translated}
                                                     </div>
                                                 )}
                                             </div>
-                                            {note.time && (
-                                                <div className="translation-msg-meta">
-                                                    <span className="translation-msg-time">{note.time}</span>
-                                                </div>
-                                            )}
                                         </div>
                                     </div>
                                 );

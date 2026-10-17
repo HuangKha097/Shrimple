@@ -56,19 +56,12 @@ services:
     restart: unless-stopped
 
   whisper:
-    image: qtmshrimple-whisper-cuda
+    image: qtmshrimple-whisper-cpu
     build:
       context: ./ai-service/whisper
-      dockerfile: Dockerfile.cuda
+      dockerfile: Dockerfile
     volumes:
       - whisper-model-cache:/models
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]
       interval: 15s

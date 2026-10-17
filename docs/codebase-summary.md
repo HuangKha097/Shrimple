@@ -110,4 +110,6 @@ Mã ticket đầy đủ và AC ở [Kanban](./kanban.md); [Plan](./plan.md) nêu
 
 Compaction180files và số đo cleanup ở phần trước là snapshot trước pull; không phải số lượng tree mới. Evidence mới: [pull conflict resolution](./validation/pull-conflict-resolution.md). Bộ tài liệu đã đọc source upstream trực tiếp; chưa tạo compaction đầy đủ tree mới.
 
-Compose mới có ai/whisper/qwen và model-cache volumes; Whisper CUDA yêu cầu GPU NVIDIA theo reservation cấu hình, chưa thử chạy. Kết quả tree cuối sau merge: server20/20, client8/8, lint0errors8warnings, build pass; syntax39JS pass. Điều này không thay các số đo snapshot cleanup trước pull ở phần5.
+Snapshot sau merge có ai/whisper/qwen, model-cache volumes và Whisper CUDA yêu cầu NVIDIA; chưa thử chạy model trong snapshot đó. Kết quả tree cuối sau merge: server20/20, client8/8, lint0errors8warnings, build pass; syntax39JS pass. Điều này không thay các số đo snapshot cleanup trước pull ở phần5.
+
+Cập nhật build local 2026-10-17: `compose.yaml` mặc định Whisper CPU (`Dockerfile`), `compose.gpu.yaml` giữ lựa chọn NVIDIA (`Dockerfile.cuda`). Không đổi medium q5_0; [evidence CPU](./validation/2026-10-17-whisper-cpu-build.md) phân biệt build/binary với inference model thực.

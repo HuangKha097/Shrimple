@@ -3,16 +3,25 @@ import classNames from 'classnames/bind';
 import styles from '../../assets/css/GroupCall.module.scss';
 import { useGroupCallStore } from '../../stores/useGroupCallStore';
 import { useAuthStore } from '../../stores/useAuthStore';
+import { useChatStore } from '../../stores/useChatStore';
+import { chatService } from '../../services/chatService';
+import AddMemberModal from './AddMemberModal.jsx';
+import { toast } from 'sonner';
 import {
     Mic,
     MicOff,
     Video,
     VideoOff,
-    ScreenShare,
+    Monitor,
     Phone,
     PhoneOff,
-    Minus,
-    Tv,
+    Users,
+    UserPlus,
+    MoreVertical,
+    ChevronDown,
+    ExternalLink,
+    X,
+    LayoutGrid,
 } from 'lucide-react';
 
 const defaultAvatar = '/favicon.png';
@@ -29,8 +38,10 @@ const ParticipantTile = ({
     isCameraOn = false,
     isScreenSharing = false,
     isSpeaking = false,
+    isSelected = false,
+    onClick,
     displayName = 'Người dùng',
-    avatar = defaultAvatar
+    avatar = defaultAvatar,
 }) => {
     const videoRef = useRef(null);
     const audioRef = useRef(null);
@@ -41,10 +52,10 @@ const ParticipantTile = ({
         return `${ASSET_BASE_URL}${avatar}`;
     }, [avatar]);
 
-        const hasVideoTrack = Boolean(
+    const hasVideoTrack = Boolean(
         stream &&
-        typeof stream.getVideoTracks === 'function' &&
-        stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled)
+            typeof stream.getVideoTracks === 'function' &&
+            stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled)
     );
     const hasActiveVideo = (isCameraOn || isScreenSharing) && hasVideoTrack;
 
@@ -63,11 +74,23 @@ const ParticipantTile = ({
     }, [stream, isLocal]);
 
     return (
-        <div className={cx('participant-card', { speaking: isSpeaking && !isMuted })}>
+        <div
+            className={cx('participant-card', {
+                speaking: isSpeaking && !isMuted,
+                active: isSelected,
+            })}
+            onClick={onClick}
+            role={onClick ? 'button' : undefined}
+            tabIndex={onClick ? 0 : undefined}
+            onKeyDown={(e) => {
+                if (onClick && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    onClick();
+                }
+            }}
+        >
             {/* Hidden audio element for remote audio */}
-            {!isLocal && (
-                <audio ref={audioRef} autoPlay playsInline />
-            )}
+            {!isLocal && <audio ref={audioRef} autoPlay playsInline />}
 
             {hasActiveVideo ? (
                 <video
@@ -83,43 +106,38 @@ const ParticipantTile = ({
                         <img
                             src={avatarSrc}
                             alt={displayName}
-                            onError={(e) => { e.target.src = defaultAvatar; }}
+                            onError={(e) => {
+                                e.target.src = defaultAvatar;
+                            }}
                         />
                     </div>
                 </div>
             )}
 
-            {/* Top Right Status Badges */}
+            {/* Top Right Status Badge */}
             <div className={cx('status-badges')}>
-                {isScreenSharing && (
-                    <div className={cx('badge-icon', 'live')} title="Đang chia sẻ màn hình">
-                        <Tv size={14} />
-                    </div>
-                )}
-                {/* Camera Status Badge */}
                 <div
-                    className={cx('badge-icon', isCameraOn ? 'cam-on' : 'cam-off')}
-                    title={isCameraOn ? 'Camera: Bật' : 'Camera: Tắt'}
+                    className={cx('badge-icon', isMuted ? 'muted' : 'unmuted', {
+                        speaking: isSpeaking && !isMuted,
+                    })}
+                    title={isMuted ? 'Micro: Tắt' : isSpeaking ? 'Đang nói...' : 'Micro: Bật'}
                 >
-                    {isCameraOn ? <Video size={14} /> : <VideoOff size={14} />}
-                </div>
-                {/* Microphone Status Badge */}
-                <div
-                    className={cx('badge-icon', isMuted ? 'muted' : 'unmuted', { speaking: isSpeaking && !isMuted })}
-                    title={isMuted ? 'Micro: Tắt' : (isSpeaking ? 'Đang nói...' : 'Micro: Bật')}
-                >
-                    {isMuted ? <MicOff size={14} /> : <Mic size={14} />}
+                    {isMuted ? <MicOff size={13} /> : <Mic size={13} />}
                 </div>
             </div>
 
-            {/* Bottom Left Name Tag */}
+            {/* Bottom Name & Menu Tag */}
             <div className={cx('participant-tag')}>
                 <span className={cx('tag-name')}>{displayName}</span>
-                {isLocal && <span className={cx('you-pill')}>Bạn</span>}
+                <span className={cx('tile-more-icon')} aria-hidden="true">
+                    <MoreVertical size={14} />
+                </span>
             </div>
         </div>
     );
 };
+
+const ZOOM_LEVELS = [100, 125, 150];
 
 const GroupCallModal = () => {
     const {
@@ -145,16 +163,48 @@ const GroupCallModal = () => {
     } = useGroupCallStore();
 
     const { user: currentUser } = useAuthStore();
+    const { conversations } = useChatStore();
+
     const [callDuration, setCallDuration] = useState(0);
+    const [viewMode, setViewMode] = useState('speaker'); // 'speaker' | 'grid'
+    const [viewMenuOpen, setViewMenuOpen] = useState(false);
+    const [selectedParticipantId, setSelectedParticipantId] = useState('local');
+    const [zoomLevel, setZoomLevel] = useState(100);
+    const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+
     const screenVideoRef = useRef(null);
-    const translationSources = useMemo(() => [
-        { id: currentUser?._id, stream: localStream, muted: isMuted },
-        ...Object.values(peers).map(peer => ({
-            id: peer.user?._id || peer.user?.userId,
-            stream: peer.stream,
-            muted: peer.isMuted,
-        })),
-    ], [currentUser?._id, localStream, isMuted, peers]);
+    const featuredVideoRef = useRef(null);
+    const stageCardRef = useRef(null);
+
+    const activeConversation = useMemo(
+        () => (conversations || []).find((c) => c._id === currentConversationId),
+        [conversations, currentConversationId]
+    );
+
+    const canManageMembers = useMemo(() => {
+        if (!activeConversation || !currentUser?._id) return false;
+        const userIdStr = currentUser._id.toString();
+        const creatorIdStr = (
+            activeConversation.group?.createdBy?._id || activeConversation.group?.createdBy
+        )?.toString();
+        if (creatorIdStr && creatorIdStr === userIdStr) return true;
+        const me = (activeConversation.participants || []).find(
+            (p) => (p._id || p.userId)?.toString() === userIdStr
+        );
+        return me?.role === 'leader' || me?.role === 'admin';
+    }, [activeConversation, currentUser?._id]);
+
+    const translationSources = useMemo(
+        () => [
+            { id: currentUser?._id, stream: localStream, muted: isMuted },
+            ...Object.values(peers).map((peer) => ({
+                id: peer.user?._id || peer.user?.userId,
+                stream: peer.stream,
+                muted: peer.isMuted,
+            })),
+        ],
+        [currentUser?._id, localStream, isMuted, peers]
+    );
 
     // Call duration timer
     useEffect(() => {
@@ -175,24 +225,123 @@ const GroupCallModal = () => {
     const remoteScreenSharer = peerList.find((p) => p.isScreenSharing && p.stream);
     const hasScreenShareActive = isScreenSharing || Boolean(remoteScreenSharer);
 
-    // Attach screen stream to theater view (local or remote)
+    const allParticipants = useMemo(() => {
+        const localEntry = {
+            id: 'local',
+            isLocal: true,
+            stream: localStream,
+            isMuted,
+            isCameraOn,
+            isScreenSharing,
+            isSpeaking: speakingSockets.has('local'),
+            displayName: currentUser?.displayName || currentUser?.username || 'Bạn',
+            avatar: currentUser?.avatarURL,
+        };
+        const remoteEntries = peerList.map((p) => ({
+            id: p.socketId,
+            isLocal: false,
+            stream: p.stream,
+            isMuted: p.isMuted,
+            isCameraOn: p.isCameraOn,
+            isScreenSharing: p.isScreenSharing,
+            isSpeaking: speakingSockets.has(p.socketId),
+            displayName:
+                p.user?.displayName || p.user?.name || p.user?.username || 'Người dùng',
+            avatar: p.user?.avatar || p.user?.avatarURL,
+        }));
+        return [localEntry, ...remoteEntries];
+    }, [
+        localStream,
+        isMuted,
+        isCameraOn,
+        isScreenSharing,
+        speakingSockets,
+        currentUser?.displayName,
+        currentUser?.username,
+        currentUser?.avatarURL,
+        peerList,
+    ]);
+
+    const featuredParticipant = useMemo(() => {
+        const explicit = allParticipants.find((p) => p.id === selectedParticipantId);
+        if (explicit) return explicit;
+        const activeSpeaker = allParticipants.find((p) => p.isSpeaking && !p.isMuted);
+        return activeSpeaker || allParticipants[0];
+    }, [allParticipants, selectedParticipantId]);
+
+    const featuredHasVideo = useMemo(() => {
+        const s = featuredParticipant?.stream;
+        const hasTrack = Boolean(
+            s &&
+                typeof s.getVideoTracks === 'function' &&
+                s.getVideoTracks().some((t) => t.readyState === 'live' && t.enabled)
+        );
+        return Boolean(
+            (featuredParticipant?.isCameraOn || featuredParticipant?.isScreenSharing) && hasTrack
+        );
+    }, [featuredParticipant]);
+
+    // Attach screen stream to stage video (local or remote)
     useEffect(() => {
-        if (screenVideoRef.current) {
+        if (screenVideoRef.current && hasScreenShareActive) {
             const streamToDisplay = isScreenSharing ? screenStream : remoteScreenSharer?.stream;
             if (streamToDisplay) {
                 screenVideoRef.current.srcObject = streamToDisplay;
             }
         }
-    }, [screenStream, isScreenSharing, remoteScreenSharer?.stream]);
+    }, [screenStream, isScreenSharing, remoteScreenSharer?.stream, hasScreenShareActive, viewMode]);
+
+    // Attach featured participant camera video when no screen share is active
+    useEffect(() => {
+        if (featuredVideoRef.current && !hasScreenShareActive && featuredHasVideo) {
+            featuredVideoRef.current.srcObject = featuredParticipant.stream;
+        }
+    }, [hasScreenShareActive, featuredHasVideo, featuredParticipant?.stream, viewMode]);
+
+    const handleInviteClick = async () => {
+        if (!currentConversationId) return;
+        if (canManageMembers) {
+            setShowAddMemberModal(true);
+            return;
+        }
+        try {
+            const data = await chatService.getGroupInvite(currentConversationId);
+            if (data?.token) {
+                const inviteUrl = `${window.location.origin}/groups/join/${data.token}`;
+                await navigator.clipboard.writeText(inviteUrl);
+                toast.success('Đã sao chép liên kết mời tham gia nhóm');
+            }
+        } catch {
+            toast.error('Không thể lấy liên kết mời lúc này');
+        }
+    };
+
+    const handleCycleZoom = () => {
+        setZoomLevel((prev) => {
+            const idx = ZOOM_LEVELS.indexOf(prev);
+            return ZOOM_LEVELS[(idx + 1) % ZOOM_LEVELS.length];
+        });
+    };
+
+    const handleToggleStageFullscreen = () => {
+        const el = stageCardRef.current;
+        if (!el) return;
+        if (document.fullscreenElement) {
+            document.exitFullscreen?.().catch(() => {});
+        } else {
+            el.requestFullscreen?.().catch(() => {});
+        }
+    };
 
     // Render Incoming Group Call Dialog if receiver is invited
     if (incomingCall && !isInCall) {
         const callerName = incomingCall.caller?.name || 'Thành viên';
         const groupName = incomingCall.groupInfo?.name || 'Cuộc gọi nhóm';
         const callerAvatar = incomingCall.caller?.avatar || defaultAvatar;
-        const avatarSrc = callerAvatar.startsWith('http') || callerAvatar.startsWith('data:')
-            ? callerAvatar
-            : `${ASSET_BASE_URL}${callerAvatar}`;
+        const avatarSrc =
+            callerAvatar.startsWith('http') || callerAvatar.startsWith('data:')
+                ? callerAvatar
+                : `${ASSET_BASE_URL}${callerAvatar}`;
 
         return (
             <div className={cx('group-call-backdrop')}>
@@ -225,10 +374,19 @@ const GroupCallModal = () => {
                             src={avatarSrc}
                             alt={callerName}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                            onError={(e) => { e.currentTarget.src = defaultAvatar; }}
+                            onError={(e) => {
+                                e.currentTarget.src = defaultAvatar;
+                            }}
                         />
                     </div>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 700, margin: '0 0 6px 0', color: '#ffffff' }}>
+                    <h3
+                        style={{
+                            fontSize: '1.25rem',
+                            fontWeight: 700,
+                            margin: '0 0 6px 0',
+                            color: '#ffffff',
+                        }}
+                    >
                         {groupName}
                     </h3>
                     <p style={{ fontSize: '0.95rem', color: '#949ba4', margin: '0 0 28px 0' }}>
@@ -293,8 +451,6 @@ const GroupCallModal = () => {
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
 
-
-
     const getGridClass = () => {
         if (totalCount === 1) return 'grid-1';
         if (totalCount === 2) return 'grid-2';
@@ -302,179 +458,334 @@ const GroupCallModal = () => {
         return 'grid-many';
     };
 
+    const sharerName = isScreenSharing
+        ? currentUser?.displayName || currentUser?.username || 'Bạn'
+        : remoteScreenSharer?.user?.displayName ||
+          remoteScreenSharer?.user?.name ||
+          remoteScreenSharer?.user?.username ||
+          'Thành viên';
+
+    const featuredAvatarSrc = (() => {
+        const av = featuredParticipant?.avatar;
+        if (!av) return defaultAvatar;
+        if (av.startsWith('http') || av.startsWith('data:')) return av;
+        return `${ASSET_BASE_URL}${av}`;
+    })();
+
     return (
-        <div className={cx('group-call-backdrop')}>
-            <div className={cx('group-call-container')}>
+        <div className={cx('group-call-backdrop')} onClick={() => setViewMenuOpen(false)}>
+            <div className={cx('group-call-container')} onClick={(e) => e.stopPropagation()}>
                 {/* 1. Header Bar */}
                 <div className={cx('call-header')}>
                     <div className={cx('header-left')}>
+                        <div className={cx('group-icon-box')}>
+                            <Users size={18} />
+                        </div>
                         <div className={cx('group-meta')}>
                             <h3 className={cx('group-name')}>
-                                {groupInfo?.name || 'Phòng trò chuyện nhóm'}
+                                {groupInfo?.name ||
+                                    activeConversation?.name ||
+                                    activeConversation?.group?.name ||
+                                    'Phòng trò chuyện nhóm'}
                             </h3>
                             <span className={cx('participant-count')}>
-                                {totalCount} người tham gia · {formatTimer(callDuration)}
+                                {totalCount} {totalCount === 1 ? 'person' : 'people'} in the call
+                                <span className={cx('meta-dot')}>·</span>
+                                {formatTimer(callDuration)}
                             </span>
                         </div>
                     </div>
 
                     <div className={cx('header-right')}>
+                        <div className={cx('view-mode-wrapper')}>
+                            <button
+                                type="button"
+                                className={cx('view-mode-btn')}
+                                onClick={() => setViewMenuOpen((prev) => !prev)}
+                                title="Chế độ hiển thị"
+                            >
+                                {viewMode === 'speaker' ? (
+                                    <Monitor size={15} />
+                                ) : (
+                                    <LayoutGrid size={15} />
+                                )}
+                                <span>
+                                    {viewMode === 'speaker' ? 'Speaker view' : 'Grid view'}
+                                </span>
+                                <ChevronDown size={14} />
+                            </button>
+
+                            {viewMenuOpen && (
+                                <div className={cx('view-mode-menu')}>
+                                    <button
+                                        type="button"
+                                        className={cx('view-mode-option', {
+                                            selected: viewMode === 'speaker',
+                                        })}
+                                        onClick={() => {
+                                            setViewMode('speaker');
+                                            setViewMenuOpen(false);
+                                        }}
+                                    >
+                                        <Monitor size={14} />
+                                        <span>Speaker view</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={cx('view-mode-option', {
+                                            selected: viewMode === 'grid',
+                                        })}
+                                        onClick={() => {
+                                            setViewMode('grid');
+                                            setViewMenuOpen(false);
+                                        }}
+                                    >
+                                        <LayoutGrid size={14} />
+                                        <span>Grid view</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
                         <button
                             type="button"
-                            className={cx('icon-btn')}
+                            className={cx('icon-btn', 'ghost')}
+                            onClick={() => setViewMode((m) => (m === 'speaker' ? 'grid' : 'speaker'))}
+                            title="Tùy chọn hiển thị"
+                        >
+                            <MoreVertical size={18} />
+                        </button>
+
+                        <button
+                            type="button"
+                            className={cx('icon-btn', 'ghost')}
                             onClick={toggleMinimize}
                             title="Thu nhỏ cửa sổ"
                         >
-                            <Minus size={18} />
+                            <X size={18} />
                         </button>
                     </div>
                 </div>
 
-                {/* 2. Main Stage */}
+                {/* 2. Main Workspace Stage */}
                 <div className={cx('call-stage')}>
-                    {hasScreenShareActive ? (
-                        /* Theater Mode with Large Screen Share */
-                        <div className={cx('theater-layout')}>
-                            <div className={cx('theater-screen-box')}>
-                                <video
-                                    ref={screenVideoRef}
-                                    autoPlay
-                                    playsInline
-                                    muted={isScreenSharing}
-                                    srcObject={
-                                        isScreenSharing
-                                            ? screenStream
-                                            : remoteScreenSharer?.stream
-                                    }
-                                />
-                                <div className={cx('theater-screen-badge')}>
-                                    <Tv size={16} />
-                                    <span>
-                                        Màn hình của{' '}
-                                        {isScreenSharing
-                                            ? 'Bạn'
-                                            : remoteScreenSharer?.user?.name || 'Thành viên'}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Participant Strip below screen */}
-                            <div className={cx('theater-strip')}>
-                                <ParticipantTile
-                                    isLocal
-                                    stream={localStream}
-                                    isMuted={isMuted}
-                                    isCameraOn={isCameraOn}
-                                    isScreenSharing={isScreenSharing}
-                                    isSpeaking={speakingSockets.has('local')}
-                                    displayName={
-                                        currentUser?.displayName || currentUser?.username || 'Bạn'
-                                    }
-                                    avatar={currentUser?.avatarURL}
-                                />
-                                {peerList.map((p) => (
+                    {viewMode === 'speaker' ? (
+                        <div className={cx('speaker-workspace')}>
+                            {/* Left Column: Participants Sidebar + Invite Card */}
+                            <div className={cx('participants-sidebar')}>
+                                {allParticipants.map((p) => (
                                     <ParticipantTile
-                                        key={p.socketId}
+                                        key={p.id}
+                                        isLocal={p.isLocal}
                                         stream={p.stream}
                                         isMuted={p.isMuted}
                                         isCameraOn={p.isCameraOn}
                                         isScreenSharing={p.isScreenSharing}
-                                        isSpeaking={speakingSockets.has(p.socketId)}
-                                        displayName={
-                                            p.user?.displayName ||
-                                            p.user?.name ||
-                                            p.user?.username ||
-                                            'Người dùng'
-                                        }
-                                        avatar={p.user?.avatar || p.user?.avatarURL}
+                                        isSpeaking={p.isSpeaking}
+                                        isSelected={featuredParticipant?.id === p.id}
+                                        onClick={() => setSelectedParticipantId(p.id)}
+                                        displayName={p.displayName}
+                                        avatar={p.avatar}
                                     />
                                 ))}
+
+                                <button
+                                    type="button"
+                                    className={cx('invite-card')}
+                                    onClick={handleInviteClick}
+                                    title="Mời thêm thành viên"
+                                >
+                                    <div className={cx('invite-icon-circle')}>
+                                        <UserPlus size={18} />
+                                    </div>
+                                    <span className={cx('invite-label')}>Invite people</span>
+                                </button>
+                            </div>
+
+                            {/* Center Column: Main Stage Card */}
+                            <div ref={stageCardRef} className={cx('main-stage-card')}>
+                                <div className={cx('stage-topbar')}>
+                                    <div className={cx('stage-title')}>
+                                        <Monitor size={16} className={cx('stage-title-icon')} />
+                                        <span>
+                                            {hasScreenShareActive
+                                                ? `${sharerName} is sharing their screen`
+                                                : `${featuredParticipant?.displayName || 'Speaker'} is on stage`}
+                                        </span>
+                                    </div>
+
+                                    <div className={cx('stage-controls')}>
+                                        <button
+                                            type="button"
+                                            className={cx('zoom-btn')}
+                                            onClick={handleCycleZoom}
+                                            title="Phóng to khung hình"
+                                        >
+                                            <span>{zoomLevel}%</span>
+                                            <ChevronDown size={13} />
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            className={cx('expand-stage-btn')}
+                                            onClick={handleToggleStageFullscreen}
+                                            title="Toàn màn hình"
+                                        >
+                                            <ExternalLink size={14} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className={cx('stage-viewport')}>
+                                    {hasScreenShareActive ? (
+                                        <video
+                                            ref={screenVideoRef}
+                                            autoPlay
+                                            playsInline
+                                            muted={isScreenSharing}
+                                            className={cx('stage-video')}
+                                            style={{ transform: `scale(${zoomLevel / 100})` }}
+                                        />
+                                    ) : featuredHasVideo ? (
+                                        <video
+                                            ref={featuredVideoRef}
+                                            autoPlay
+                                            playsInline
+                                            muted={featuredParticipant?.isLocal}
+                                            className={cx('stage-video', 'camera-cover')}
+                                            style={{ transform: `scale(${zoomLevel / 100})` }}
+                                        />
+                                    ) : (
+                                        <div
+                                            className={cx('stage-spotlight', {
+                                                speaking:
+                                                    featuredParticipant?.isSpeaking &&
+                                                    !featuredParticipant?.isMuted,
+                                            })}
+                                        >
+                                            <div className={cx('spotlight-avatar-ring')}>
+                                                <img
+                                                    src={featuredAvatarSrc}
+                                                    alt={featuredParticipant?.displayName}
+                                                    onError={(e) => {
+                                                        e.currentTarget.src = defaultAvatar;
+                                                    }}
+                                                />
+                                            </div>
+                                            <h4 className={cx('spotlight-name')}>
+                                                {featuredParticipant?.displayName}
+                                            </h4>
+                                            <span className={cx('spotlight-status')}>
+                                                {featuredParticipant?.isMuted
+                                                    ? 'Microphone muted'
+                                                    : featuredParticipant?.isSpeaking
+                                                    ? 'Speaking now...'
+                                                    : 'Connected to voice'}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        /* Standard Dynamic Participant Grid */
+                        /* Grid View Mode */
                         <div className={cx('participants-grid', getGridClass())}>
-                            {/* Local User Tile */}
-                            <ParticipantTile
-                                isLocal
-                                stream={localStream}
-                                isMuted={isMuted}
-                                isCameraOn={isCameraOn}
-                                isScreenSharing={isScreenSharing}
-                                isSpeaking={speakingSockets.has('local')}
-                                displayName={
-                                    currentUser?.displayName || currentUser?.username || 'Bạn'
-                                }
-                                avatar={currentUser?.avatarURL}
-                            />
-
-                            {/* Remote Peers Tiles */}
-                            {peerList.map((p) => (
+                            {allParticipants.map((p) => (
                                 <ParticipantTile
-                                    key={p.socketId}
+                                    key={p.id}
+                                    isLocal={p.isLocal}
                                     stream={p.stream}
                                     isMuted={p.isMuted}
                                     isCameraOn={p.isCameraOn}
                                     isScreenSharing={p.isScreenSharing}
-                                    isSpeaking={speakingSockets.has(p.socketId)}
-                                    displayName={
-                                        p.user?.displayName ||
-                                        p.user?.name ||
-                                        p.user?.username ||
-                                        'Người dùng'
-                                    }
-                                    avatar={p.user?.avatar || p.user?.avatarURL}
+                                    isSpeaking={p.isSpeaking}
+                                    isSelected={featuredParticipant?.id === p.id}
+                                    onClick={() => {
+                                        setSelectedParticipantId(p.id);
+                                        setViewMode('speaker');
+                                    }}
+                                    displayName={p.displayName}
+                                    avatar={p.avatar}
                                 />
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* 3. Discord Bottom Control Dock */}
+                {/* 3. Bottom Floating Control Dock */}
                 <div className={cx('call-dock')}>
                     {/* Mic Toggle Button */}
                     <button
                         type="button"
-                        className={cx('dock-btn', { muted: isMuted })}
+                        className={cx('dock-control', { muted: isMuted })}
                         onClick={toggleMic}
                         title={isMuted ? 'Bật Micro (Unmute)' : 'Tắt Micro (Mute)'}
                     >
-                        {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
+                        <span className={cx('dock-pill')}>
+                            {isMuted ? <MicOff size={20} /> : <Mic size={20} />}
+                        </span>
+                        <span className={cx('dock-label')}>Mic</span>
                     </button>
 
                     {/* Camera Toggle Button */}
                     <button
                         type="button"
-                        className={cx('dock-btn', { active: isCameraOn })}
+                        className={cx('dock-control', { active: isCameraOn })}
                         onClick={toggleCamera}
                         title={isCameraOn ? 'Tắt Camera' : 'Bật Camera'}
                     >
-                        {isCameraOn ? <Video size={22} /> : <VideoOff size={22} />}
+                        <span className={cx('dock-pill')}>
+                            {isCameraOn ? <Video size={20} /> : <VideoOff size={20} />}
+                        </span>
+                        <span className={cx('dock-label')}>Camera</span>
                     </button>
 
-                    {/* Screen Share / Livestream Button */}
+                    {/* Screen Share Button */}
                     <button
                         type="button"
-                        className={cx('dock-btn', { active: isScreenSharing })}
+                        className={cx('dock-control', { active: isScreenSharing })}
                         onClick={toggleScreenShare}
                         title={isScreenSharing ? 'Dừng chia sẻ' : 'Chia sẻ màn hình'}
                     >
-                        <ScreenShare size={22} />
+                        <span className={cx('dock-pill')}>
+                            <Monitor size={20} />
+                        </span>
+                        <span className={cx('dock-label')}>Share</span>
                     </button>
 
-                    <TranslationNotes active={isInCall} kind="group"
-                        sessionId={currentConversationId} sources={translationSources} />
+                    {/* Translate Toggle + Right Panel */}
+                    <TranslationNotes
+                        active={isInCall}
+                        kind="group"
+                        sessionId={currentConversationId}
+                        sources={translationSources}
+                    />
 
-                    {/* Leave / Disconnect Button */}
+                    <div className={cx('dock-divider')} aria-hidden="true" />
+
+                    {/* End Call Button */}
                     <button
                         type="button"
-                        className={cx('dock-btn', 'disconnect')}
+                        className={cx('dock-control', 'disconnect')}
                         onClick={leaveGroupCall}
                         title="Rời phòng thoại"
                     >
-                        <PhoneOff size={22} />
+                        <span className={cx('dock-pill')}>
+                            <PhoneOff size={20} />
+                        </span>
+                        <span className={cx('dock-label')}>End call</span>
                     </button>
                 </div>
+
+                {showAddMemberModal && currentConversationId && (
+                    <AddMemberModal
+                        conversationId={currentConversationId}
+                        existingParticipantIds={(activeConversation?.participants || []).map(
+                            (p) => p._id || p.userId
+                        )}
+                        onClose={() => setShowAddMemberModal(false)}
+                    />
+                )}
             </div>
         </div>
     );

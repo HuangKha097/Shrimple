@@ -19,7 +19,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=builder /src/whisper.cpp/build/bin/whisper-server /usr/local/bin/whisper-server
 COPY start.sh /usr/local/bin/start-whisper
-RUN chmod +x /usr/local/bin/start-whisper \
+RUN sed -i 's/\r$//' /usr/local/bin/start-whisper \
+    && chmod +x /usr/local/bin/start-whisper \
     && mkdir -p /models /tmp/whisper /usr/share/whisper-public \
     && chown -R 10001:10001 /models /tmp/whisper
 

@@ -1,0 +1,14 @@
+# Opt in on a machine with NVIDIA GPU support:
+# docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
+services:
+  whisper:
+    image: qtmshrimple-whisper-cuda
+    build:
+      dockerfile: Dockerfile.cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

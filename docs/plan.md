@@ -87,6 +87,7 @@ Scripts này có thật trong package.json. Backend phải dùng cwd `server/` v
 | `server/.env.example` | PORT, CLIENT_ORIGINS, MONGODB_CONNECTIONSTRING, optional MONGODB_DNS_SERVERS, ACCESS_TOKEN_SECRET, CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET, GOOGLE_CLIENT_ID, EMAIL_SERVICE/USER/PASS, optional EMAIL_HOST/PORT/SECURE |
 | `server/src/controllers/authController.js` | NODE_ENV chi phối secure/SameSite cookie; deployment phải cấp đúng, key này chưa liệt kê trong server env sample |
 | `compose.yaml` | client/.env.development, server/.env; ai-service/init-env.ps1 tạo ai-service/.env dùng chung cho backend+ai; ports5173/5001/loopback8001; ai/whisper/qwen, Mongo bên ngoài |
+| `compose.gpu.yaml` | Override NVIDIA cho Whisper; mặc định compose.yaml dùng CPU, không cần CUDA/GPU reservation |
 
 Development API/socket mặc định localhost:5001. Production API fallback là cùng origin (config chuyển `/` thành chuỗi rỗng), còn socket/assets có fallback host Render trong code. Cần đặt env production rõ; không giả định REST và socket tự cùng host nếu thiếu cấu hình. Hai Google Client ID frontend/backend phải khớp audience.
 
@@ -230,6 +231,10 @@ Mỗi phase hoàn tất cập nhật ticket/FR/AC/evidence thay vì tạo bản 
 Upstream bổ sung delegated admin/add/role/leave, poll, TreeQR scan/preview và note dịch cuộc gọi. [Group roles](./group-roles.md) là authority cho ma trận role/invite/poll; [Design](./design.md) ghi translation proxy/service/session. Ticket mới I22/I23 Done về triển khai, board42tickets25Done17Backlog; không thêm scope phát hành/commit/deploy.
 
 Dependencies mới: server TRANSLATION_AI_URL/KEY; `ai-service/` FastAPI, whisper.cpp/Qwen endpoints và ffmpeg. `server/package.json` test bao gồm test/ + tests/; `test:ai` là smoke script cho dịch vụ đang chạy, chưa chạy trong đợt xử lý conflict. Không đồng nhất node:test session pass với dịch AI output hoặc vận hành GPU/models.
+
+Sửa Docker build 2026-10-17: AI dùng `uvicorn` core + h11, bỏ optional native extras `standard`; Dockerfile kiểm tra `pip check`. CPU/CUDA Whisper chuẩn hóa CRLF entrypoint trong image. Kết quả và giới hạn: [AI Docker build](./validation/2026-10-17-ai-docker-build.md); vẫn cần nghiệm thu model/GPU và gọi dịch audio thật.
+
+Theo kiểm tra máy local chỉ nhận Intel UHD, Compose chuyển mặc định Whisper CPU; NVIDIA dùng thêm `-f compose.gpu.yaml`. Giữ nguyên medium q5_0, API, khóa và model volumes. [Whisper CPU build](./validation/2026-10-17-whisper-cpu-build.md) ghi phạm vi B/T; không hứa inference CPU theo kịp clip6s, không đánh dấu Q03 Done khi chưa đo latency.
 
 Q01 thêm poll/QR64+24hex/login retention, incoming group call và note dịch2browser; Q02 thêm poll caps/races, quyền upload audio/viewer/speaker và end/disconnect; Q03 thêm AI readiness/latency/consent/retention/logging. Hợp nhất code xong cần kết quả checks tree cuối ở [validation sau pull](./validation/pull-conflict-resolution.md); evidence cleanup trước pull không bị ghi đè.
 

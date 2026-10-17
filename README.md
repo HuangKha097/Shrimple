@@ -61,9 +61,19 @@ docker compose up -d --build
 
 Script tạo `ai-service/.env` với khóa ngẫu nhiên, không in khóa và không ghi đè tệp đã có. Compose nạp tệp này vào **cả backend và ai**, sau `server/.env`, nên `TRANSLATION_AI_KEY` trong đó được dùng chung cho Docker. Không dùng `docker compose config` không có `--quiet` để chia sẻ output vì nó có thể chứa secrets. FastAPI trả 503 khi chưa cấu hình khóa và 401 khi khóa không đúng.
 
-Compose mặc định yêu cầu NVIDIA GPU và Docker Desktop WSL2 GPU support. Service `whisper` biên dịch whisper.cpp v1.9.4 với CUDA, tải model `ggml-medium-q5_0.bin` (khoảng 539 MB), kiểm tra SHA-256 và giữ model trong volume `whisper-model-cache`. Service `qwen` chạy bản GGUF Q8_0 chính thức của Qwen3 1.7B bằng llama.cpp và giữ model trong volume `qwen-model-cache`; `ai` nối tới hai service này. Lần đầu cần mạng để tải model. Trên máy không có NVIDIA GPU, đổi `whisper.build.dockerfile` trong `compose.yaml` về `Dockerfile`, bỏ `whisper.deploy.resources.reservations.devices` và `whisper.image`; tốc độ bản CPU cần đo trên máy thực tế. Model-cache volumes chỉ chứa model. FastAPI dùng `/tmp` trên tmpfs cho multipart tạm; Whisper nhận WAV trong RAM, không bật chuyển đổi bằng file tạm.
+Compose mặc định chạy **CPU**, phù hợp máy không có NVIDIA GPU; `whisper` build từ `ai-service/whisper/Dockerfile`, không tải CUDA. Vẫn dùng whisper.cpp v1.9.4 và model `ggml-medium-q5_0.bin` (khoảng 539 MB), kiểm tra SHA-256 và giữ model trong volume `whisper-model-cache`. Service `qwen` chạy Qwen3 1.7B GGUF Q8_0 bằng llama.cpp, giữ model trong volume `qwen-model-cache`. Lần đầu vẫn cần mạng để tải các package/model. Medium trên CPU có thể không theo kịp clip 6 giây; cần đo thực tế, hàng chờ vẫn bỏ clip cũ và cảnh báo khi xử lý chậm.
+
+Máy có NVIDIA GPU và Docker Desktop WSL2 GPU support có thể dùng cấu hình riêng:
+
+~~~powershell
+docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
+~~~
+
+Override này dùng `Dockerfile.cuda` và GPU reservation, không cần sửa file Compose gốc. Build CUDA lần đầu phải tải các lớp lớn và biên dịch riêng. Model-cache volumes chỉ chứa model và được dùng chung giữa hai cấu hình. FastAPI dùng `/tmp` trên tmpfs cho multipart tạm; Whisper nhận WAV trong RAM, không bật chuyển đổi bằng file tạm. [Kiểm tra build CPU](docs/validation/2026-10-17-whisper-cpu-build.md).
 
 Nếu Docker Engine trả lỗi 500 khi chạy `docker info`, cần khởi động/khôi phục Docker Desktop Linux Engine trước khi build hoặc chạy model. Kết quả kiểm tra code, Compose và giới hạn thử nghiệm ngày 2026-10-17: [translation review](docs/validation/2026-10-17-translation.md).
+
+AI service dùng Uvicorn core với HTTP parser `h11`; không cần extras `standard` như `httptools` cho REST dịch audio. Docker build chạy thêm `pip check` để phát hiện dependency không hợp lệ. Hai Dockerfile Whisper chuẩn hóa script khởi động từ CRLF về LF để chạy trên Linux khi checkout từ Windows. [Kiểm tra sửa lỗi Docker build](docs/validation/2026-10-17-ai-docker-build.md).
 
 Nếu chạy ngoài Docker, cần Python 3.10+, `whisper-server` được build theo [hướng dẫn whisper.cpp](https://github.com/ggml-org/whisper.cpp), `llama-server` theo [hướng dẫn llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md), model medium đa ngôn ngữ và FFmpeg trên PATH. Khởi động `whisper-server` trước với `--model <đường_dẫn_model> --host 127.0.0.1 --port 8080 --language auto`; khởi động `llama-server` với `-hf Qwen/Qwen3-1.7B-GGUF:Q8_0 --host 127.0.0.1 --port 8081 -c 1024 -np 1 -t 4`, rồi chạy FastAPI từ thư mục `ai-service/`:
 

@@ -1,4 +1,5 @@
 fastapi>=0.115,<1
-uvicorn[standard]>=0.30,<1
+# HTTP-only proxy: h11 is included by Uvicorn; native standard extras are unnecessary.
+uvicorn>=0.30,<1
 python-multipart>=0.0.9,<1
 httpx>=0.27,<1
