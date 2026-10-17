@@ -1,10 +1,18 @@
-# Opt in on a machine with NVIDIA GPU support:
+# Opt in on a machine with NVIDIA GPU support (50/50 GPU ASR + CPU VAD/MT split):
 # docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
 services:
+  ai:
+    environment:
+      WHISPER_GPU: "true"
+
   whisper:
     image: qtmshrimple-whisper-cuda
     build:
       dockerfile: Dockerfile.cuda
+    environment:
+      WHISPER_GPU: "true"
+      WHISPER_MODEL: ${WHISPER_MODEL:-base-q5_1}
+      WHISPER_THREADS: ${WHISPER_THREADS:-2}
     deploy:
       resources:
         reservations:

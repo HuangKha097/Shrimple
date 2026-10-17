@@ -1,0 +1,20 @@
+- heading "Translation progressive check — synthetic audio" [level=1]
+- button "Record Bob"
+- button "Original Bob"
+- button "Translate Bob"
+- button "Timeout Bob"
+- button "Forbidden Bob"
+- button "Add Carol"
+- button "Record Carol"
+- button "Original Carol"
+- button "Translate Carol"
+- button "New session"
+- button "Hide tab"
+- button "Show tab"
+- button "Light theme"
+- button "Dark theme"
+- button "English UI"
+- button "Logout" [active]
+- generic: "{ \"requests\": [ { \"clip\": \"bob-1\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-2\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-5\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-6\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-7\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-8\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"carol-1\", \"speakerId\": \"carol\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-9\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-10\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" } ], \"aborted\": [ \"bob-2\", \"bob-5\", \"bob-8\", \"carol-1\", \"bob-10\" ], \"errors\": [], \"streams\": [], \"live\": [], \"pending\": [], \"session\": \"first-call-new\" }"
+- button "Mở note lời nói của đối phương":
+  - generic: Dịch

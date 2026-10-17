@@ -1,0 +1,48 @@
+Browser tab: 3, Title: "Translation lifecycle check", URL: "http://127.0.0.1:5174/.tmp/translation-runtime/translation.html".
+1 AXWebArea Translation lifecycle check, URL: 127.0.0.1:5174/.tmp/translation-runtime/translation.html
+	2 heading Translation lifecycle check, Value: 1
+		3 text Translation lifecycle check
+	4 container root
+		5 container
+			6 button Clip Alice
+			7 button Clip Bob
+			8 button Complete Alice
+			9 button Complete Bob
+			10 button Forbidden Alice
+			11 button Timeout Alice
+			12 button Busy Alice
+			13 button New session
+			14 button Hide tab
+			15 button Show tab
+			16 button Logout
+		17 text {
+  "requests": [
+    "alice-1",
+    "alice-2",
+    "alice-3"
+  ],
+  "aborted": [],
+  "live": 2,
+  "errors": [],
+  "inFlight": [],
+  "session": "first-call"
+}
+		18 button Đóng note dịch thuật
+		19 container Note dịch thuật
+			20 text Translation Notes
+			21 button Xóa lịch sử dịch
+			22 button Description: Đóng note, Help: Đóng note dịch
+			23 button Vietnamese Tiếng Việt, Help: Bấm để đổi chiều dịch
+				24 text Vietnamese
+				25 text Tiếng Việt
+			26 button Description: Đổi chiều dịch, Help: Đổi chiều dịch (Bấm để chuyển đổi)
+			27 button English English, Help: Bấm để đổi chiều dịch
+				28 text English
+				29 text English
+			30 text Real-time translation
+			31 text Converting speech to notes...
+			32 text Máy chủ xử lý chậm; một số đoạn âm thanh đã bị bỏ qua.
+			33 container
+				34 text alice 00:19 Original alice-3 Dịch alice-3
+
+The focused UI element is 8 button Complete Alice

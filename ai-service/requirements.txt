@@ -1,5 +1,10 @@
 fastapi>=0.115,<1
-# HTTP-only proxy: h11 is included by Uvicorn; native standard extras are unnecessary.
+# h11 plus the explicit pure-Python WebSocket protocol; native standard extras unnecessary.
 uvicorn>=0.30,<1
+websockets>=14,<16
 python-multipart>=0.0.9,<1
 httpx>=0.27,<1
+numpy>=1.26,<3
+onnxruntime>=1.20,<2
+ctranslate2>=4.5,<5
+sentencepiece>=0.2,<1

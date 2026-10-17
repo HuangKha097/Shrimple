@@ -196,7 +196,11 @@ const GroupCallModal = () => {
 
     const translationSources = useMemo(
         () => [
-            { id: currentUser?._id, stream: localStream, muted: isMuted },
+            {
+                id: currentUser?._id,
+                stream: localStream,
+                muted: isMuted,
+            },
             ...Object.values(peers).map((peer) => ({
                 id: peer.user?._id || peer.user?.userId,
                 stream: peer.stream,

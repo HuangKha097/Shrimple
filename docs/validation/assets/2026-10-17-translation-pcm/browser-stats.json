@@ -1,0 +1,75 @@
+{
+  "starts": [
+    {
+      "kind": "group",
+      "sessionId": "fixture-call",
+      "speakerId": "bob",
+      "sourceLanguage": "en",
+      "targetLanguage": "vi",
+      "streamId": "fixture-stream-1",
+      "seq": 0,
+      "revision": 0
+    },
+    {
+      "kind": "group",
+      "sessionId": "fixture-call",
+      "speakerId": "bob",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "streamId": "fixture-stream-2",
+      "seq": 0,
+      "revision": 0
+    },
+    {
+      "kind": "group",
+      "sessionId": "fixture-call",
+      "speakerId": "bob",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "streamId": "fixture-stream-3",
+      "seq": 0,
+      "revision": 0
+    },
+    {
+      "kind": "group",
+      "sessionId": "fixture-call",
+      "speakerId": "bob",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "streamId": "fixture-stream-4",
+      "seq": 0,
+      "revision": 0
+    },
+    {
+      "kind": "group",
+      "sessionId": "fixture-call-next",
+      "speakerId": "bob",
+      "sourceLanguage": "vi",
+      "targetLanguage": "en",
+      "streamId": "fixture-stream-5",
+      "seq": 0,
+      "revision": 0
+    }
+  ],
+  "stops": [
+    "fixture-stream-1",
+    "fixture-stream-2",
+    "fixture-stream-4",
+    "fixture-stream-5"
+  ],
+  "packets": 1820,
+  "bytes": [
+    4096
+  ],
+  "seqErrors": 0,
+  "voicedPackets": 1820,
+  "errors": [],
+  "active": [
+    "fixture-stream-3"
+  ],
+  "handlers": {
+    "connect": 0,
+    "disconnect": 0,
+    "translation:event": 0
+  }
+}

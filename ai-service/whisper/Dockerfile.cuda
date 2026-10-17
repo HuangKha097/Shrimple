@@ -28,7 +28,7 @@ RUN sed -i 's/\r$//' /usr/local/bin/start-whisper \
     && mkdir -p /models /tmp/whisper /usr/share/whisper-public \
     && chown -R 10001:10001 /models /tmp/whisper
 
-ENV WHISPER_GPU=true
+ENV WHISPER_GPU=true WHISPER_MODEL=medium-q5_0 WHISPER_THREADS=4
 USER 10001:10001
 WORKDIR /tmp/whisper
 EXPOSE 8080

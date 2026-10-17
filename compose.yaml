@@ -43,6 +43,10 @@ services:
     environment:
       WHISPER_CPP_URL: http://whisper:8080
       QWEN_URL: http://qwen:8080
+      CT2_MODEL_DIR: /models/ct2
+      WHISPER_GPU: ${WHISPER_GPU:-false}
+    volumes:
+      - qwen-model-cache:/models
     tmpfs:
       - /tmp:size=32m,mode=1777
     depends_on:
@@ -56,7 +60,7 @@ services:
 
   qwen:
     image: ghcr.io/ggml-org/llama.cpp@sha256:6257697a7f5d034b8fb499ddb07af3e250506352f94102054252a23f3b85e0af
-    command: ["-hf", "Qwen/Qwen3-1.7B-GGUF:Q8_0", "--host", "0.0.0.0", "--port", "8080", "-c", "1024", "-np", "1", "-t", "4"]
+    command: ["-hf", "${QWEN_MODEL:-Qwen/Qwen3-0.6B-GGUF:Q8_0}", "--host", "0.0.0.0", "--port", "8080", "-c", "1024", "-np", "1", "-t", "${QWEN_THREADS:-2}", "-tb", "${QWEN_THREADS:-2}", "--poll", "0"]
     environment:
       LLAMA_CACHE: /models
     volumes:
@@ -68,6 +72,9 @@ services:
     build:
       context: ./ai-service/whisper
       dockerfile: Dockerfile
+    environment:
+      WHISPER_MODEL: ${WHISPER_MODEL:-base-q5_1}
+      WHISPER_THREADS: ${WHISPER_THREADS:-2}
     volumes:
       - whisper-model-cache:/models
     healthcheck:

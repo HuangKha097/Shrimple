@@ -6,6 +6,18 @@ const savedLang = localStorage.getItem('app_language') || 'vi';
 const resources = {
     vi: {
         translation: {
+            translationNotes: {
+                toggle: 'Dịch', title: 'Note lời nói & bản dịch', open: 'Mở note hội thoại & bản dịch', close: 'Đóng note dịch', clear: 'Xóa note',
+                counterpartSpeech: 'Đối phương nói', readTranslation: 'Bản dịch bạn đọc', swap: 'Đổi ngôn ngữ đối phương và bản dịch', vi: 'Tiếng Việt', en: 'Tiếng Anh',
+                directionHint: 'Ghi lời của cả hai bên: lời của bạn chỉ hiện văn bản gốc; lời đối phương hiện văn bản gốc trước và bản dịch bên dưới.',
+                liveTitle: 'Ghi âm & dịch trực tiếp', starting: 'Đang khởi động nhận dạng…', listening: 'Cập nhật theo đoạn nói; bản dịch của đối phương đến ngay sau.',
+                emptyTitle: 'Đang chờ hội thoại', emptyDescription: 'Chọn ngôn ngữ đối phương nói ở bên trái và ngôn ngữ bạn đọc ở bên phải.',
+                original: 'Lời gốc', translation: 'Bản dịch', pending: 'Translating...', interrupted: 'Đã dừng dịch đoạn này; lời gốc được giữ lại.', translationError: 'Chưa dịch được đoạn này; lời gốc được giữ lại.', participant: 'Đối phương', you: 'Bạn',
+                skipped: 'Xử lý hoặc kết nối bị chậm; có đoạn lời nói bị gián đoạn. Lời gốc đã nhận vẫn được giữ lại.',
+                reconnecting: 'Đang kết nối lại; tạm dừng nhận lời nói.', resumeAudio: 'Nhấn Thử lại để cho phép trình duyệt tiếp tục nhận âm thanh.',
+                expired: 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.', forbidden: 'Bạn không còn quyền dịch âm thanh trong phiên gọi này.',
+                unavailable: 'Chưa nhận được kết quả dịch. Lời gốc đã có vẫn được giữ lại.', unsupported: 'Trình duyệt không hỗ trợ AudioWorklet để nhận âm thanh liên tục.', recordingError: 'Không thể nhận âm thanh để ghi chú. Nhấn Thử lại.', retry: 'Thử lại'
+            },
             recovery: {
                 eyebrow: 'Khôi phục tài khoản', progress: 'Tiến trình khôi phục',
                 title1: 'Quên mật khẩu?', title2: 'Kiểm tra email', title3: 'Đặt lại mật khẩu',
@@ -169,6 +181,18 @@ const resources = {
     },
     en: {
         translation: {
+            translationNotes: {
+                toggle: 'Translate', title: 'Speech & translation notes', open: 'Open speech & translation notes', close: 'Close translation notes', clear: 'Clear notes',
+                counterpartSpeech: 'They speak', readTranslation: 'You read', swap: 'Swap counterpart speech and translation languages', vi: 'Vietnamese', en: 'English',
+                directionHint: 'Captures all conversation speech: your speech shows original text only; their speech shows original text first with translation below.',
+                liveTitle: 'Live speech & translation', starting: 'Starting speech recognition…', listening: 'Updates by speech segment; their translation follows immediately.',
+                emptyTitle: 'Waiting for speech', emptyDescription: 'Choose the language they speak on the left and the language you read on the right.',
+                original: 'Original speech', translation: 'Translation', pending: 'Translating...', interrupted: 'Translation stopped for this segment; original text is kept.', translationError: 'Could not translate this segment; original text is kept.', participant: 'Participant', you: 'You',
+                skipped: 'Processing or connection was slow; speech was interrupted. Received original text is kept.',
+                reconnecting: 'Reconnecting; speech capture is paused.', resumeAudio: 'Press Retry to let the browser resume audio capture.',
+                expired: 'Your session has expired. Please sign in again.', forbidden: 'You no longer have permission to translate audio in this call.',
+                unavailable: 'Translation did not return a result. Existing original text is kept.', unsupported: 'This browser does not support AudioWorklet for continuous audio capture.', recordingError: 'Could not capture speech for notes. Press Retry.', retry: 'Retry'
+            },
             recovery: {
                 eyebrow: 'Account recovery', progress: 'Recovery progress',
                 title1: 'Forgot password?', title2: 'Check your email', title3: 'Reset password',
@@ -329,6 +353,18 @@ const resources = {
     },
     zh: {
         translation: {
+            translationNotes: {
+                toggle: '翻译', title: '语音与翻译笔记', open: '打开语音与翻译笔记', close: '关闭翻译笔记', clear: '清空笔记',
+                counterpartSpeech: '对方说的语言', readTranslation: '您阅读的译文', swap: '交换对方语言与译文语言', vi: '越南语', en: '英语',
+                directionHint: '记录双方的语音：您的语音仅显示原文；对方的语音先显示原文，再在下方补充译文。',
+                liveTitle: '实时语音与翻译', starting: '正在启动语音识别…', listening: '按语音片段更新；对方译文将随后显示。',
+                emptyTitle: '等待说话', emptyDescription: '左侧选择对方说的语言，右侧选择您想阅读的语言。',
+                original: '原文', translation: '译文', pending: 'Translating...', interrupted: '此片段的翻译已停止，原文已保留。', translationError: '无法翻译此片段，原文已保留。', participant: '对方', you: '你',
+                skipped: '处理或连接较慢，语音已中断。收到的原文已保留。',
+                reconnecting: '正在重新连接；语音接收已暂停。', resumeAudio: '请点击重试，允许浏览器继续接收音频。',
+                expired: '登录已过期，请重新登录。', forbidden: '您已无权翻译此次通话中的语音。',
+                unavailable: '尚未收到翻译结果，已有原文已保留。', unsupported: '此浏览器不支持翻译所需的录音功能。', recordingError: '无法录制语音以进行笔记。', retry: '重试'
+            },
             recovery: {
                 eyebrow: '找回账号', progress: '找回进度',
                 title1: '忘记密码？', title2: '查看电子邮箱', title3: '重置密码',

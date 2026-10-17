@@ -1,0 +1,4 @@
+{"stage": "concurrent_http", "attempt": 1, "results": [{"status": 429, "seconds": 0.18, "original_chars": 0, "translated_chars": 0, "source": null, "busy": "busy"}, {"status": 200, "seconds": 10.96, "original_chars": 55, "translated_chars": 283, "source": "en", "busy": null}]}
+{"stage": "warm_http", "target": "vi", "status": 200, "seconds": 6.67, "original_chars": 55, "translated_chars": 62, "source": "en", "busy": null}
+{"stage": "warm_http", "target": "en", "status": 200, "seconds": 3.02, "original_chars": 55, "translated_chars": 55, "source": "en", "busy": null}
+{"stage": "vi_to_en_text", "seconds": 1.5, "translated": "Tonight we meet at eight o'clock."}

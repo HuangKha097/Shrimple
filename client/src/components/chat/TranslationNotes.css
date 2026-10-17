@@ -8,7 +8,7 @@
     padding: 0;
     background: transparent;
     border: none;
-    color: #9ca3af;
+    color: var(--text-muted);
     cursor: pointer;
     user-select: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -18,9 +18,9 @@
     width: 62px;
     height: 40px;
     border-radius: 9999px;
-    background: #23262f;
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    color: #e5e7eb;
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
+    color: var(--primary-textColor);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -30,31 +30,31 @@
 .translation-toggle-label {
     font-size: 11.5px;
     font-weight: 500;
-    color: #9ca3af;
+    color: var(--text-muted);
     line-height: 1.1;
     transition: color 0.2s ease;
 }
 
 .translation-toggle:hover .translation-toggle-pill {
-    background: #2d313c;
+    background: var(--primary-hoverBackgroundColor);
     border-color: rgba(255, 255, 255, 0.16);
-    color: #ffffff;
+    color: var(--primary-textColor);
     transform: translateY(-1px);
 }
 
 .translation-toggle:hover .translation-toggle-label {
-    color: #e5e7eb;
+    color: var(--primary-textColor);
 }
 
 .translation-toggle.active .translation-toggle-pill {
-    background: #2c303b;
-    color: #ffffff;
+    background: var(--primary-hoverBackgroundColor);
+    color: var(--primary-textColor);
     border-color: rgba(255, 255, 255, 0.28);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0 0 1px var(--primary-borderColor);
 }
 
 .translation-toggle.active .translation-toggle-label {
-    color: #f3f4f6;
+    color: var(--primary-textColor);
 }
 
 /* Translation Panel - Right Column Sidebar */
@@ -67,11 +67,11 @@
     width: min(336px, calc(100vw - 32px));
     display: flex;
     flex-direction: column;
-    background: #13151a;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--primary-blockBackgroundColor);
+    border: 1px solid var(--primary-borderColor);
     border-radius: 16px;
     box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
-    color: #e6edf3;
+    color: var(--primary-textColor);
     padding: 16px;
     text-align: left;
     box-sizing: border-box;
@@ -112,16 +112,16 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #1e2129;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #e5e7eb;
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
+    color: var(--primary-textColor);
     flex-shrink: 0;
 }
 
 .translation-title {
     font-size: 14.5px;
     font-weight: 700;
-    color: #f3f4f6;
+    color: var(--primary-textColor);
     letter-spacing: -0.01em;
 }
 
@@ -141,15 +141,15 @@
     border-radius: 8px;
     background: transparent;
     border: none;
-    color: #8b949e;
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.18s ease;
 }
 
 .translation-action-btn:hover,
 .translation-close-btn:hover {
-    background: rgba(255, 255, 255, 0.07);
-    color: #f3f4f6;
+    background: var(--primary-borderColor);
+    color: var(--primary-textColor);
 }
 
 .translation-action-btn:hover {
@@ -176,19 +176,14 @@
     align-items: center;
     justify-content: space-between;
     gap: 6px;
-    background: #181b22;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
     border-radius: 12px;
     padding: 8px 12px;
-    cursor: pointer;
     text-align: left;
     transition: all 0.2s ease;
 }
 
-.translation-lang-box:hover {
-    border-color: rgba(255, 255, 255, 0.18);
-    background: #1d2028;
-}
 
 .translation-lang-info {
     display: flex;
@@ -200,14 +195,14 @@
 .translation-lang-role {
     font-size: 11px;
     font-weight: 500;
-    color: #8b949e;
+    color: var(--text-muted);
     line-height: 1.2;
 }
 
 .translation-lang-name {
     font-size: 13px;
     font-weight: 700;
-    color: #f3f4f6;
+    color: var(--primary-textColor);
     line-height: 1.25;
     white-space: nowrap;
     overflow: hidden;
@@ -215,7 +210,7 @@
 }
 
 .translation-lang-chevron {
-    color: #8b949e;
+    color: var(--text-muted);
     flex-shrink: 0;
 }
 
@@ -226,17 +221,17 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: #1d2028;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #9ca3af;
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     flex-shrink: 0;
 }
 
 .translation-swap-btn:hover {
-    background: #282c37;
-    color: #ffffff;
+    background: var(--primary-hoverBackgroundColor);
+    color: var(--primary-textColor);
     border-color: rgba(255, 255, 255, 0.2);
     transform: rotate(180deg);
 }
@@ -248,8 +243,8 @@
 }
 
 .translation-status-card {
-    background: #171a21;
-    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
     border-radius: 12px;
     padding: 10px 14px;
     display: flex;
@@ -274,13 +269,13 @@
 .translation-state-title {
     font-size: 12.5px;
     font-weight: 600;
-    color: #4ade80;
+    color: var(--accent-text);
     line-height: 1.2;
 }
 
 .translation-state-sub {
     font-size: 12px;
-    color: #8b949e;
+    color: var(--text-muted);
     padding-left: 16px;
     line-height: 1.3;
 }
@@ -305,8 +300,8 @@
 }
 
 .translation-pulse-dot.loading {
-    background: #38bdf8;
-    box-shadow: 0 0 8px #38bdf8;
+    background: var(--accent-text);
+    box-shadow: 0 0 8px var(--accent-text);
     animation: statusPulse 1s infinite;
 }
 
@@ -333,7 +328,7 @@
 .translation-waveform span {
     width: 2.5px;
     border-radius: 999px;
-    background: #6e7681;
+    background: var(--text-muted);
     transition: height 0.2s ease, background 0.2s ease;
 }
 
@@ -344,7 +339,7 @@
 .translation-waveform span:nth-child(5) { height: 6px; }
 
 .translation-waveform.active span {
-    background: #9ca3af;
+    background: var(--text-muted);
     animation: waveBounce 0.9s ease-in-out infinite;
 }
 
@@ -384,7 +379,7 @@
     height: 16px;
     border-radius: 50%;
     background: #ef4444;
-    color: #ffffff;
+    color: var(--primary-textColor);
     font-size: 11px;
     font-weight: 700;
     flex-shrink: 0;
@@ -421,7 +416,7 @@
     justify-content: center;
     text-align: center;
     padding: 32px 14px;
-    color: #8b949e;
+    color: var(--text-muted);
     gap: 8px;
     margin: auto 0;
 }
@@ -433,27 +428,27 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: #181b22;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #9ca3af;
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
+    color: var(--text-muted);
     margin-bottom: 4px;
 }
 
 .translation-empty-title {
     font-size: 13.5px;
     font-weight: 600;
-    color: #e6edf3;
+    color: var(--primary-textColor);
 }
 
 .translation-empty-desc {
     font-size: 12px;
     line-height: 1.45;
-    color: #8b949e;
+    color: var(--text-muted);
     max-width: 260px;
 }
 
 .translation-empty-desc strong {
-    color: #e6edf3;
+    color: var(--primary-textColor);
 }
 
 /* Individual Translation Note Card */
@@ -466,8 +461,8 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    background: #181b22;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
     border-radius: 12px;
     padding: 12px 14px;
     box-sizing: border-box;
@@ -475,7 +470,7 @@
 }
 
 .translation-msg-content:hover {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: var(--primary-borderColor);
 }
 
 .translation-note-header {
@@ -496,12 +491,12 @@
 }
 
 .translation-msg-sender.speaker-blue {
-    color: #38bdf8;
+    color: var(--accent-text);
 }
 
 .translation-msg-time {
     font-size: 11.5px;
-    color: #6e7681;
+    color: var(--text-muted);
     font-weight: 500;
 }
 
@@ -516,7 +511,7 @@
 .translation-msg-original {
     font-size: 13px;
     line-height: 1.45;
-    color: #e6edf3;
+    color: var(--primary-textColor);
     font-weight: 500;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -525,14 +520,14 @@
 .translation-msg-text {
     font-size: 12.5px;
     line-height: 1.42;
-    color: #8b949e;
+    color: var(--text-muted);
     white-space: pre-wrap;
     word-wrap: break-word;
 }
 
 .translation-msg-text.primary-only {
     font-size: 13px;
-    color: #e6edf3;
+    color: var(--primary-textColor);
     font-weight: 500;
 }
 
@@ -555,4 +550,64 @@ div[class*="group-call-container"]:has(.translation-panel) > div[class*="call-st
         border-radius: 16px;
         padding: 14px;
     }
+}
+
+/* Original text remains visible while translation is pending or interrupted. */
+.translation-direction-hint {
+    margin: 8px 0 0;
+    color: var(--text-muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+.translation-note-language {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.translation-msg-original + .translation-note-language {
+    padding-top: 7px;
+    margin-top: 2px;
+    border-top: 1px solid var(--primary-borderColor);
+}
+
+.translation-msg-sender,
+.translation-title-area,
+.translation-error > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.translation-msg-time { flex-shrink: 0; }
+
+.translation-msg-text.translation-error {
+    display: block;
+    padding: 0;
+    border: none;
+    background: transparent;
+}
+
+.translation-retry {
+    flex-shrink: 0;
+    padding: 6px 8px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+}
+
+.translation-panel { min-height: 0; box-shadow: var(--surface-shadow); }
+.translation-list { min-height: 0; }
+
+.translation-toggle:focus-visible,
+.translation-panel button:focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .translation-panel, .translation-panel *, .translation-toggle * { animation: none; transition: none; }
+    .translation-swap-btn:hover, .translation-toggle:hover .translation-toggle-pill { transform: none; }
 }

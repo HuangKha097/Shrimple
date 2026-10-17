@@ -1,127 +1,159 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Languages, ArrowLeftRight, Trash2, Sparkles, ChevronUp, ChevronDown } from 'lucide-react';
+import { Languages, ArrowLeftRight, Trash2, Sparkles, ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '../../lib/axios.js';
 import { useAuthStore } from '../../stores/useAuthStore.js';
+import { conversationTranslationSources, defaultTranslationDirection } from './translationStream.js';
+import { createPcmAudioContext, createPcmCapture } from './translationPcmCapture.js';
+import { createTranslationPcmSocket } from './translationPcmSocket.js';
+import { interruptTranslationNotes, reduceTranslationNotes } from './translationNotesState.js';
+import pcmWorkletUrl from './translationPcmWorklet.js?url';
 import './TranslationNotes.css';
 
 const HEALTH_TIMEOUT = 20000;
 const HEALTH_RETRY_MS = 3000;
 const HEALTH_STARTUP_TIMEOUT = 10 * 60 * 1000;
-const CHUNK_TIMEOUT = 95000;
-const CLIP_MS = 6000;
-const MAX_PENDING_CLIPS = 1;
+const STREAM_RETRY_MS = 1000;
 
-const errorMessage = (error, fallback) =>
-    error.response?.status === 401
-        ? 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.'
-        : error.response?.data?.message || fallback;
-
-const formatElapsed = (startedAt) => {
-    const elapsedSec = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
-    const mins = Math.floor(elapsedSec / 60);
-    const secs = elapsedSec % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+const formatElapsed = startedAt => {
+    const seconds = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+    return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
 };
 
 export default function TranslationNotes({ active, kind, sessionId, sources }) {
-    const { user } = useAuthStore();
+    const { user, socket } = useAuthStore();
+    const { t, i18n } = useTranslation();
     const [open, setOpen] = useState(false);
     const [status, setStatus] = useState('idle');
     const [error, setError] = useState('');
     const [notes, setNotes] = useState([]);
-    // Default direction: Vietnamese -> English ('vi-en')
-    // Alternate direction: English -> Vietnamese ('en-vi')
-    const [direction, setDirection] = useState('vi-en');
-    const [processingCount, setProcessingCount] = useState(0);
+    const [direction, setDirection] = useState(() => defaultTranslationDirection(i18n.resolvedLanguage || i18n.language));
     const [skippedClips, setSkippedClips] = useState(false);
+    const [healthAttempt, setHealthAttempt] = useState(0);
     const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden');
-
+    const [connected, setConnected] = useState(Boolean(socket?.connected));
     const sourceLanguage = direction === 'vi-en' ? 'vi' : 'en';
     const targetLanguage = direction === 'vi-en' ? 'en' : 'vi';
-
-    const controllers = useRef(new Set());
-    const recorders = useRef([]);
-    const closeTimer = useRef(null);
+    const streams = useRef(new Map());
+    const audioRef = useRef(null);
+    const generation = useRef(0);
     const notesEndRef = useRef(null);
     const sessionStartRef = useRef(Date.now());
+    const processingCount = notes.filter(note => note.translationState === 'pending').length;
 
-    const toggleDirection = () => {
-        setNotes([]);
-        setSkippedClips(false);
-        setDirection(prev => (prev === 'vi-en' ? 'en-vi' : 'vi-en'));
-    };
+    const prepareAudio = useCallback(() => {
+        if (!audioRef.current || audioRef.current.context.state === 'closed') {
+            const context = createPcmAudioContext();
+            const moduleReady = context.audioWorklet.addModule(pcmWorkletUrl);
+            // Loading starts during the gesture; capture observes any failure later.
+            void moduleReady.catch(() => {});
+            audioRef.current = { context, moduleReady };
+        }
+        void audioRef.current.context.resume().catch(() => {});
+        return audioRef.current;
+    }, []);
 
     const stop = useCallback(() => {
-        recorders.current.forEach(({ recorder, timer }) => {
-            clearTimeout(timer);
-            recorder.onstop = null;
-            if (recorder.state !== 'inactive') recorder.stop();
-        });
-        recorders.current = [];
-        controllers.current.forEach(controller => controller.abort());
-        controllers.current.clear();
+        generation.current += 1;
+        streams.current.forEach(source => source.stop());
+        streams.current.clear();
+        const audio = audioRef.current;
+        audioRef.current = null;
+        if (audio && audio.context.state !== 'closed') void audio.context.close().catch(() => {});
+        setNotes(previous => interruptTranslationNotes(previous));
     }, []);
+
+    const togglePanel = () => {
+        if (open) { stop(); setOpen(false); return; }
+        try { prepareAudio(); } catch { /* Capture reports unsupported browsers after health. */ }
+        setOpen(true);
+    };
+
+    const toggleDirection = () => {
+        stop();
+        try { prepareAudio(); } catch { /* Capture shows the actionable error. */ }
+        setNotes([]);
+        setSkippedClips(false);
+        setDirection(previous => previous === 'vi-en' ? 'en-vi' : 'vi-en');
+    };
+
+    const retry = () => {
+        stop();
+        try { prepareAudio(); } catch { /* Capture shows the actionable error. */ }
+        setHealthAttempt(value => value + 1);
+    };
 
     useEffect(() => {
         stop();
-        clearTimeout(closeTimer.current);
         sessionStartRef.current = Date.now();
         setOpen(false);
         setNotes([]);
         setStatus('idle');
-        setProcessingCount(0);
+        setError('');
         setSkippedClips(false);
     }, [active, kind, sessionId, user?._id, stop]);
 
+    useEffect(() => () => stop(), [stop]);
+
     useEffect(() => {
-        const onVisibility = () => setVisible(document.visibilityState !== 'hidden');
+        const onVisibility = () => {
+            if (document.visibilityState === 'hidden') stop();
+            setVisible(document.visibilityState !== 'hidden');
+        };
         document.addEventListener('visibilitychange', onVisibility);
         return () => document.removeEventListener('visibilitychange', onVisibility);
-    }, []);
-
-    useEffect(() => () => {
-        stop();
-        clearTimeout(closeTimer.current);
     }, [stop]);
 
     useEffect(() => {
+        const onConnect = () => setConnected(true);
+        const onDisconnect = () => { stop(); setConnected(false); };
+        setConnected(Boolean(socket?.connected));
+        socket?.on('connect', onConnect);
+        socket?.on('disconnect', onDisconnect);
+        return () => {
+            socket?.off('connect', onConnect);
+            socket?.off('disconnect', onDisconnect);
+            stop();
+        };
+    }, [socket, stop]);
+
+    useEffect(() => {
+        if (!open || !active || !visible || !user?._id) stop();
+    }, [open, active, visible, user?._id, stop]);
+
+    useEffect(() => {
         if (open && notes.length > 0) {
-            notesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            notesEndRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
         }
     }, [notes, open]);
 
     useEffect(() => {
-        if (!open || !active) return;
+        if (!open || !active || !visible || !user?._id) return;
         let cancelled = false;
         let retryTimer;
         let currentController;
-        const activeControllers = controllers.current;
         const started = Date.now();
         setStatus('loading');
         setError('');
         const checkHealth = async () => {
             const controller = new AbortController();
             currentController = controller;
-            activeControllers.add(controller);
             const timeout = setTimeout(() => controller.abort(), HEALTH_TIMEOUT);
             try {
-                await api.get('/api/translation/health', { signal: controller.signal });
+                await api.get('/api/translation/health', { signal: controller.signal, params: { mode: 'pcm' } });
                 if (!cancelled) setStatus('ready');
-            } catch (error) {
+            } catch (requestError) {
                 if (cancelled) return;
-                if (error.response?.data?.status === 'loading' &&
-                    Date.now() - started < HEALTH_STARTUP_TIMEOUT) {
+                if (requestError.response?.data?.status === 'loading' && Date.now() - started < HEALTH_STARTUP_TIMEOUT) {
                     retryTimer = setTimeout(checkHealth, HEALTH_RETRY_MS);
                     return;
                 }
+                stop();
                 setStatus('error');
-                setError(`${errorMessage(error, 'Không kết nối được máy chủ dịch.')} Bảng note sẽ đóng.`);
-                closeTimer.current = setTimeout(() => setOpen(false), 2500);
-            } finally {
-                clearTimeout(timeout);
-                activeControllers.delete(controller);
-                if (currentController === controller) currentController = null;
-            }
+                setError(requestError.response?.status === 401 ? t('translationNotes.expired') :
+                    requestError.response?.status === 403 ? t('translationNotes.forbidden') :
+                    requestError.response?.data?.message || t('translationNotes.unavailable'));
+            } finally { clearTimeout(timeout); }
         };
         void checkHealth();
         return () => {
@@ -129,316 +161,175 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
             clearTimeout(retryTimer);
             currentController?.abort();
         };
-    }, [open, active]);
+    }, [open, active, visible, user?._id, healthAttempt, stop, t]);
 
+    // Keep existing speakers running when only the remote participant list changes.
     useEffect(() => {
-        if (!open || !active || !visible || !user?._id || status !== 'ready' || !sessionId) return;
-        if (typeof MediaRecorder === 'undefined') {
-            setStatus('error');
-            setError('Trình duyệt không hỗ trợ ghi âm để dịch.');
-            closeTimer.current = setTimeout(() => setOpen(false), 2500);
-            return;
-        }
-        let stopped = false;
-        const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
-            .find(type => MediaRecorder.isTypeSupported(type));
-        if (!mimeType) {
-            setStatus('error');
-            setError('Trình duyệt không hỗ trợ định dạng âm thanh để dịch.');
-            closeTimer.current = setTimeout(() => setOpen(false), 2500);
-            return;
-        }
-
-        const fail = (message) => {
-            if (stopped) return;
+        if (!open || !active || !visible || !user?._id || status !== 'ready' || !sessionId || !connected || !socket?.connected) return;
+        const epoch = generation.current;
+        const fail = message => {
+            if (epoch !== generation.current) return;
+            stop();
             setStatus('error');
             setError(message);
-            closeTimer.current = setTimeout(() => setOpen(false), 2500);
         };
-
-        const sendClip = async (blob, speakerId) => {
-            if (stopped || blob.size < 1000) return;
-            const controller = new AbortController();
-            controllers.current.add(controller);
-            const timeout = setTimeout(() => controller.abort(), CHUNK_TIMEOUT);
-            try {
-                const form = new FormData();
-                form.append('audio', blob, mimeType === 'audio/mp4' ? 'clip.mp4' : 'clip.webm');
-                form.append('kind', kind);
-                form.append('sessionId', sessionId);
-                form.append('speakerId', speakerId);
-                form.append('targetLanguage', targetLanguage);
-                form.append('sourceLanguage', sourceLanguage);
-                const response = await api.post('/api/translation/chunk', form, { signal: controller.signal });
-                const result = response.data;
-                if (!stopped && result.translated) {
-                    const time = formatElapsed(sessionStartRef.current);
-                    setNotes(previous => [...previous.slice(-49), { ...result, id: crypto.randomUUID(), time }]);
-                }
-            } catch (error) {
-                fail(`${errorMessage(error, 'Máy chủ dịch không phản hồi.')} Bảng note sẽ đóng.`);
-            } finally {
-                clearTimeout(timeout);
-                controllers.current.delete(controller);
+        let audio;
+        try { audio = prepareAudio(); } catch { fail(t('translationNotes.unsupported')); return; }
+        const desired = conversationTranslationSources(sources, user._id);
+        const wanted = new Map(desired.map(source => [source.id, source]));
+        for (const [id, source] of streams.current) {
+            const next = wanted.get(id);
+            if (!next || next.track !== source.track || Boolean(next.isSelf) !== Boolean(source.isSelf)) {
+                source.stop();
+                streams.current.delete(id);
             }
-        };
-
-        const startSource = ({ id, stream, muted }) => {
-            const track = stream?.getAudioTracks()[0];
-            if (!id || !track || muted) return;
-            const pending = [];
-            let draining = false;
-            const drain = async () => {
-                if (draining) return;
-                draining = true;
-                while (!stopped && pending.length > 0) {
-                    const next = pending.shift();
-                    try {
-                        await sendClip(next, id);
-                    } finally {
-                        if (!stopped) setProcessingCount(count => Math.max(0, count - 1));
-                    }
-                }
-                draining = false;
+        }
+        const startSource = ({ id, track, isSelf = false }) => {
+            if (streams.current.has(id)) return;
+            const source = { track, isSelf: Boolean(isSelf), stopped: false, capture: null, transport: null, timer: null, streamId: null };
+            const stopped = () => source.stopped || epoch !== generation.current;
+            const finishAttempt = () => {
+                source.capture?.stop();
+                source.transport?.stop();
+                source.capture = null;
+                source.transport = null;
+                if (source.streamId) setNotes(previous => interruptTranslationNotes(previous, source.streamId));
             };
-            const record = () => {
-                if (stopped || track.readyState !== 'live') return;
-                const recorder = new MediaRecorder(new MediaStream([track]), { mimeType });
-                const chunks = [];
-                recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
-                recorder.onerror = () => fail('Không thể ghi âm cuộc gọi để dịch.');
-                recorder.onstop = () => {
-                    clearTimeout(timer);
-                    recorders.current = recorders.current.filter(entry => entry.recorder !== recorder);
-                    const blob = new Blob(chunks, { type: mimeType });
-                    record();
-                    if (stopped || blob.size < 1000) return;
-                    if (pending.length >= MAX_PENDING_CLIPS) {
-                        pending.shift();
-                        setProcessingCount(count => Math.max(0, count - 1));
-                        setSkippedClips(true);
-                    }
-                    pending.push(blob);
-                    setProcessingCount(count => count + 1);
-                    void drain();
-                };
-                recorder.start();
-                const timer = setTimeout(() => { if (recorder.state === 'recording') recorder.stop(); }, CLIP_MS);
-                recorders.current.push({ recorder, timer });
+            source.stop = () => {
+                source.stopped = true;
+                clearTimeout(source.timer);
+                track.removeEventListener('ended', onEnded);
+                finishAttempt();
             };
-            record();
+            const onEnded = () => {
+                source.stop();
+                if (streams.current.get(id) === source) streams.current.delete(id);
+            };
+            const startAttempt = () => {
+                if (stopped() || !socket.connected || track.readyState !== 'live') return;
+                source.streamId = null;
+                const request = source.isSelf
+                    ? { kind, sessionId, speakerId: id, sourceLanguage: targetLanguage, targetLanguage, translate: false }
+                    : { kind, sessionId, speakerId: id, sourceLanguage, targetLanguage };
+                source.transport = createTranslationPcmSocket({
+                    socket, request,
+                    onReady: streamId => {
+                        if (stopped()) return;
+                        source.streamId = streamId;
+                        source.capture = createPcmCapture({ ...audio, track,
+                            onPacket: packet => { if (!stopped()) source.transport?.send(packet); },
+                            onError: () => fail(t(audio.context.state === 'suspended' ? 'translationNotes.resumeAudio' : 'translationNotes.recordingError')),
+                        });
+                    },
+                    onEvent: event => {
+                        if (stopped()) return;
+                        if (event.type === 'status' && [429, 503].includes(event.status)) setSkippedClips(true);
+                        setNotes(previous => reduceTranslationNotes(previous, event, formatElapsed(sessionStartRef.current)));
+                    },
+                    onFailure: detail => {
+                        if (stopped()) return;
+                        finishAttempt();
+                        if ([401, 403].includes(detail.status)) {
+                            fail(t(detail.status === 401 ? 'translationNotes.expired' : 'translationNotes.forbidden'));
+                        } else if (detail.status === 429 || detail.status >= 500) {
+                            setSkippedClips(true);
+                            source.timer = setTimeout(startAttempt, STREAM_RETRY_MS);
+                        } else fail(detail.message || t('translationNotes.unavailable'));
+                    },
+                });
+            };
+            streams.current.set(id, source);
+            track.addEventListener('ended', onEnded);
+            startAttempt();
         };
-        sources.forEach(startSource);
-        return () => { stopped = true; stop(); setProcessingCount(0); };
-    }, [open, active, visible, user?._id, status, kind, sessionId, sources, targetLanguage, sourceLanguage, stop]);
-
+        desired.forEach(startSource);
+    }, [open, active, visible, user?._id, status, kind, sessionId, sources, connected, socket, targetLanguage, sourceLanguage, stop, prepareAudio, t]);
     if (!active) return null;
     return (
         <>
-            <button
-                type="button"
-                className={`translation-toggle ${open ? 'active' : ''}`}
-                onClick={() => { clearTimeout(closeTimer.current); if (!open) setSkippedClips(false); setOpen(value => !value); }}
-                title={open ? 'Đóng note dịch thuật' : 'Bật mic dịch thuật'}
-                aria-label={open ? 'Đóng note dịch thuật' : 'Bật mic dịch thuật'}
-            >
-                <span className="translation-toggle-pill">
-                    <Languages size={20} />
-                </span>
-                <span className="translation-toggle-label">Translate</span>
+            <button type="button" className={`translation-toggle ${open ? 'active' : ''}`}
+                onClick={togglePanel} aria-expanded={open}
+                title={t(open ? 'translationNotes.close' : 'translationNotes.open')}
+                aria-label={t(open ? 'translationNotes.close' : 'translationNotes.open')}>
+                <span className="translation-toggle-pill"><Languages size={20} /></span>
+                <span className="translation-toggle-label">{t('translationNotes.toggle')}</span>
             </button>
-
             {open && (
-                <aside className="translation-panel" aria-label="Note dịch thuật">
-                    {/* Header */}
+                <aside className="translation-panel" aria-label={t('translationNotes.title')}>
                     <div className="translation-header">
                         <div className="translation-title-area">
-                            <div className="translation-icon-badge">
-                                <Languages size={16} />
-                            </div>
-                            <span className="translation-title">Translation Notes</span>
+                            <div className="translation-icon-badge"><Languages size={16} /></div>
+                            <span className="translation-title">{t('translationNotes.title')}</span>
                         </div>
                         <div className="translation-header-actions">
-                            {notes.length > 0 && (
-                                <button
-                                    type="button"
-                                    className="translation-action-btn"
-                                    onClick={() => setNotes([])}
-                                    title="Xóa lịch sử dịch"
-                                    aria-label="Xóa lịch sử dịch"
-                                >
-                                    <Trash2 size={15} />
-                                </button>
-                            )}
-                            <button
-                                type="button"
-                                className="translation-close-btn"
-                                onClick={() => setOpen(false)}
-                                title="Đóng note dịch"
-                                aria-label="Đóng note"
-                            >
-                                <ChevronUp size={18} />
-                            </button>
+                            {notes.length > 0 && <button type="button" className="translation-action-btn"
+                                onClick={() => setNotes([])} title={t('translationNotes.clear')} aria-label={t('translationNotes.clear')}><Trash2 size={15} /></button>}
+                            <button type="button" className="translation-close-btn" onClick={togglePanel}
+                                title={t('translationNotes.close')} aria-label={t('translationNotes.close')}><ChevronUp size={18} /></button>
                         </div>
                     </div>
-
-                    {/* Language Selector Row */}
                     <div className="translation-setting-card">
                         <div className="translation-direction-row">
-                            <button
-                                type="button"
-                                className="translation-lang-box source"
-                                onClick={toggleDirection}
-                                title="Bấm để đổi chiều dịch"
-                            >
-                                <div className="translation-lang-info">
-                                    <span className="translation-lang-role">
-                                        {direction === 'vi-en' ? 'Vietnamese' : 'English'}
-                                    </span>
-                                    <span className="translation-lang-name">
-                                        {direction === 'vi-en' ? 'Tiếng Việt' : 'English'}
-                                    </span>
-                                </div>
-                                <ChevronDown size={14} className="translation-lang-chevron" />
-                            </button>
-
-                            <button
-                                type="button"
-                                className="translation-swap-btn"
-                                onClick={toggleDirection}
-                                title="Đổi chiều dịch (Bấm để chuyển đổi)"
-                                aria-label="Đổi chiều dịch"
-                            >
-                                <ArrowLeftRight size={15} />
-                            </button>
-
-                            <button
-                                type="button"
-                                className="translation-lang-box target"
-                                onClick={toggleDirection}
-                                title="Bấm để đổi chiều dịch"
-                            >
-                                <div className="translation-lang-info">
-                                    <span className="translation-lang-role">
-                                        {direction === 'vi-en' ? 'English' : 'Vietnamese'}
-                                    </span>
-                                    <span className="translation-lang-name">
-                                        {direction === 'vi-en' ? 'English' : 'Tiếng Việt'}
-                                    </span>
-                                </div>
-                                <ChevronDown size={14} className="translation-lang-chevron" />
-                            </button>
+                            <div className="translation-lang-box source"><div className="translation-lang-info">
+                                <span className="translation-lang-role">{t('translationNotes.counterpartSpeech')}</span>
+                                <span className="translation-lang-name">{t(`translationNotes.${sourceLanguage}`)}</span>
+                            </div></div>
+                            <button type="button" className="translation-swap-btn" onClick={toggleDirection}
+                                title={t('translationNotes.swap')} aria-label={t('translationNotes.swap')}><ArrowLeftRight size={15} /></button>
+                            <div className="translation-lang-box target"><div className="translation-lang-info">
+                                <span className="translation-lang-role">{t('translationNotes.readTranslation')}</span>
+                                <span className="translation-lang-name">{t(`translationNotes.${targetLanguage}`)}</span>
+                            </div></div>
                         </div>
+                        <p className="translation-direction-hint">{t('translationNotes.directionHint')}</p>
                     </div>
-
-                    {/* Real-time Status Card */}
                     <div className="translation-status-bar">
-                        {status === 'error' ? (
-                            <div className="translation-error" role="alert">
-                                <span className="translation-error-icon">!</span>
-                                <span>{error}</span>
+                        {status === 'error' ? <div className="translation-error" role="alert">
+                            <span>{error}</span><button type="button" className="translation-retry" onClick={retry}>{t('translationNotes.retry')}</button>
+                        </div> : <div className="translation-status-card" role="status">
+                            <div className="translation-status-copy">
+                                <div className="translation-state"><span className={`translation-pulse-dot ${status === 'loading' ? 'loading' : processingCount > 0 ? 'processing' : 'live'}`} />
+                                    <span className="translation-state-title">{t('translationNotes.liveTitle')}</span></div>
+                                <div className="translation-state-sub">{t(!connected ? 'translationNotes.reconnecting' : status === 'loading' ? 'translationNotes.starting' : 'translationNotes.listening')}</div>
                             </div>
-                        ) : (
-                            <>
-                                <div className="translation-status-card">
-                                    <div className="translation-status-copy">
-                                        <div className="translation-state">
-                                            <span
-                                                className={`translation-pulse-dot ${
-                                                    status === 'loading'
-                                                        ? 'loading'
-                                                        : processingCount > 0
-                                                        ? 'processing'
-                                                        : 'live'
-                                                }`}
-                                            />
-                                            <span className="translation-state-title">
-                                                Real-time translation
-                                            </span>
-                                        </div>
-                                        <div className="translation-state-sub">
-                                            {status === 'loading'
-                                                ? 'Starting translation model...'
-                                                : 'Converting speech to notes...'}
-                                        </div>
-                                    </div>
-                                    <div
-                                        className={`translation-waveform ${
-                                            status === 'ready' && processingCount > 0 ? 'active' : ''
-                                        }`}
-                                        aria-hidden="true"
-                                    >
-                                        <span />
-                                        <span />
-                                        <span />
-                                        <span />
-                                        <span />
-                                    </div>
-                                </div>
-                                {skippedClips && (
-                                    <div className="translation-warning">
-                                        Máy chủ xử lý chậm; một số đoạn âm thanh đã bị bỏ qua.
-                                    </div>
-                                )}
-                            </>
-                        )}
+                            <div className={`translation-waveform ${status === 'ready' && processingCount > 0 ? 'active' : ''}`} aria-hidden="true"><span /><span /><span /><span /><span /></div>
+                        </div>}
+                        {skippedClips && <div className="translation-warning" role="status">{t('translationNotes.skipped')}</div>}
                     </div>
-
-                    {/* Translation Note Cards List */}
-                    <div className="translation-list" aria-live="polite">
-                        {notes.length === 0 ? (
-                            <div className="translation-empty">
-                                <div className="translation-empty-icon">
-                                    <Sparkles size={20} />
-                                </div>
-                                <div className="translation-empty-title">No translation notes yet</div>
-                                <div className="translation-empty-desc">
-                                    Call speech will be automatically transcribed and translated from{' '}
-                                    <strong>{direction === 'vi-en' ? 'Tiếng Việt to English' : 'English to Tiếng Việt'}</strong>{' '}
-                                    in real time.
-                                </div>
-                            </div>
-                        ) : (
-                            notes.map(note => {
-                                const isMe = Boolean(user?._id && note.speakerId === user._id);
-                                const speakerLabel =
-                                    note.speakerName ||
-                                    (isMe ? user?.displayName || user?.username || 'Bạn' : 'Thành viên');
-                                return (
-                                    <div
-                                        className={`translation-msg-wrapper ${isMe ? 'me' : 'other'}`}
-                                        key={note.id}
-                                    >
-                                        <div className="translation-msg-content">
-                                            <div className="translation-note-header">
-                                                <span className={`translation-msg-sender ${isMe ? 'speaker-amber' : 'speaker-blue'}`}>
-                                                    {speakerLabel}
-                                                </span>
-                                                {note.time && (
-                                                    <span className="translation-msg-time">{note.time}</span>
-                                                )}
-                                            </div>
-                                            <div className="translation-msg-bubble">
-                                                {note.original && note.original !== note.translated ? (
-                                                    <>
-                                                        <div className="translation-msg-original">
-                                                            {note.original}
-                                                        </div>
-                                                        <div className="translation-msg-text">
-                                                            {note.translated}
-                                                        </div>
-                                                    </>
-                                                ) : (
-                                                    <div className="translation-msg-text primary-only">
-                                                        {note.translated}
+                    <div className="translation-list" role="log" aria-live="polite" aria-relevant="additions text" aria-label={t('translationNotes.title')}>
+                        {notes.length === 0 ? <div className="translation-empty">
+                            <div className="translation-empty-icon"><Sparkles size={20} /></div>
+                            <div className="translation-empty-title">{t('translationNotes.emptyTitle')}</div>
+                            <div className="translation-empty-desc">{t('translationNotes.emptyDescription')}</div>
+                        </div> : notes.map(note => {
+                            const isSelfNote = note.translationState === 'self' || note.translate === false || String(note.speakerId || '') === String(user?._id || '');
+                            return (
+                                <div className={`translation-msg-wrapper ${isSelfNote ? 'self' : 'other'}`} key={note.id}>
+                                    <div className="translation-msg-content">
+                                        <div className="translation-note-header">
+                                            <span className={`translation-msg-sender ${isSelfNote ? 'speaker-amber' : 'speaker-blue'}`}>
+                                                {isSelfNote ? (note.speakerName || t('translationNotes.you')) : (note.speakerName || t('translationNotes.participant'))}
+                                            </span>
+                                            <span className="translation-msg-time">{note.time}</span>
+                                        </div>
+                                        <div className="translation-msg-bubble">
+                                            <div className="translation-note-language">{t('translationNotes.original')} · {t(`translationNotes.${note.sourceLanguage}`)}</div>
+                                            <div className="translation-msg-original" lang={note.sourceLanguage}>{note.original}</div>
+                                            {!isSelfNote && (
+                                                <>
+                                                    <div className="translation-note-language">{t('translationNotes.translation')} · {t(`translationNotes.${note.targetLanguage}`)}</div>
+                                                    <div className={`translation-msg-text ${note.translationState !== 'complete' ? `translation-${note.translationState}` : ''}`} lang={note.translationState === 'complete' ? note.targetLanguage : undefined}>
+                                                        {note.translationState === 'complete' ? note.translated :
+                                                            note.translationState === 'error' && note.message ? note.message :
+                                                                t(note.translationState === 'pending' ? 'translationNotes.pending' : note.translationState === 'interrupted' ? 'translationNotes.interrupted' : 'translationNotes.translationError')}
                                                     </div>
-                                                )}
-                                            </div>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
-                                );
-                            })
-                        )}
+                                </div>
+                            );
+                        })}
                         <div ref={notesEndRef} />
                     </div>
                 </aside>

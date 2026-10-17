@@ -1,0 +1,10 @@
+{
+  "project": "https://github.com/snakers4/silero-vad",
+  "version": "v6.2",
+  "revision": "be95df9152c0d7618fa1edfeb296fc3dae32376f",
+  "source": "https://raw.githubusercontent.com/snakers4/silero-vad/be95df9152c0d7618fa1edfeb296fc3dae32376f/src/silero_vad/data/silero_vad.onnx",
+  "sha256": "1a153a22f4509e292a94e67d6f9b85e8deb25b4988682b7e174c65279d8788e3",
+  "bytes": 2327524,
+  "license": "MIT; see SILERO-LICENSE",
+  "runtime": "ONNX Runtime CPU, 16000 Hz, 512-sample frames with 64-sample context; per-stream recurrent state"
+}

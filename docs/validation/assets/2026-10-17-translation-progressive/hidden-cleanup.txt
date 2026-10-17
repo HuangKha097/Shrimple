@@ -1,0 +1,59 @@
+- heading "Translation progressive check — synthetic audio" [level=1]
+- button "Record Bob"
+- button "Original Bob"
+- button "Translate Bob"
+- button "Timeout Bob"
+- button "Forbidden Bob"
+- button "Add Carol"
+- button "Record Carol"
+- button "Original Carol"
+- button "Translate Carol"
+- button "New session"
+- button "Hide tab" [active]
+- button "Show tab"
+- button "Light theme"
+- button "Dark theme"
+- button "English UI"
+- button "Logout"
+- generic: "{ \"requests\": [ { \"clip\": \"bob-1\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-2\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-5\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-6\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-7\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-8\", \"speakerId\": \"bob\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"carol-1\", \"speakerId\": \"carol\", \"sourceLanguage\": \"vi\", \"targetLanguage\": \"en\", \"url\": \"/api/translation/chunk-stream\" } ], \"aborted\": [ \"bob-2\", \"bob-5\", \"bob-8\", \"carol-1\" ], \"errors\": [], \"streams\": [], \"live\": [], \"pending\": [], \"session\": \"first-call\" }"
+- button "Đóng note dịch" [expanded]:
+  - generic: Dịch
+- complementary "Note lời nói & bản dịch":
+  - generic: Note lời nói & bản dịch
+  - button "Xóa note":
+  - button "Đóng note dịch":
+  - generic: Đối phương nói
+  - generic: Tiếng Việt
+  - button "Đổi ngôn ngữ đối phương và bản dịch":
+  - generic: Bản dịch bạn đọc
+  - generic: Tiếng Anh
+  - paragraph: Chỉ ghi lời đối phương. Bản gốc hiện trước, bản dịch bổ sung bên dưới.
+  - status:
+    - generic: Ghi lời đối phương
+    - generic: Cập nhật theo đoạn nói; bản dịch có thể đến sau.
+  - status: Xử lý chậm; một số đoạn đã bị bỏ qua để tiếp tục với lời nói mới nhất.
+  - log "Note lời nói & bản dịch":
+    - generic: Bob
+    - generic: 01:09
+    - generic: Lời gốc · Tiếng Việt
+    - generic: Xin chào từ bob-6.
+    - generic: Bản dịch · Tiếng Anh
+    - generic: Translation bob-6.
+    - generic: Bob
+    - generic: 01:10
+    - generic: Lời gốc · Tiếng Việt
+    - generic: Xin chào từ bob-7.
+    - generic: Bản dịch · Tiếng Anh
+    - generic: Chưa dịch được đoạn này; lời gốc được giữ lại.
+    - generic: Bob
+    - generic: 01:20
+    - generic: Lời gốc · Tiếng Việt
+    - generic: Xin chào từ bob-8.
+    - generic: Bản dịch · Tiếng Anh
+    - generic: Đã dừng dịch đoạn này; lời gốc được giữ lại.
+    - generic: Carol
+    - generic: 01:21
+    - generic: Lời gốc · Tiếng Việt
+    - generic: Xin chào từ carol-1.
+    - generic: Bản dịch · Tiếng Anh
+    - generic: Đã dừng dịch đoạn này; lời gốc được giữ lại.

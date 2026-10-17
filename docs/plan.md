@@ -189,7 +189,7 @@ G-BASE đạt ở phạm vi cleanup; những gate còn lại chưa được tuy�
 
 ## 7. Kiểm tra và phát hành
 
-Chỉ chạy kiểm tra cần thiết cho thay đổi, không lặp bộ test đã pass khi không có code/failure mới. Quyền tài nguyên/identity/data deletion cần regression; pure docs cần link/path/ID/LOC checks. Client test hiện chỉ tracker, server test hiện groups và direct translation session; phải thêm suite đúng module trước kết luận coverage toàn hệ thống.
+Chỉ chạy kiểm tra cần thiết cho thay đổi, không lặp bộ test đã pass khi không có code/failure mới. Quyền tài nguyên/identity/data deletion cần regression; pure docs cần link/path/ID/LOC checks. Client test gồm tracker và translation stream/queue/PCM; server test gồm groups, translation session/HTTP/socket PCM. Các suite không xác nhận coverage toàn hệ thống; test:ai vẫn cần dịch vụ live.
 
 Deployment checklist dự thảo:
 
@@ -236,7 +236,15 @@ Dependencies mới: server TRANSLATION_AI_URL/KEY; `ai-service/` FastAPI, whispe
 
 Sửa Docker build 2026-10-17: AI dùng `uvicorn` core + h11, bỏ optional native extras `standard`; Dockerfile kiểm tra `pip check`. CPU/CUDA Whisper chuẩn hóa CRLF entrypoint trong image. Kết quả và giới hạn: [AI Docker build](./validation/2026-10-17-ai-docker-build.md); vẫn cần nghiệm thu model/GPU và gọi dịch audio thật.
 
-Theo kiểm tra máy local chỉ nhận Intel UHD, Compose chuyển mặc định Whisper CPU; NVIDIA dùng thêm `-f compose.gpu.yaml`. Giữ nguyên medium q5_0, API, khóa và model volumes. [Whisper CPU build](./validation/2026-10-17-whisper-cpu-build.md) ghi phạm vi B/T; không hứa inference CPU theo kịp clip6s, không đánh dấu Q03 Done khi chưa đo latency.
+Theo kiểm tra máy local chỉ nhận Intel UHD, Compose chuyển mặc định Whisper CPU; NVIDIA dùng thêm `-f compose.gpu.yaml`. Đợt chọn CPU ban đầu giữ medium q5_0, API, khóa và model volumes. [Whisper CPU build](./validation/2026-10-17-whisper-cpu-build.md) ghi phạm vi B/T; không hứa inference CPU theo kịp clip6s, không đánh dấu Q03 Done khi chưa đo latency.
+
+Đợt ưu tiên tốc độ local trước progressive đổi mặc định sang Whisper base-q5_1 + Qwen3-0.6B Q8_0; WHISPER_MODEL/QWEN_MODEL cho phép quay lại medium/1.7B, cache cũ được giữ. Snapshot đó dùng chung một slot inference/tiến trình, không xếp hàng, bận429; UI bỏ clip bận/hết hạn và tiếp tục. Mặc định2 thread/model và Qwen polling0. [Evidence và giới hạn của snapshot](./validation/2026-10-17-translation-speed.md); không coi CPU local là nghiệm thu realtime nhiều người.
+
+Bản progressive HTTP trước PCM đã tách original/translation và hai slot model, chỉ ghi remote; giữ evidence lịch sử ở [progressive notes](./validation/2026-10-17-translation-progressive.md). Hai route HTTP tiếp tục tương thích, bảng note mới chuyển sang socket PCM.
+
+Delta PCM 2026-10-17: AudioWorklet gửi mono16kHz/2048samples mỗi128ms, không chờ clip2s/6s hoặc FFmpeg theo gói. Backend bridge xác thực JWT và pin đúng call/attendance; AI WebSocket dùng khóa nội bộ. Silero VAD CPU giữ đầu câu, chỉ đưa lời nói tới ASR; original tạm và câu cuối cập nhật cùng note với Translating..., dịch tới sau đúng revision. ASR/dịch độc lập, queue hữu hạn, quá tải có lỗi rõ; reconnect/hidden/đổi chiều không replay audio cũ. Model ASR/dịch và lựa chọn CPU/NVIDIA vẫn theo cấu hình hiện hữu, chưa tự phát hiện/failover GPU. Contract authority ở [Design](./design.md), kết quả/gaps ở [PCM validation](./validation/2026-10-17-translation-pcm.md), kế hoạch triển khai theo phiên ở [PCM phases](../plans/261017-pcm-streaming/plan.md).
+
+Bước tiếp theo Q01/Q02: hai browser/WebRTC thật cho cả hai chiều, loại mic viewer, remote track replacement, end/leave/rejoin giữa transcript và translation; không để output cũ lọt phiên mới. Q03: đo thời gian packet→partial/final→translation, độ chính xác en/vi, silence/noise và tải nhiều nguồn trên từng CPU/NVIDIA. Packet128ms và VAD608ms không thay số đo latency model hoặc cam kết1–2s. Chốt consent/retention/logging trước release; không coi các suite mock model hoặc synthetic browser là nghiệm thu thiết bị/production.
 
 Q01 thêm poll/QR64+24hex/login retention, incoming group call và note dịch2browser; Q02 thêm poll caps/races, quyền upload audio/viewer/speaker và end/disconnect; Q03 thêm AI readiness/latency/consent/retention/logging. Hợp nhất code xong cần kết quả checks tree cuối ở [validation sau pull](./validation/pull-conflict-resolution.md); evidence cleanup trước pull không bị ghi đè.
 

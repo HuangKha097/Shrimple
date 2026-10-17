@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { isConversationMember } from "../utils/conversationHelper.js";
 import User from "../models/User.js";
+import { createTranslationPcmBridge } from "./translationPcm.js";
 
 const CLIENT_ORIGINS = (process.env.CLIENT_ORIGINS || "http://localhost:5173,https://shrimplechat.netlify.app")
     .split(",")
@@ -55,6 +56,9 @@ export const getTranslationSession = (kind, sessionId, viewerId, speakerId) => {
 
 export const isTranslationParticipant = (kind, sessionId, viewerId, speakerId) =>
     Boolean(getTranslationSession(kind, sessionId, viewerId, speakerId));
+
+const translationPcm = createTranslationPcmBridge({ getSession: getTranslationSession });
+server.on("close", () => translationPcm.dispose());
 
 io.use(async (socket, next) => {
     try {
@@ -295,6 +299,7 @@ export const isUserOnline = (userId) => {
 
 io.on("connection", (socket) => {
     console.log("A user connected", socket.id);
+    translationPcm.register(socket);
 
     const userId = socket.data.userId;
     const showOnline = socket.handshake.query.showOnlineStatus !== "false";

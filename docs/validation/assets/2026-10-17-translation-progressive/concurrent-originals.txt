@@ -1,0 +1,46 @@
+- heading "Translation progressive check — synthetic audio" [level=1]
+- button "Record Bob"
+- button "Original Bob" [active]
+- button "Translate Bob"
+- button "Timeout Bob"
+- button "Forbidden Bob"
+- button "Add Carol"
+- button "Record Carol"
+- button "Original Carol"
+- button "Translate Carol"
+- button "New session"
+- button "Hide tab"
+- button "Show tab"
+- button "Light theme"
+- button "Dark theme"
+- button "English UI"
+- button "Logout"
+- generic: "{ \"requests\": [ { \"clip\": \"bob-1\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" }, { \"clip\": \"bob-2\", \"speakerId\": \"bob\", \"sourceLanguage\": \"en\", \"targetLanguage\": \"vi\", \"url\": \"/api/translation/chunk-stream\" } ], \"aborted\": [], \"errors\": [], \"streams\": [], \"live\": [ \"bob\" ], \"pending\": [ \"bob-1\", \"bob-2\" ], \"session\": \"first-call\" }"
+- button "Đóng note dịch" [expanded]:
+  - generic: Dịch
+- complementary "Note lời nói & bản dịch":
+  - generic: Note lời nói & bản dịch
+  - button "Xóa note":
+  - button "Đóng note dịch":
+  - generic: Đối phương nói
+  - generic: Tiếng Anh
+  - button "Đổi ngôn ngữ đối phương và bản dịch":
+  - generic: Bản dịch bạn đọc
+  - generic: Tiếng Việt
+  - paragraph: Chỉ ghi lời đối phương. Bản gốc hiện trước, bản dịch bổ sung bên dưới.
+  - status:
+    - generic: Ghi lời đối phương
+    - generic: Cập nhật theo đoạn nói; bản dịch có thể đến sau.
+  - log "Note lời nói & bản dịch":
+    - generic: Bob
+    - generic: 00:04
+    - generic: Lời gốc · Tiếng Anh
+    - generic: Hello from bob-1.
+    - generic: Bản dịch · Tiếng Việt
+    - generic: Đang dịch…
+    - generic: Bob
+    - generic: 00:05
+    - generic: Lời gốc · Tiếng Anh
+    - generic: Hello from bob-2.
+    - generic: Bản dịch · Tiếng Việt
+    - generic: Đang dịch…

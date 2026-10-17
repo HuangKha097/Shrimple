@@ -4,8 +4,7 @@ Shrimple là ứng dụng mạng xã hội full-stack kết hợp nhắn tin th�
 
 ## Tài liệu dự án
 
-Các tài liệu dưới đây được tái dựng từ code ngày 2026-10-08; trạng thái đã triển
-khai và nghiệm thu được phân biệt rõ trong kanban.
+Tài liệu gồm baseline2026-10-08 và cập nhật PCM2026-10-17; triển khai và nghiệm thu được phân biệt trong kanban.
 
 | Tài liệu | Trách nhiệm |
 | --- | --- |
@@ -22,7 +21,7 @@ khai và nghiệm thu được phân biệt rõ trong kanban.
 - **Hồ sơ và quan hệ:** quản lý hồ sơ cá nhân, kết bạn và chặn người dùng.
 - **Nhắn tin trực tiếp và nhóm:** gửi nội dung và media, reaction, thu hồi, xóa, ghim, chuyển tiếp, trạng thái đã đọc và trạng thái online.
 - **Cuộc gọi:** gọi thoại/video ngang hàng bằng WebRTC; server chuyển tiếp tín hiệu thiết lập cuộc gọi qua Socket.IO.
-- **Mic dịch thuật:** trong cuộc gọi 1–1 hoặc nhóm, người dùng có thể mở note dịch tiếng Anh/Việt theo tên người nói. Audio được chia thành clip ngắn, xử lý qua FastAPI và chỉ lưu note trong phiên giao diện hiện tại.
+- **Note dịch thuật:** trong cuộc gọi 1–1 hoặc nhóm, note chỉ ghi lời đối phương/thành viên khác. Chữ gốc hiện sau nhận dạng, bản dịch đến sau ở phía dưới cùng note; chỉ giữ note trong phiên giao diện hiện tại.
 - **Nội dung xã hội:** bài đăng, bảng tin, bình luận, reaction, nội dung đã lưu và bảng tin video ngắn.
 - **Cá nhân hóa:** giao diện sáng/tối và các thiết lập người dùng.
 - **Anti-Peep:** ghi nhớ chủ nhân bằng 5 embedding, quét camera ở nhịp thấp và chỉ khóa khi cùng một người lạ nhìn vào màn hình liên tục 3 giây. Camera tự dừng khi tab bị ẩn.
@@ -47,11 +46,13 @@ React 19 + Vite
 
 Client gọi REST để xử lý dữ liệu nghiệp vụ và dùng Socket.IO cho trạng thái thời gian thực cũng như signaling WebRTC. Âm thanh/video cuộc gọi đi trực tiếp giữa các peer sau khi kết nối được thiết lập; server không phải media server.
 
-Khi bật Mic dịch, trình duyệt tạo clip 6 giây riêng từ luồng mic của từng người tham gia, gửi tới Express qua REST có access token; Express kiểm tra người gửi và người nói thuộc phiên gọi trước khi chuyển clip sang FastAPI, rồi kiểm tra lại đúng phiên trước khi trả note. FastAPI giải mã clip thành WAV mono 16 kHz trong RAM, gửi tới `whisper-server` của whisper.cpp để nhận dạng giọng nói bằng model medium đa ngôn ngữ lượng tử hóa q5_0; sau đó Qwen3 1.7B dịch `en`/`vi` theo prompt chỉ trả về bản dịch, với chế độ suy luận đã tắt. Cấu hình hiện tại dùng Qwen3, chưa chuyển sang Qwen3.5. Người dùng chọn ngôn ngữ đang nói để nhận chữ chính xác hơn; API vẫn hỗ trợ tự nhận diện. Model whisper được nạp một lần trong tiến trình riêng. Nếu xử lý chậm, hàng chờ giữ tối đa một clip chưa gửi cho mỗi người nói, bỏ clip cũ hơn và hiển thị cảnh báo. Clip và note không được lưu vào MongoDB; note giữ tối đa 50 mục trong phiên giao diện, xóa khi đổi/kết thúc cuộc gọi hoặc đăng xuất. Đóng bảng dừng ghi/gửi clip và giữ note để mở lại trong cùng cuộc gọi; ẩn tab dừng recorder/hủy request, hiện tab tiếp tục ghi khi bảng còn mở.
+Khi mở note dịch, AudioWorklet lấy **audio đối phương**, chuyển thành PCM mono 16 kHz và gửi gói 128 ms qua Socket.IO đã xác thực. Express kiểm tra viewer/speaker còn thuộc đúng phiên gọi trước mỗi gói và kết quả, rồi nối WebSocket nội bộ đến FastAPI. Silero VAD v6.2 chạy CPU, giữ đệm đầu câu 256 ms và chốt câu sau 320 ms im lặng hoặc tối đa 8 giây. Chỉ đoạn có lời nói được đưa tới whisper.cpp; đường PCM tạo WAV trong RAM, không tạo clip MediaRecorder hoặc chạy FFmpeg theo gói. Transcript tạm cập nhật cùng note với `Translating...`; sau transcript cuối, Qwen3 dịch và cập nhật phía dưới. Nhận dạng và dịch có hai lượt xử lý độc lập, hàng chờ giới hạn và báo lỗi khi quá tải.
+
+Note giữ tối đa 50 mục trong RAM giao diện, không lưu audio/note vào MongoDB. Đóng bảng hoặc ẩn tab dừng gửi và đánh dấu phần đang chờ bị gián đoạn; đổi chiều, đổi/kết thúc cuộc gọi hoặc đăng xuất xóa note. Kết nối lại bắt đầu stream mới, không phát lại audio cũ. Đồ thị audio dịch được dọn riêng, không dừng track WebRTC của cuộc gọi. `/api/translation/chunk` và `/chunk-stream` vẫn giữ tương thích cho consumer HTTP cũ. [Contract và kiểm chứng PCM](docs/validation/2026-10-17-translation-pcm.md).
 
 ### Chạy dịch thuật cục bộ
 
-Từ thư mục root, sau khi đã cấu hình `server/.env` và `client/.env.development`:
+Sau khi cấu hình `server/.env` và `client/.env.development`, chạy từ root:
 
 ~~~powershell
 .\ai-service\init-env.ps1
@@ -59,48 +60,11 @@ docker compose config --quiet
 docker compose up -d --build
 ~~~
 
-Script tạo `ai-service/.env` với khóa ngẫu nhiên, không in khóa và không ghi đè tệp đã có. Compose nạp tệp này vào **cả backend và ai**, sau `server/.env`, nên `TRANSLATION_AI_KEY` trong đó được dùng chung cho Docker. Không dùng `docker compose config` không có `--quiet` để chia sẻ output vì nó có thể chứa secrets. FastAPI trả 503 khi chưa cấu hình khóa và 401 khi khóa không đúng.
+Mở `http://localhost:5173`; backend local dùng `http://localhost:5001`. Script tạo khóa AI dùng chung backend/AI, không in hoặc ghi đè khóa đã có. Không chia sẻ output `docker compose config` thiếu `--quiet`, vì có thể chứa secrets.
 
-Compose này dành cho local: mở `http://localhost:5173`; API, Socket.IO và media đều dùng `http://localhost:5001`. Các URL này được Compose ưu tiên hơn giá trị trong env client, tránh gọi nhầm Render hoặc HTTPS vào backend HTTP. Backend dùng cổng 5001, chế độ development và CORS cho `http://localhost:5173`. Khi sửa cấu hình Compose, áp dụng bằng `docker compose up -d --no-deps frontend backend`; không cần tải lại model.
+Compose mặc định Whisper CPU/base-q5_1 và Qwen3-0.6B Q8_0; Silero VAD dùng CPU. NVIDIA opt-in qua `compose.gpu.yaml`; chưa tự phát hiện/failover GPU khi chạy. Model nhỏ ưu tiên tốc độ và có thể giảm chính xác. [Cấu hình model, GPU và chạy ngoài Docker](docs/design.md#chạy-dịch-thuật-cục-bộ).
 
-Compose mặc định chạy **CPU**, phù hợp máy không có NVIDIA GPU; `whisper` build từ `ai-service/whisper/Dockerfile`, không tải CUDA. Vẫn dùng whisper.cpp v1.9.4 và model `ggml-medium-q5_0.bin` (khoảng 539 MB), kiểm tra SHA-256 và giữ model trong volume `whisper-model-cache`. Service `qwen` chạy Qwen3 1.7B GGUF Q8_0 bằng llama.cpp, giữ model trong volume `qwen-model-cache`. Lần đầu vẫn cần mạng để tải các package/model. Medium trên CPU có thể không theo kịp clip 6 giây; cần đo thực tế, hàng chờ vẫn bỏ clip cũ và cảnh báo khi xử lý chậm.
-
-Máy có NVIDIA GPU và Docker Desktop WSL2 GPU support có thể dùng cấu hình riêng:
-
-~~~powershell
-docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
-~~~
-
-Override này dùng `Dockerfile.cuda` và GPU reservation, không cần sửa file Compose gốc. Build CUDA lần đầu phải tải các lớp lớn và biên dịch riêng. Model-cache volumes chỉ chứa model và được dùng chung giữa hai cấu hình. FastAPI dùng `/tmp` trên tmpfs cho multipart tạm; Whisper nhận WAV trong RAM, không bật chuyển đổi bằng file tạm. [Kiểm tra build CPU](docs/validation/2026-10-17-whisper-cpu-build.md).
-
-Nếu Docker Engine trả lỗi 500 khi chạy `docker info`, cần khởi động/khôi phục Docker Desktop Linux Engine trước khi build hoặc chạy model. Kết quả kiểm tra code, Compose và giới hạn thử nghiệm ngày 2026-10-17: [translation review](docs/validation/2026-10-17-translation.md).
-
-AI service dùng Uvicorn core với HTTP parser `h11`; không cần extras `standard` như `httptools` cho REST dịch audio. Docker build chạy thêm `pip check` để phát hiện dependency không hợp lệ. Hai Dockerfile Whisper chuẩn hóa script khởi động từ CRLF về LF để chạy trên Linux khi checkout từ Windows. [Kiểm tra sửa lỗi Docker build](docs/validation/2026-10-17-ai-docker-build.md).
-
-Nếu chạy ngoài Docker, cần Python 3.10+, `whisper-server` được build theo [hướng dẫn whisper.cpp](https://github.com/ggml-org/whisper.cpp), `llama-server` theo [hướng dẫn llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md), model medium đa ngôn ngữ và FFmpeg trên PATH. Khởi động `whisper-server` trước với `--model <đường_dẫn_model> --host 127.0.0.1 --port 8080 --language auto`; khởi động `llama-server` với `-hf Qwen/Qwen3-1.7B-GGUF:Q8_0 --host 127.0.0.1 --port 8081 -c 1024 -np 1 -t 4`, rồi chạy FastAPI từ thư mục `ai-service/`:
-
-~~~powershell
-python -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-$env:TRANSLATION_AI_KEY="replace_with_a_long_random_key"
-$env:QWEN_URL="http://127.0.0.1:8081"
-$env:WHISPER_CPP_URL="http://127.0.0.1:8080"
-.\.venv\Scripts\python.exe -m uvicorn app:app --host 127.0.0.1 --port 8001
-~~~
-
-Đặt cùng giá trị `TRANSLATION_AI_KEY` trong `server/.env`, và `TRANSLATION_AI_URL=http://127.0.0.1:8001` nếu chạy backend trực tiếp trên Windows.
-
-Để thử riêng Qwen với câu mẫu trước khi mở cuộc gọi, chạy trong thư mục `ai-service/` sau khi `llama-server` sẵn sàng:
-
-~~~powershell
-.\.venv\Scripts\python.exe -c "from app import translate_text; print(translate_text('We should deploy the backend tonight.', 'en', 'vi'))"
-~~~
-
-Kết quả kỳ vọng là một câu tiếng Việt ngắn như `Chúng ta nên triển khai backend vào tối nay.`; cách diễn đạt có thể khác đôi chút giữa các lần chạy/model.
-
-Compose tự nối backend đến `http://ai:8001`; không dùng `127.0.0.1` giữa hai container. Có thể kiểm tra `http://127.0.0.1:8001/health`: lúc tải model hoặc chờ whisper trả HTTP 503 với `status=loading`, sau đó trả `status=ready`. Nếu bật Mic dịch trong lúc khởi động, bảng note sẽ kiểm tra lại trạng thái tải model thay vì tự đóng ngay. Model Qwen mặc định là `Qwen/Qwen3-1.7B-GGUF:Q8_0`; liên kết `Qwen/Qwen3-0.6B-FP8` là model nhỏ hơn và không phải cấu hình mặc định này.
-
-Chỉ hỗ trợ dịch Việt ↔ Anh. Đây là dịch theo clip khoảng 6 giây, nên vẫn có độ trễ ghi âm và xử lý, không bảo đảm độ chính xác tuyệt đối. Nếu nhiều người nói cùng lúc khiến medium + Qwen xử lý chậm hơn tốc độ ghi, app ưu tiên clip mới nhất và báo đã bỏ qua clip cũ. Chỉ bật Mic dịch khi người tham gia đồng ý gửi audio đến dịch vụ AI.
+Chọn **Anh→Việt** khi đối phương nói Anh và bạn đọc Việt; **Việt→Anh** cho chiều ngược lại. UI vi/zh mặc định Anh→Việt, UI en mặc định Việt→Anh. Đổi chiều hủy xử lý/xóa note cũ. Chỉ bật note khi người tham gia đồng ý gửi audio tới AI. [Kiểm chứng PCM và giới hạn latency](docs/validation/2026-10-17-translation-pcm.md).
 
 ## Công nghệ
 
@@ -126,8 +90,6 @@ Chỉ hỗ trợ dịch Việt ↔ Anh. Đây là dịch theo clip khoảng 6 gi
 - Python và các gói ML nếu bật bộ phân loại tin tiếng Việt.
 
 ## Khởi động nhanh
-
-Các lệnh dưới đây chạy từ thư mục gốc repository bằng PowerShell.
 
 ### 1. Cài dependency
 
@@ -214,8 +176,6 @@ Trong cấu hình một Google Web Client hiện tại, <code>VITE_GOOGLE_CLIENT
 
 Nếu Google báo `The given origin is not allowed for the given client ID`, thêm `http://localhost` và `http://localhost:5173` vào **Authorized JavaScript origins** của đúng OAuth Web Client trong Google Cloud Console. Đây là cấu hình tại Google, không phải CORS của Express; xem [hướng dẫn Google Identity Services](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid). Không dùng `https://localhost:5001` cho API local khi backend chưa có TLS.
 
-Các tệp env thật được Git bỏ qua. Hai tệp <code>.env.example</code> chỉ chứa placeholder và được commit để mô tả cấu hình cần thiết.
-
 ## npm scripts
 
 ### Client
@@ -225,7 +185,7 @@ Các tệp env thật được Git bỏ qua. Hai tệp <code>.env.example</code>
 | <code>npm run dev</code> | Chạy Vite development server |
 | <code>npm run build</code> | Tạo production build |
 | <code>npm run lint</code> | Chạy ESLint |
-| <code>npm test</code> | Chạy unit test cho bộ theo dõi Anti-Peep |
+| <code>npm test</code> | Chạy node:test cho Anti-Peep và note dịch/PCM |
 | <code>npm run preview</code> | Xem thử production build cục bộ |
 
 ### Server
@@ -286,9 +246,7 @@ Các nhóm nghiệp vụ được bảo vệ bằng xác thực; nhóm auth là 
 ## Anti-Peep
 
 Anti-Peep chạy suy luận ngay trong trình duyệt bằng `@vladmandic/human`; khung hình camera không được gửi lên server. Khi thiết lập, ứng dụng lấy 5 embedding khuôn mặt của chủ nhân và lưu các mảng số này cùng phiên bản model trong hồ sơ người dùng. Người dùng có dữ liệu `face-api` cũ phải quét lại vì hai loại embedding không tương thích.
-
 Khi bảo vệ được bật và tab đang hiển thị, camera dùng độ phân giải mục tiêu 320×240, khoảng 6 FPS và tối đa 10 FPS. Vòng quét nhẹ chỉ đếm khuôn mặt mỗi 1,5 giây. FaceMesh, Iris và FaceRes chỉ chạy khi phát hiện ít nhất hai khuôn mặt; cùng một khuôn mặt không phải chủ nhân phải vừa hướng mặt vừa nhìn về camera liên tục 3 giây mới khóa màn hình. Nhìn sang hướng khác đặt lại bộ đếm; mất nhận diện dưới 500 ms được bỏ qua để tránh khóa sai do một frame lỗi.
-
 Camera dừng khi tắt bảo vệ, chuyển sang tab ẩn hoặc component bị hủy, rồi tự khởi động lại khi người dùng quay lại tab nếu Anti-Peep vẫn bật. Các model cần thiết được lưu tại `client/public/models/human/` và được tải từ cùng origin của frontend.
 
 ## ML tiếng Việt tùy chọn

@@ -285,9 +285,106 @@ Thứ tự và exit gate: [Plan](./plan.md). Những lựa chọn này là backl
 
 - Group delegated admin/member, add/role/leave và ma trận creator-only đã có; API/DTO/link legacy: [group-roles](./group-roles.md). Message poll embedded question/options/votes/allowMultiple/closed/closedAt/createdBy; không có collection Poll. Group-call messages thêm callId/callStatus/callDuration/startedAt/endedAt. Đóng poll emits messageUpdated, tạo poll emits newMessage.
 - QR upstream: `client/src/components/common/TreeQRCodeModal.jsx`, magic-tree scene và html5-qrcode có cây3D/scan/file; link mới/legacy đều tới preview xác nhận, không auto-join; không dùng conversationId thay secret. Pending onboarding giữ cả64/24hex qua login/complete-profile.
-- `/api/translation` protectedRoute: GET `/health`; POST `/chunk` memory multipart `audio` max2MiB, MIME audio/webm (kể cả codecs=opus), audio/mp4 hoặc audio/wav; body kind(group/direct), sessionId, speakerId, targetLanguage(en/vi), sourceLanguage(en/vi/auto). Return speakerId/speakerName/original/translated/sourceLanguage/targetLanguage. JSON 400 invalid input, 413 quá dung lượng, 422 ngôn ngữ nhận diện không hỗ trợ; 403 không còn trong đúng phiên, 503 service unavailable, 504 timeout. Đóng HTTP connection hủy fetch tới AI.
-- `socket.js` export getTranslationSession/isTranslationParticipant: direct pair chỉ accepted khi người nhận answer; sessionId là peer userId, viewer/speaker trong pair; group sessionId=conversationId và viewer/speaker trong active room. Proxy giữ reference nội bộ của phiên, kiểm tra lại trước inference và trả kết quả để không gửi note cũ sang cuộc gọi mới cùng ID. Auth caller ID server; end/disconnect thu hồi, query group không reset direct session. Reference không trả qua DTO.
-- Proxy dùng TRANSLATION_AI_URL (fallback127.0.0.1:8001), TRANSLATION_AI_KEY (x-api-key). Compose dùng chung ai-service/.env cho backend/ai, khởi tạo qua ai-service/init-env.ps1; ngoài Docker vẫn cần đồng bộ khóa thủ công. FastAPI thiếu khóa trả503, sai khóa401. Audio được FFmpeg decode một lần thành mono16kHz WAV trong RAM; từ chối audio hỏng hoặc dài >15s, bỏ silence trước STT. Whisper medium multilingual q5_0 chạy riêng, nhận WAV không dùng --convert; Qwen3-1.7B GGUF Q8_0 dịch en/vi, enable_thinking=false, max_tokens256 và từ chối output rỗng/thinking/truncated. Chia sẻ ngân sách80s giữa decode/STT/dịch; proxy hard timeout90s. Compose mặc định Whisper CPU; NVIDIA opt-in qua compose.gpu.yaml, giữ model/volume/API và cần đo latency riêng.
-- TranslationNotes chỉ ghi khi bảng mở, call active, có user và tab hiển thị; clip6s, tối đa1 pending/source, notes50 entries ở RAM. Đổi direction/end/session/kind/user/unmount dọn recorder/request; đổi phiên/end/logout xóa notes, đóng bảng giữ note cùng phiên. Ẩn tab hủy request và dừng recorder; hiện tab tiếp tục nếu còn mở. Health client20s/retry3s tối đa10phút, chunk95s; proxy health15s. Không lưu clip/note MongoDB; multipart tạm của AI trên tmpfs Compose. [Evidence](./validation/2026-10-17-translation.md) có REST/FastAPI/queue giả lập và FFmpeg; chưa nghiệm thu AI output, GPU latency, camera/WebRTC hoặc consent Q01/Q02/Q03.
+
+### Note dịch PCM hiện tại
+
+Audio cuộc gọi vẫn đi qua WebRTC giữa peer. Bảng note lấy cả mic của viewer (`isSelf=true`) và remote track của đối phương (`conversationTranslationSources`) khi bảng mở, call active, có user/socket, mic/track không mute và tab hiển thị. `TranslationNotes.jsx` dùng AudioWorklet qua `translationPcmCapture.js`/`translationPcmWorklet.js`, downmix/resample theo sample rate thực thành PCM16 little-endian mono16kHz; output của worklet là silence để không phát lại âm thanh.
+
+| Socket.IO event | Contract |
+| --- | --- |
+| `translation:start` | `{kind, sessionId, speakerId, sourceLanguage, targetLanguage, translate?}`; đối phương: hai language en/vi khác nhau; lời của chính viewer (`speakerId === viewerId`): `translate: false` và `sourceLanguage === targetLanguage`. Ack thành công `{ok:true, streamId, sampleRate:16000, channels:1, packetSamples:2048}`; lỗi `{ok:false,status,message}` |
+| `translation:audio` | `{streamId,seq,audio}`; seq bắt đầu0 tăng1, ArrayBuffer đúng4096bytes=2048samples=128ms; ack báo gói đã chuyển tới AI |
+| `translation:stop` | `{streamId}`; dừng đúng stream thuộc socket |
+| `translation:event` | Thêm `streamId,speakerId,speakerName` do backend xác định vào transcript/translation/status/error đã kiểm tra schema; nội dung lỗi được lọc |
+
+Transcript có `utteranceId,revision,original,sourceLanguage,targetLanguage,isFinal` (và `translate:false` cho luồng của chính viewer). Note định danh stream+utterance; revision phải tăng, câu cuối không nhận sửa lại. Với lời của viewer (`translationState='self'`), bảng note chỉ hiển thị văn bản gốc, không gọi dịch và không hiện dòng dịch. Với lời của đối phương, original tạm hiện ngay cùng dòng dịch `Translating...`; `translation` (`utteranceId,revision,translated`, khớp câu cuối) cập nhật phía dưới cùng note. Status202/429/503 chỉ là cảnh báo, không kết thúc note. Error có utteranceId kết thúc câu đó và giữ original; error không có utteranceId dừng stream. Notes tối đa50entries trong RAM, không lưu audio/note vào MongoDB.
+
+`socket.js` xác thực JWT, gọi bridge `translationPcm.js`; direct chỉ accepted sau answer, sessionId=peer userId; group sessionId=conversationId, viewer/speaker phải còn trong active room. Bridge chỉ cho phép `speakerId === viewerId` khi `translate === false` và `sourceLanguage === targetLanguage`; pin reference phiên và attendance trong group, kiểm tra mỗi gói/event và mỗi500ms. End/disconnect/leave/rejoin cùng ID thu hồi stream cũ; query group không reset direct session. Reference không trả qua DTO.
+
+Bridge mở WebSocket `/stream/pcm` từ TRANSLATION_AI_URL, gửi x-api-key bằng TRANSLATION_AI_KEY và JSON `{sourceLanguage,targetLanguage,translate?}` trước binary PCM. Chờ AI ready đúng cấu hình mới ack start. FastAPI thiếu khóa trả503, sai khóa401. Khóa chỉ ở backend/AI; Compose dùng chung ai-service/.env qua init-env.ps1, ngoài Docker phải đồng bộ thủ công.
+
+| Tầng | Giới hạn hiện có |
+| --- | --- |
+| Client | Tối đa2gói chờ ack, audio ack timeout2.5s/start15s; không queue audio offline; quá tải dừng và mở stream mới với cảnh báo |
+| Bridge | 8streams/socket,64/process; setup/idle5s; token bucket12gói/s burst4;64KiB bộ đệm/event; ledger câu và tombstone giới hạn, từ chối kết quả cũ |
+| AI | 64streams; setup/idle5s; mỗi stream tối đa3công việc ASR câu cuối và3dịch kể cả đang chạy; partial giữ mới nhất; quá tải trả lỗi rõ |
+
+`pcm_vad.py` nạp Silero VAD v6.2 ONNX đã pin checksum, CPUExecutionProvider một thread; recurrent state/context riêng mỗi stream. Xét frame512samples/32ms, pre-roll8frames/256ms; bắt đầu ngưỡng0.5, giữ câu ngưỡng0.35, chốt sau10frames/320ms im lặng hoặc250frames/8s gồm đầu/đuôi. Partial sau19frames lời nói/608ms, nhịp16frames/512ms. PCM chỉ được bọc WAV trong RAM cho Whisper, không gọi decode_audio/FFmpeg.
+
+`pcm_stream.py` tách ASR và dịch văn bản, dùng chung hai lock model độc lập; ưu tiên câu cuối hơn partial, có deadline và giới hạn queue. Khi `translate=false`, pipeline chỉ phát `transcript` (kèm `translate:false`) và bỏ qua hàng đợi dịch. Whisper chạy greedy decoding độ trễ thấp (`beam_size=1`, `best_of=1`, `temperature=0.0`, `temperature_inc=0.0`, `max_context=0`, `--no-fallback`), local `base-q5_1` (hoặc `WHISPER_MODEL=medium-q5_0`), `audio_ctx` theo thời lượng WAV+1s đệm (min128/max1500). Dịch văn bản hai chiều (`en-vi`, `vi-en`) ưu tiên CTranslate2 INT8 MarianMT (`dekthedev/opus-mt-en-vi-ct2-int8` và `dekthedev/opus-mt-vi-en-ct2-int8`, kiểm tra SHA-256 tại `/models/ct2` trong volume `qwen-model-cache`), fallback sang Qwen3 GGUF (`QWEN_URL`) khi CTranslate2 không khả dụng. `compute_profile()` chia tải 50/50: khi có GPU (`cpu_gpu_50_50`), 50% tải (Whisper ASR) chạy trên GPU và 50% tải (Silero VAD + CTranslate2 MarianMT) chạy trên CPU; khi không có GPU (`cpu_only_50_50`), chia 50/50 số luồng CPU giữa nhánh ASR và nhánh VAD+MT.
+
+Anh→Việt nghĩa đối phương nói Anh, viewer đọc/nói Việt; Việt→Anh ngược lại. UI vi/zh mặc định Anh→Việt, UI en mặc định Việt→Anh. Đổi direction hủy stream/xóa notes. Đóng bảng/hidden/disconnect dọn worklet, port, node, context, timer/listener và đánh dấu pending bị gián đoạn; đóng bảng giữ note cùng cuộc gọi. Visible/reconnect bắt đầu stream mới, không replay audio. Đổi phiên/end/logout xóa note, unmount dọn xử lý; không stop WebRTC track. Health client dùng mode=pcm(timeout20s/retry3s tới10phút); kiểm tra Silero+Whisper và làm nóng CTranslate2 nếu đã có trong `/models/ct2`, không phụ thuộc Qwen. Proxy health15s.
+
+### HTTP tương thích cũ
+
+`/api/translation` protectedRoute giữ GET `/health`: mặc định Whisper+Qwen, mode=transcribe chỉ Whisper, mode=pcm Whisper+Silero, mode khác400. POST `/chunk` JSON và `/chunk-stream` NDJSON vẫn nhận memory multipart audio<=2MiB, webm/mp4/wav; body kind/sessionId/speakerId/targetLanguage(en/vi)/sourceLanguage(en/vi/auto). HTTP clip được FFmpeg decode một lần thành mono16kHz WAV trong RAM, kiểm tra<=15s; ngân sách AI80s/proxy90s. JSON legacy lấy cả hai slot model; NDJSON nhả ASR trước transcript rồi translation/error, slot bận trả429. Proxy kiểm tra quyền/reference phiên trước inference và từng kết quả, giới hạn64KiB/event; đóng HTTP hủy reader/fetch. Bảng note hiện tại không tạo MediaRecorder clip hoặc gọi hai route upload này.
+
+Kiểm chứng hiện tại: [PCM](./validation/2026-10-17-translation-pcm.md). [Progressive HTTP](./validation/2026-10-17-translation-progressive.md) và [clip6s](./validation/2026-10-17-translation-speed.md) giữ evidence từng snapshot; chất lượng, latency model, WebRTC nhiều người và consent/retention/logging còn thuộc Q01/Q02/Q03.
+
+### Chạy dịch thuật cục bộ
+
+Từ thư mục root, sau khi đã cấu hình `server/.env` và `client/.env.development`:
+
+~~~powershell
+.\ai-service\init-env.ps1
+docker compose config --quiet
+docker compose up -d --build
+~~~
+
+Script tạo `ai-service/.env` với khóa ngẫu nhiên, không in khóa và không ghi đè tệp đã có. Compose nạp tệp này vào **cả backend và ai**, sau `server/.env`, nên `TRANSLATION_AI_KEY` trong đó được dùng chung cho Docker. Không dùng `docker compose config` không có `--quiet` để chia sẻ output vì nó có thể chứa secrets. FastAPI trả 503 khi chưa cấu hình khóa và 401 khi khóa không đúng.
+
+Compose này dành cho local: mở `http://localhost:5173`; API, Socket.IO và media đều dùng `http://localhost:5001`. Các URL này được Compose ưu tiên hơn giá trị trong env client, tránh gọi nhầm Render hoặc HTTPS vào backend HTTP. Backend dùng cổng 5001, chế độ development và CORS cho `http://localhost:5173`. Khi sửa cấu hình Compose, áp dụng bằng `docker compose up -d --no-deps frontend backend`; không cần tải lại model.
+
+Compose mặc định chạy **CPU**, phù hợp máy không có NVIDIA GPU; `whisper` build từ `ai-service/whisper/Dockerfile`, không tải CUDA. Dùng whisper.cpp v1.9.4 và mặc định `ggml-base-q5_1.bin` đa ngôn ngữ (59.7 MB), kiểm tra SHA-256 và giữ model trong volume `whisper-model-cache`. Service `qwen` mặc định Qwen3 0.6B GGUF Q8_0 bằng llama.cpp, giữ model trong volume `qwen-model-cache`. Đây là lựa chọn ưu tiên tốc độ local; model nhỏ có thể giảm độ chính xác. Cache medium/1.7B đã tải vẫn được giữ. Lần đầu cần mạng để tải model. Chọn model qua `WHISPER_MODEL` (base-q5_1 hoặc medium-q5_0) và `QWEN_MODEL`. [Kiểm tra hiệu năng local](./validation/2026-10-17-translation-speed.md).
+
+Để quay lại cấu hình model lớn đã dùng trước đó, đặt hai biến trong terminal hiện tại rồi áp dụng (cache cũ được tái sử dụng):
+
+```powershell
+$env:WHISPER_MODEL="medium-q5_0"
+$env:QWEN_MODEL="Qwen/Qwen3-1.7B-GGUF:Q8_0"
+docker compose up -d --no-deps whisper qwen
+```
+
+Xóa hai biến môi trường này khỏi terminal khi muốn dùng lại mặc định nhỏ.
+
+Máy có NVIDIA GPU và Docker Desktop WSL2 GPU support có thể dùng cấu hình riêng:
+
+~~~powershell
+docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
+~~~
+
+Override này dùng `Dockerfile.cuda`, GPU reservation và mặc định Whisper medium-q5_0; Qwen vẫn theo QWEN_MODEL. Silero VAD và xử lý audio chạy CPU; Whisper dùng GPU khi cấu hình NVIDIA được hỗ trợ, hoặc cấu hình CPU mặc định khi không có GPU phù hợp. Đây là hai cấu hình khởi chạy, chưa tự chuyển GPU lỗi sang CPU lúc đang chạy. Build CUDA lần đầu phải tải các lớp lớn và biên dịch riêng. Model-cache volumes dùng chung; FastAPI dùng `/tmp` trên tmpfs cho multipart HTTP cũ, PCM/WAV xử lý trong RAM. [Kiểm tra build CPU](./validation/2026-10-17-whisper-cpu-build.md).
+
+Nếu Docker Engine trả lỗi 500 khi chạy `docker info`, cần khởi động/khôi phục Docker Desktop Linux Engine trước khi build hoặc chạy model. Kết quả kiểm tra code, Compose và giới hạn thử nghiệm ngày 2026-10-17: [translation review](./validation/2026-10-17-translation.md).
+
+AI service dùng Uvicorn core với HTTP parser `h11`, protocol `websockets` và ONNX Runtime CPU cho Silero. Docker build kiểm tra `pip check`, checksum/model VAD và chạy thử inference VAD. Hai Dockerfile Whisper chuẩn hóa script khởi động từ CRLF về LF. [Kiểm tra sửa lỗi Docker build trước PCM](./validation/2026-10-17-ai-docker-build.md).
+
+Nếu chạy ngoài Docker, cần Python 3.10+, `whisper-server` được build theo [hướng dẫn whisper.cpp](https://github.com/ggml-org/whisper.cpp), `llama-server` theo [hướng dẫn llama.cpp](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md), model base q5_1 đa ngôn ngữ (hoặc medium q5_0) và FFmpeg trên PATH. Khởi động `whisper-server` trước với `--model <đường_dẫn_model> --host 127.0.0.1 --port 8080 --language auto`; khởi động `llama-server` với `-hf Qwen/Qwen3-0.6B-GGUF:Q8_0 --host 127.0.0.1 --port 8081 -c 1024 -np 1 -t 4`, rồi chạy FastAPI từ thư mục `ai-service/`:
+
+~~~powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+$env:TRANSLATION_AI_KEY="replace_with_a_long_random_key"
+$env:QWEN_URL="http://127.0.0.1:8081"
+$env:WHISPER_CPP_URL="http://127.0.0.1:8080"
+.\.venv\Scripts\python.exe -m uvicorn app:app --host 127.0.0.1 --port 8001 --http h11 --ws websockets --ws-max-size 4096 --ws-max-queue 8
+~~~
+
+Đặt cùng giá trị `TRANSLATION_AI_KEY` trong `server/.env`, và `TRANSLATION_AI_URL=http://127.0.0.1:8001` nếu chạy backend trực tiếp trên Windows.
+
+Để thử riêng Qwen với câu mẫu trước khi mở cuộc gọi, chạy trong thư mục `ai-service/` sau khi `llama-server` sẵn sàng:
+
+~~~powershell
+.\.venv\Scripts\python.exe -c "from app import translate_text; print(translate_text('We should deploy the backend tonight.', 'en', 'vi'))"
+~~~
+
+Kết quả kỳ vọng là một câu tiếng Việt ngắn như `Chúng ta nên triển khai backend vào tối nay.`; cách diễn đạt có thể khác đôi chút giữa các lần chạy/model.
+
+Compose tự nối backend đến `http://ai:8001`; không dùng `127.0.0.1` giữa hai container. `/health` kiểm tra Whisper/Qwen; `/health?mode=transcribe` chỉ kiểm tra Whisper. Bảng note dùng `/health?mode=pcm` qua proxy: kiểm tra Whisper và Silero, cho phép hiện chữ gốc khi Qwen chưa sẵn sàng. Chưa sẵn sàng trả HTTP503 với status=loading. Model Qwen mặc định `Qwen/Qwen3-0.6B-GGUF:Q8_0`; QWEN_MODEL cho phép quay lại1.7B.
+
+Chỉ hỗ trợ Việt ↔ Anh, chỉ ghi lời đối phương/thành viên khác. Chọn **Anh → Việt** khi đối phương nói Anh và bạn muốn đọc Việt; **Việt → Anh** cho chiều ngược lại. UI tiếng Việt/Trung mặc định Anh→Việt, UI tiếng Anh mặc định Việt→Anh. Đổi chiều hủy xử lý và xóa note cũ. Chữ gốc tạm có thể được sửa tới khi câu chốt; `Translating...` được thay bằng bản dịch hoặc trạng thái lỗi, vẫn giữ chữ gốc. Gói audio128ms không đồng nghĩa transcript/model trả trong128ms hoặc bảo đảm1–2giây. [Contract và giới hạn hiện tại](./validation/2026-10-17-translation-pcm.md).
+
+Whisper dùng cửa sổ audio theo độ dài WAV cộng1giây đệm, tối đa30giây. PCM giữ partial mới nhất và tối đa3công việc nhận dạng câu cuối/3công việc dịch mỗi stream; ưu tiên câu cuối, quá tải báo lỗi rõ và giữ chữ gốc đã có. Client tối đa2gói chưa được xác nhận; chậm hoặc mất kết nối dừng stream rồi mở mới, không tích audio để phát lại. Local mặc định2thread/model và tắt Qwen polling; điều chỉnh WHISPER_THREADS/QWEN_THREADS theo phần cứng. Cảnh báo status không kết thúc note; lỗi từng câu chỉ kết thúc câu đó, lỗi stream/quyền dừng stream. Chỉ bật note khi người tham gia đồng ý gửi audio đến dịch vụ AI.
+
 
 Evidence hiện tại và warnings mới: [pull conflict resolution](./validation/pull-conflict-resolution.md). Kết quả cleanup trước pull giữ riêng; không thay chúng bằng kết quả tree mới.
