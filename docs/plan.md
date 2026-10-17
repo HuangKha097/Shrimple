@@ -86,7 +86,7 @@ Scripts này có thật trong package.json. Backend phải dùng cwd `server/` v
 | `client/.env.example`, `client/src/config/env.js` | VITE_API_URL, VITE_SOCKET_URL, VITE_ASSET_BASE_URL, VITE_GOOGLE_CLIENT_ID |
 | `server/.env.example` | PORT, CLIENT_ORIGINS, MONGODB_CONNECTIONSTRING, optional MONGODB_DNS_SERVERS, ACCESS_TOKEN_SECRET, CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET, GOOGLE_CLIENT_ID, EMAIL_SERVICE/USER/PASS, optional EMAIL_HOST/PORT/SECURE |
 | `server/src/controllers/authController.js` | NODE_ENV chi phối secure/SameSite cookie; deployment phải cấp đúng, key này chưa liệt kê trong server env sample |
-| `compose.yaml` | client/.env.development và server/.env và ai-service/.env; ports5173/5001/loopback8001; ai/whisper/qwen, Mongo vẫn bên ngoài |
+| `compose.yaml` | client/.env.development, server/.env; ai-service/init-env.ps1 tạo ai-service/.env dùng chung cho backend+ai; ports5173/5001/loopback8001; ai/whisper/qwen, Mongo bên ngoài |
 
 Development API/socket mặc định localhost:5001. Production API fallback là cùng origin (config chuyển `/` thành chuỗi rỗng), còn socket/assets có fallback host Render trong code. Cần đặt env production rõ; không giả định REST và socket tự cùng host nếu thiếu cấu hình. Hai Google Client ID frontend/backend phải khớp audience.
 

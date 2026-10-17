@@ -106,7 +106,7 @@ Mã ticket đầy đủ và AC ở [Kanban](./kanban.md); [Plan](./plan.md) nêu
 - `client/src/components/common/TreeQRCodeModal.jsx`, `components/magic-tree/` và html5-qrcode: TreeQR/scan camera/file, link64/legacy24 tới preview/onboarding, không join bằng ID.
 - `server/src/routes/translationRoute.js` protected health/chunk; `socket.js` direct accepted session và group active-room gate; `client/src/components/chat/TranslationNotes.jsx` được nối cả CallModal/GroupCallModal.
 - `ai-service/app.py`/requirements/Dockerfiles: FastAPI audio proxy tới whisper.cpp/Qwen, ffmpeg; env TRANSLATION_AI_URL/KEY ở server, QWEN_URL/WHISPER_CPP_URL ở AI service. Chưa chạy model/service smoke trong merge.
-- `server/tests/translationSession.test.js` bổ sung suite session; không test actual translated text.
+- `server/tests/translationSession.test.js` và `translationRoute.test.js` kiểm tra session/JWT, multipart, quyền trong lúc inference, đổi cuộc gọi cùng peer, group và abort proxy; `ai-service/test_app.py` kiểm tra FastAPI với model HTTP mocks và FFmpeg khi có trên PATH. Không test actual translated text của model; xem [review 2026-10-17](./validation/2026-10-17-translation.md).
 
 Compaction180files và số đo cleanup ở phần trước là snapshot trước pull; không phải số lượng tree mới. Evidence mới: [pull conflict resolution](./validation/pull-conflict-resolution.md). Bộ tài liệu đã đọc source upstream trực tiếp; chưa tạo compaction đầy đủ tree mới.
 

@@ -16,7 +16,7 @@ if [ ! -s "$model" ] || ! echo "$expected_sha256  $model" | sha256sum -c - >/dev
 fi
 
 set -- whisper-server --model "$model" --host 0.0.0.0 --port 8080 \
-    --language auto --convert --threads "${WHISPER_THREADS:-4}" \
+    --language auto --threads "${WHISPER_THREADS:-4}" \
     --tmp-dir /tmp/whisper --public /usr/share/whisper-public
 if [ "${WHISPER_GPU:-false}" != "true" ]; then
     set -- "$@" --no-gpu

@@ -14,6 +14,8 @@ services:
       context: ./server
     env_file:
       - ./server/.env
+      # Shared translation key; keep this last so both services use the same value.
+      - ./ai-service/.env
     environment:
       TRANSLATION_AI_URL: http://ai:8001
     ports:
@@ -33,6 +35,8 @@ services:
     environment:
       WHISPER_CPP_URL: http://whisper:8080
       QWEN_URL: http://qwen:8080
+    tmpfs:
+      - /tmp:size=32m,mode=1777
     depends_on:
       whisper:
         condition: service_healthy

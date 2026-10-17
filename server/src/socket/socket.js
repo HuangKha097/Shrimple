@@ -38,20 +38,23 @@ const activeGroupCalls = new Map();
 const directCalls = new Map();
 const directKey = (a, b) => [a?.toString(), b?.toString()].sort().join(":");
 
-export const isTranslationParticipant = (kind, sessionId, viewerId, speakerId) => {
-    if (!sessionId || !speakerId) return false;
+export const getTranslationSession = (kind, sessionId, viewerId, speakerId) => {
+    if (!sessionId || !speakerId) return null;
     if (kind === "direct") {
         const call = directCalls.get(directKey(viewerId, sessionId));
-        return Boolean(call?.accepted && call.users.includes(viewerId) && call.users.includes(speakerId));
+        return call?.accepted && call.users.includes(viewerId) && call.users.includes(speakerId) ? call : null;
     }
     if (kind === "group") {
         const call = activeGroupCalls.get(sessionId);
-        if (!call) return false;
+        if (!call) return null;
         const members = Array.from(call.participants.values()).map((participant) => participant.userId.toString());
-        return members.includes(viewerId) && members.includes(speakerId);
+        return members.includes(viewerId) && members.includes(speakerId) ? call : null;
     }
-    return false;
+    return null;
 };
+
+export const isTranslationParticipant = (kind, sessionId, viewerId, speakerId) =>
+    Boolean(getTranslationSession(kind, sessionId, viewerId, speakerId));
 
 io.use(async (socket, next) => {
     try {
@@ -321,7 +324,9 @@ io.on("connection", (socket) => {
     socket.on("callUser", ({ userToCall, signalData, from, name, avatar, isVideo }) => {
         const targetUserId = userToCall?.toString();
         if (targetUserId && isUserOnline(targetUserId)) {
-            directCalls.set(directKey(userId, targetUserId), { users: [userId, targetUserId], accepted: false });
+            directCalls.set(directKey(userId, targetUserId), {
+                users: [userId, targetUserId], initiatorId: userId, accepted: false,
+            });
             io.to(targetUserId).emit("callUser", { signal: signalData, from: userId, name, avatar, isVideo });
         } else {
              // Notify caller that user is offline
@@ -333,7 +338,7 @@ io.on("connection", (socket) => {
     socket.on("answerCall", (data) => {
         const targetUserId = data.to?.toString();
         const call = directCalls.get(directKey(userId, targetUserId));
-        if (targetUserId && call?.users.includes(userId)) {
+        if (targetUserId && call?.users.includes(userId) && call.initiatorId !== userId) {
             call.accepted = true;
             io.to(targetUserId).emit("callAccepted", data.signal);
         }

@@ -1,0 +1,32 @@
+{
+  "finalVisibleStats": {
+    "requests": [
+      "alice-1",
+      "bob-1",
+      "alice-3",
+      "alice-7"
+    ],
+    "aborted": [
+      "alice-3"
+    ],
+    "live": 0,
+    "errors": [],
+    "inFlight": [],
+    "session": "second-call"
+  },
+  "observed": [
+    "two independent recording sources",
+    "alice-1 and bob-1 sent concurrently",
+    "alice-2 replaced by alice-3 with skip warning",
+    "hiding tab stopped all recorders and aborted alice-3",
+    "showing tab resumed recording",
+    "changing session closed panel and reopened with no old notes",
+    "403 displayed call-membership reason instead of login-expired message",
+    "logout left no recorder or request"
+  ],
+  "limitations": [
+    "MediaRecorder, streams, clip timers and AI responses simulated",
+    "No real microphone, WebRTC or model inference"
+  ],
+  "earlierHarnessLog": "One duplicate-createRoot warning during fixture HMR before explicit reload; no errors in final fixture stats"
+}

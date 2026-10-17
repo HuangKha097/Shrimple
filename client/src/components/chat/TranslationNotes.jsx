@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Languages, X, ArrowLeftRight, Trash2, Sparkles } from 'lucide-react';
 import api from '../../lib/axios.js';
 import { useAuthStore } from '../../stores/useAuthStore.js';
@@ -12,7 +12,7 @@ const CLIP_MS = 6000;
 const MAX_PENDING_CLIPS = 1;
 
 const errorMessage = (error, fallback) =>
-    [401, 403].includes(error.response?.status)
+    error.response?.status === 401
         ? 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.'
         : error.response?.data?.message || fallback;
 
@@ -27,6 +27,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     const [direction, setDirection] = useState('vi-en');
     const [processingCount, setProcessingCount] = useState(0);
     const [skippedClips, setSkippedClips] = useState(false);
+    const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden');
 
     const sourceLanguage = direction === 'vi-en' ? 'vi' : 'en';
     const targetLanguage = direction === 'vi-en' ? 'en' : 'vi';
@@ -42,7 +43,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
         setDirection(prev => (prev === 'vi-en' ? 'en-vi' : 'vi-en'));
     };
 
-    const stop = () => {
+    const stop = useCallback(() => {
         recorders.current.forEach(({ recorder, timer }) => {
             clearTimeout(timer);
             recorder.onstop = null;
@@ -51,22 +52,28 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
         recorders.current = [];
         controllers.current.forEach(controller => controller.abort());
         controllers.current.clear();
-    };
+    }, []);
 
     useEffect(() => {
-        if (active) return;
         stop();
+        clearTimeout(closeTimer.current);
         setOpen(false);
         setNotes([]);
         setStatus('idle');
         setProcessingCount(0);
         setSkippedClips(false);
-    }, [active]);
+    }, [active, kind, sessionId, user?._id, stop]);
+
+    useEffect(() => {
+        const onVisibility = () => setVisible(document.visibilityState !== 'hidden');
+        document.addEventListener('visibilitychange', onVisibility);
+        return () => document.removeEventListener('visibilitychange', onVisibility);
+    }, []);
 
     useEffect(() => () => {
         stop();
         clearTimeout(closeTimer.current);
-    }, []);
+    }, [stop]);
 
     useEffect(() => {
         if (open && notes.length > 0) {
@@ -116,7 +123,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     }, [open, active]);
 
     useEffect(() => {
-        if (!open || status !== 'ready' || !sessionId) return;
+        if (!open || !active || !visible || !user?._id || status !== 'ready' || !sessionId) return;
         if (typeof MediaRecorder === 'undefined') {
             setStatus('error');
             setError('Trình duyệt không hỗ trợ ghi âm để dịch.');
@@ -214,7 +221,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
         };
         sources.forEach(startSource);
         return () => { stopped = true; stop(); setProcessingCount(0); };
-    }, [open, status, kind, sessionId, sources, targetLanguage, sourceLanguage]);
+    }, [open, active, visible, user?._id, status, kind, sessionId, sources, targetLanguage, sourceLanguage, stop]);
 
     if (!active) return null;
     return (

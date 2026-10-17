@@ -1,18 +1,24 @@
 import { Router } from "express";
 import multer from "multer";
 import User from "../models/User.js";
-import { isTranslationParticipant } from "../socket/socket.js";
+import { getTranslationSession } from "../socket/socket.js";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 const AI_URL = process.env.TRANSLATION_AI_URL || "http://127.0.0.1:8001";
 const AI_KEY = process.env.TRANSLATION_AI_KEY || "";
+const AUDIO_TYPES = new Map([
+    ["audio/webm", "webm"], ["audio/mp4", "mp4"], ["audio/wav", "wav"],
+]);
 
 async function callAi(path, options = {}) {
     const response = await fetch(`${AI_URL}${path}`, {
         ...options,
         headers: { ...(AI_KEY ? { "x-api-key": AI_KEY } : {}), ...options.headers },
-        signal: AbortSignal.timeout(path === "/health" ? 15000 : 90000),
+        signal: AbortSignal.any([
+            AbortSignal.timeout(path === "/health" ? 15000 : 90000),
+            ...(options.signal ? [options.signal] : []),
+        ]),
     });
     if (!response.ok) {
         const body = await response.json().catch(() => ({}));
@@ -42,25 +48,47 @@ router.get("/health", async (_req, res) => {
     }
 });
 
-router.post("/chunk", upload.single("audio"), async (req, res) => {
-    const { kind, sessionId, speakerId, targetLanguage, sourceLanguage = "auto" } = req.body;
+router.post("/chunk", (req, res, next) => {
+    upload.single("audio")(req, res, error => {
+        if (!error) return next();
+        const tooLarge = error.code === "LIMIT_FILE_SIZE";
+        return res.status(tooLarge ? 413 : 400).json({
+            message: tooLarge ? "Âm thanh vượt quá giới hạn 2 MiB" : "Dữ liệu âm thanh không hợp lệ",
+        });
+    });
+}, async (req, res) => {
+    const { kind, sessionId, speakerId, targetLanguage, sourceLanguage = "auto" } = req.body || {};
     const viewerId = req.user._id.toString();
     if (!req.file || !["en", "vi"].includes(targetLanguage) ||
         !["en", "vi", "auto"].includes(sourceLanguage) || !["group", "direct"].includes(kind)) {
         return res.status(400).json({ message: "Dữ liệu âm thanh hoặc ngôn ngữ không hợp lệ" });
     }
-    if (!isTranslationParticipant(kind, sessionId, viewerId, speakerId)) {
+    const session = getTranslationSession(kind, sessionId, viewerId, speakerId);
+    if (!session) {
         return res.status(403).json({ message: "Bạn không tham gia cuộc gọi này" });
     }
+    const contentType = req.file.mimetype.split(";")[0].trim().toLowerCase();
+    if (!AUDIO_TYPES.has(contentType) || !req.file.size) {
+        return res.status(400).json({ message: "Định dạng âm thanh không hợp lệ" });
+    }
+    const controller = new AbortController();
+    const abortOnClose = () => { if (!res.writableEnded) controller.abort(); };
+    res.on("close", abortOnClose);
     try {
         const speaker = await User.findById(speakerId).select("displayName username");
         if (!speaker) return res.status(404).json({ message: "Không tìm thấy người nói" });
+        if (getTranslationSession(kind, sessionId, viewerId, speakerId) !== session) {
+            return res.status(403).json({ message: "Bạn không còn tham gia cuộc gọi này" });
+        }
         const form = new FormData();
-        form.append("audio", new Blob([req.file.buffer], { type: req.file.mimetype }),
-            req.file.mimetype === "audio/mp4" ? "clip.mp4" : "clip.webm");
+        form.append("audio", new Blob([req.file.buffer], { type: contentType }),
+            `clip.${AUDIO_TYPES.get(contentType)}`);
         form.append("target_language", targetLanguage);
         form.append("source_language", sourceLanguage);
-        const result = await callAi("/translate", { method: "POST", body: form });
+        const result = await callAi("/translate", { method: "POST", body: form, signal: controller.signal });
+        if (getTranslationSession(kind, sessionId, viewerId, speakerId) !== session) {
+            return res.status(403).json({ message: "Bạn không còn tham gia cuộc gọi này" });
+        }
         res.json({
             speakerId,
             speakerName: speaker.displayName || speaker.username || "Người dùng",
@@ -70,9 +98,16 @@ router.post("/chunk", upload.single("audio"), async (req, res) => {
             targetLanguage,
         });
     } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("[translation:chunk]", error.message);
-        const timeout = error?.name === "TimeoutError";
-        res.status(timeout ? 504 : 503).json({ message: timeout ? "Máy chủ dịch không phản hồi" : "Không thể dịch âm thanh lúc này" });
+        const timeout = error?.name === "TimeoutError" || error.status === 504;
+        const invalidAudio = [400, 413, 422].includes(error.status);
+        res.status(invalidAudio ? error.status : timeout ? 504 : 503).json({
+            message: invalidAudio ? "Âm thanh hoặc ngôn ngữ nhận diện không hợp lệ" :
+                timeout ? "Máy chủ dịch không phản hồi" : "Không thể dịch âm thanh lúc này",
+        });
+    } finally {
+        res.off("close", abortOnClose);
     }
 });
 
