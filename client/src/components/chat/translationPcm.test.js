@@ -187,6 +187,18 @@ test('error/interruptions retain originals and never allow a late translation to
     assert.equal(reduceTranslationNotes(notes, { ...transcript(), streamId: 'stream-b', type: 'translation', translated: 'late' }), notes);
 });
 
+test('unclear final preserves the last safe partial and a later utterance can complete', () => {
+    let notes = reduceTranslationNotes([], transcript(), '00:01');
+    notes = reduceTranslationNotes(notes, { ...transcript(), type: 'error', status: 422, message: 'Please repeat this part.' });
+    assert.equal(notes[0].original, 'Hello');
+    assert.equal(notes[0].translationState, 'error');
+    assert.equal(reduceTranslationNotes(notes, transcript({ revision: 2, isFinal: true, original: 'stale' })), notes);
+    notes = reduceTranslationNotes(notes, transcript({ utteranceId: 'utterance-b', original: 'Next sentence', isFinal: true }), '00:02');
+    notes = reduceTranslationNotes(notes, { ...transcript(), utteranceId: 'utterance-b', type: 'translation', translated: 'Câu tiếp theo' });
+    assert.equal(notes[1].translationState, 'complete');
+    assert.equal(notes[1].translated, 'Câu tiếp theo');
+});
+
 test('notes retain at most 50 utterances and reject empty/invalid language/revision data', () => {
     let notes = [];
     for (let index = 0; index < 60; index += 1) notes = reduceTranslationNotes(notes, transcript({ utteranceId: `u-${index}` }), '00:01');

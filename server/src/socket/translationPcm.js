@@ -17,7 +17,8 @@ const revision = value => Number.isSafeInteger(value) && value >= 0 && value <= 
 const allowedKeys = (value, keys) => Object.keys(value).every(key => keys.includes(key));
 const errorMessage = status => status === 403 ? "Bạn không còn tham gia cuộc gọi này" :
     status === 429 ? "Máy chủ dịch đang bận; hãy thử lại" :
-        [400, 413, 422].includes(status) ? "Dữ liệu âm thanh hoặc ngôn ngữ không hợp lệ" :
+        status === 422 ? "Chưa nhận diện rõ lời nói hoặc ngôn ngữ; hãy nói lại đoạn này" :
+        [400, 413].includes(status) ? "Dữ liệu âm thanh hoặc ngôn ngữ không hợp lệ" :
             [408, 504].includes(status) ? "Máy chủ dịch không phản hồi" : "Không thể nhận diện hoặc dịch âm thanh lúc này";
 const failure = (status, message = errorMessage(status)) => ({ ok: false, status, message });
 

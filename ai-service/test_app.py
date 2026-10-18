@@ -347,6 +347,26 @@ class TranslationTests(unittest.TestCase):
             self.assertEqual(self.request(target="en").json()["translated"], "Hello")
             qwen.assert_not_called()
 
+    def test_repeated_recognition_is_never_sent_to_translation_or_http_stream(self):
+        normalized = io.BytesIO()
+        with wave.open(normalized, "wb") as wav:
+            wav.setnchannels(1)
+            wav.setsampwidth(2)
+            wav.setframerate(16000)
+            wav.writeframes(bytes(64000))
+        for stream in (False, True):
+            response = httpx.Response(200, request=httpx.Request("POST", "http://whisper.test/inference"),
+                                     json={"text": "Can you hear me? " * 44, "language": "english"})
+            with self.subTest(stream=stream), patch.object(app, "health"), \
+                    patch.object(app, "decode_audio", return_value=(normalized.getvalue(), True)), \
+                    patch.object(app.httpx, "post", return_value=response) as post, \
+                    patch.object(app, "translate_text") as translate:
+                result = self.request(stream=stream)
+                self.assertEqual(result.status_code, 422)
+                self.assertNotIn("Can you hear me", result.text)
+                self.assertEqual(post.call_count, 2)
+                translate.assert_not_called()
+
     def test_busy_clip_is_not_queued_and_timeout_releases_the_slot(self):
         with patch.object(app, "health"), patch.object(app, "decode_audio", return_value=(b"wav", True)), \
                 patch.object(app, "transcribe_audio") as stt:

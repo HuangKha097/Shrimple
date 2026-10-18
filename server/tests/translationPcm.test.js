@@ -319,6 +319,21 @@ test("utterance errors settle one note while safe status warnings keep audio ali
     assert.equal(h.socket.notes.at(-1).status, 503);
 });
 
+test("unclear recognition is sanitized, settles only its utterance and keeps later speech alive", async t => {
+    const h = harness(t);
+    const { result, ws } = await h.start();
+    ws.event({ type: "error", status: 422, message: "private-repeated-transcript", utteranceId: "u1", revision: 0 });
+    assert.equal(ws.terminated, false);
+    assert.equal(h.socket.notes.at(-1).status, 422);
+    assert.match(h.socket.notes.at(-1).message, /hãy nói lại/);
+    assert.equal(JSON.stringify(h.socket.notes).includes("private-repeated"), false);
+    assert.equal((await h.audio(result.streamId)).ok, true);
+    ws.event(transcript({ utteranceId: "u2" }));
+    ws.event({ type: "translation", utteranceId: "u2", revision: 1, translated: "Xin chào" });
+    assert.equal(ws.terminated, false);
+    assert.equal(h.socket.notes.at(-1).translated, "Xin chào");
+});
+
 test("more than 128 failed translations release ledger capacity and late results cannot revive settled notes", async t => {
     const h = harness(t);
     let { ws } = await h.start();

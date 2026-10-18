@@ -224,6 +224,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                     onEvent: event => {
                         if (stopped()) return;
                         if (event.type === 'status' && [429, 503].includes(event.status)) setSkippedClips(true);
+                        if (event.type === 'error' && event.status === 422) setSkippedClips(true);
                         setNotes(previous => reduceTranslationNotes(previous, event, formatElapsed(sessionStartRef.current)));
                     },
                     onFailure: detail => {

@@ -1,0 +1,9 @@
+{"stage": "mt", "model": "qwen17", "source": "en", "target": "vi", "original": "Can you hear me?", "translated": "Bạn có nghe tôi không?", "elapsed_ms": 3009}
+{"stage": "mt", "model": "qwen17", "source": "en", "target": "vi", "original": "What's happening?", "translated": "Đang xảy ra chuyện gì?", "elapsed_ms": 1193}
+{"stage": "mt", "model": "qwen17", "source": "en", "target": "vi", "original": "The meeting starts at eight tonight.", "translated": "Họp bắt đầu lúc 8 tối nay.", "elapsed_ms": 1734}
+{"stage": "mt", "model": "qwen17", "source": "en", "target": "vi", "original": "I can't hear you. Could you turn on your microphone?", "translated": "Tôi không thể nghe được bạn. Bạn có thể bật mic của bạn không?", "elapsed_ms": 2444}
+{"stage": "mt", "model": "qwen17", "source": "vi", "target": "en", "original": "Bạn đang làm gì vậy?", "translated": "What are you doing?", "elapsed_ms": 2556}
+{"stage": "mt", "model": "qwen17", "source": "vi", "target": "en", "original": "Bạn có nghe thấy tôi không?", "translated": "Have you heard me?", "elapsed_ms": 1103}
+{"stage": "mt", "model": "qwen17", "source": "vi", "target": "en", "original": "Tối nay chúng ta họp lúc tám giờ, không phải hôm nay lúc tám giờ sáng.", "translated": "Tonight we meet at eight o'clock, not today at eight o'clock in the morning.", "elapsed_ms": 2780}
+{"stage": "mt", "model": "qwen17", "source": "vi", "target": "en", "original": "Mạng hơi yếu nên tiếng của bạn bị ngắt quãng.", "translated": "The network is weak, so your voice is interrupted.", "elapsed_ms": 1929}
+{"stage": "mt", "model": "qwen17", "source": "vi", "target": "en", "original": "Bánh đang làm gì vậy?", "translated": "What is the cake doing?", "elapsed_ms": 1137}

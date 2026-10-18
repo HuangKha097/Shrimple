@@ -1,0 +1,3 @@
+{"stage": "asr", "model": "base", "profile": "full_context", "case": "hear", "audio_seconds": 1.72, "elapsed_ms": 4763, "expected": "Can you hear me?", "actual": "Can you hear me?", "word_errors": 0, "reference_words": 4}
+{"stage": "asr", "model": "base", "profile": "full_context", "case": "happening", "audio_seconds": 1.765, "elapsed_ms": 4898, "expected": "What is happening?", "actual": "What is happening?", "word_errors": 0, "reference_words": 3}
+{"stage": "asr", "model": "base", "profile": "full_context", "case": "meeting", "audio_seconds": 2.415, "elapsed_ms": 4421, "expected": "The meeting starts at eight tonight.", "actual": "The meeting starts at 8 to 9.", "word_errors": 3, "reference_words": 6}

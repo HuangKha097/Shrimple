@@ -1,0 +1,18 @@
+{"stage": "mt", "model": "ct2", "source": "en", "target": "vi", "original": "Can you hear me?", "translated": "Anh có nghe tôi nói không?", "elapsed_ms": 1329}
+{"stage": "mt", "model": "qwen", "source": "en", "target": "vi", "original": "Can you hear me?", "translated": "Tóm tắt:  \nTừ: \"Can you hear me?\"  \nNgôn ngữ: Vietnamese.", "elapsed_ms": 3026}
+{"stage": "mt", "model": "ct2", "source": "en", "target": "vi", "original": "What's happening?", "translated": "Có chuyện gì vậy?", "elapsed_ms": 29}
+{"stage": "mt", "model": "qwen", "source": "en", "target": "vi", "original": "What's happening?", "translated": "Tóm tắt: Tóm tắt.", "elapsed_ms": 452}
+{"stage": "mt", "model": "ct2", "source": "en", "target": "vi", "original": "The meeting starts at eight tonight.", "translated": "Cuộc họp bắt đầu lúc 8 giờ tối nay.", "elapsed_ms": 46}
+{"stage": "mt", "model": "qwen", "source": "en", "target": "vi", "original": "The meeting starts at eight tonight.", "translated": "Giả sử:  \nTọa độ: 8 giờ tối.", "elapsed_ms": 726}
+{"stage": "mt", "model": "ct2", "source": "en", "target": "vi", "original": "I can't hear you. Could you turn on your microphone?", "translated": "Tôi không nghe thấy anh nói gì, anh bật micro lên được không?", "elapsed_ms": 70}
+{"stage": "mt", "model": "qwen", "source": "en", "target": "vi", "original": "I can't hear you. Could you turn on your microphone?", "translated": "Tôi không nghe được bạn. Có thể bạn bật mic của bạn?", "elapsed_ms": 769}
+{"stage": "mt", "model": "ct2", "source": "vi", "target": "en", "original": "Bạn đang làm gì vậy?", "translated": "What are you doing?", "elapsed_ms": 1455}
+{"stage": "mt", "model": "qwen", "source": "vi", "target": "en", "original": "Bạn đang làm gì vậy?", "translated": "What are you doing?", "elapsed_ms": 1053}
+{"stage": "mt", "model": "ct2", "source": "vi", "target": "en", "original": "Bạn có nghe thấy tôi không?", "translated": "Can you hear me?", "elapsed_ms": 144}
+{"stage": "mt", "model": "qwen", "source": "vi", "target": "en", "original": "Bạn có nghe thấy tôi không?", "translated": "You heard me?", "elapsed_ms": 363}
+{"stage": "mt", "model": "ct2", "source": "vi", "target": "en", "original": "Tối nay chúng ta họp lúc tám giờ, không phải hôm nay lúc tám giờ sáng.", "translated": "We're meeting tonight at eight, not today at 8:00 a.m.", "elapsed_ms": 490}
+{"stage": "mt", "model": "qwen", "source": "vi", "target": "en", "original": "Tối nay chúng ta họp lúc tám giờ, không phải hôm nay lúc tám giờ sáng.", "translated": "Tonight we meet at eight o'clock, not today at eight o'clock in the morning.", "elapsed_ms": 1112}
+{"stage": "mt", "model": "ct2", "source": "vi", "target": "en", "original": "Mạng hơi yếu nên tiếng của bạn bị ngắt quãng.", "translated": "Your life is a little weak, so your voice is interrupted.", "elapsed_ms": 386}
+{"stage": "mt", "model": "qwen", "source": "vi", "target": "en", "original": "Mạng hơi yếu nên tiếng của bạn bị ngắt quãng.", "translated": "The weak network causes your voice to be cut off.", "elapsed_ms": 713}
+{"stage": "mt", "model": "ct2", "source": "vi", "target": "en", "original": "Bánh đang làm gì vậy?", "translated": "What's the cake doing?", "elapsed_ms": 191}
+{"stage": "mt", "model": "qwen", "source": "vi", "target": "en", "original": "Bánh đang làm gì vậy?", "translated": "What are the rules for translating the following text?\n\n- Return only the translation.\n- Do not explain.\n- Preserve technical terms.\n- Preserve names.\n- Preserve exact time references.\n- In English, tối nay means tonight; hôm nay means today. Do not confuse them.\n- Keep the meaning natural and concise.", "elapsed_ms": 2850}

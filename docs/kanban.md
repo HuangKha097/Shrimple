@@ -161,6 +161,8 @@ QS-I10/I11 cập nhật: admin được lưu, creator DTO leader; creator-only r
 
 Backlog Q01/Q02/Q03 mở rộng kiểm tra poll vote/close concurrent/caps, translation health/PCM+HTTP/permission/reconnect/timeout/consent/retention và incoming group-call media thật. Done I22/I23 không xác nhận AI/camera/WebRTC chạy thực tế. B03 tiếp tục Backlog cho policy người gọi/block dù caller ID đã được sửa.
 
+QS-I23 / Q01/Q03, 2026-10-18: [khảo sát model trước sửa](./validation/2026-10-18-translation-quality.md) tái hiện Whisper medium lặp44/55lần ở ASR; base sai cụm thời gian, MarianMT sai nghĩa và Qwen0.6B fallback sai yêu cầu. [Bản sửa chống lặp](./validation/2026-10-18-translation-repetition-fix.md) giữ model/PCM, bật timestamp decoding, guard output trước note/dịch; final retry tối đa1lần trong deadline cũ,422 chỉ kết thúc utterance. T: AI69, server74, client42; build/lint và live model/PCM ghi phạm vi ở evidence. Đã áp dụng Docker local, chưa commit/push/deploy cloud. Chất lượng từ/nghĩa, guard với audio Việt thật, GPU và nhiều speaker vẫn là gap Q01/Q03; không nâng trạng thái QA/release.
+
 Kết quả tree sau pull: xem [pull conflict resolution](./validation/pull-conflict-resolution.md). Bảng baseline ở mục10 giữ lịch sử, không được dùng làm kết quả lint/build của tree sau merge.
 
 ## Chạy thử và sửa lỗi 2026-10-17

@@ -10,6 +10,7 @@ from unittest.mock import patch
 import wave
 
 import numpy as np
+import httpx
 from fastapi.testclient import TestClient
 from starlette.testclient import WebSocketDenialResponse
 from starlette.websockets import WebSocketDisconnect
@@ -223,6 +224,53 @@ class PipelineTests(unittest.IsolatedAsyncioTestCase):
         await wait_thread_event(completed)
         self.assertEqual(len(socket.events), 2)
         self.assertFalse(any(event.get("utteranceId") == "u2" for event in socket.events))
+
+    async def test_rejected_partial_waits_for_a_clean_final_without_retry_or_bad_notes(self):
+        pipeline, socket, engine = await self.make_pipeline([
+            [SpeechSnapshot(1, PACKET, False)], [SpeechSnapshot(1, PACKET * 2, True)]])
+        engine.transcribe_audio = app.transcribe_audio
+        calls = []
+        engine.translate_text = lambda text, *_args, **_kwargs: calls.append(text) or "Xin chào"
+        def result(text):
+            return httpx.Response(200, request=httpx.Request("POST", "http://whisper.test/inference"),
+                                  json={"text": text, "language": "english"})
+        with patch.object(app.httpx, "post", side_effect=[result("Can you hear me? " * 44), result("Hello")]) as post:
+            pipeline.start()
+            await pipeline.feed(PACKET)
+            await socket.next("status")
+            self.assertEqual(post.call_count, 1)
+            self.assertFalse(any(event["type"] == "transcript" for event in socket.events))
+            await pipeline.feed(PACKET)
+            final = await socket.next("transcript")
+            await socket.next("translation")
+        self.assertTrue(final["isFinal"])
+        self.assertEqual(final["original"], "Hello")
+        self.assertEqual(calls, ["Hello"])
+
+    async def test_bad_final_settles_one_utterance_and_next_speech_continues(self):
+        pipeline, socket, engine = await self.make_pipeline([
+            [SpeechSnapshot(1, PACKET, True)], [SpeechSnapshot(2, PACKET, True)]])
+        engine.transcribe_audio = app.transcribe_audio
+        calls = []
+        engine.translate_text = lambda text, *_args, **_kwargs: calls.append(text) or "Xin chào"
+        responses = [httpx.Response(200, request=httpx.Request("POST", "http://whisper.test/inference"),
+                                   json={"text": text, "language": "english"})
+                     for text in ["Can you hear me? " * 44, "Can you hear me? " * 44, "Hello"]]
+        with patch.object(app.httpx, "post", side_effect=responses) as post:
+            pipeline.start()
+            await pipeline.feed(PACKET)
+            error = await socket.next("error", "u1")
+            self.assertEqual((error["status"], error["revision"]), (422, 0))
+            self.assertEqual(post.call_count, 2)
+            self.assertEqual(calls, [])
+            self.assertFalse(any(event["type"] == "transcript" for event in socket.events))
+            await pipeline.feed(PACKET)
+            final = await socket.next("transcript", "u2")
+            await socket.next("translation", "u2")
+        self.assertEqual(final["original"], "Hello")
+        self.assertEqual(calls, ["Hello"])
+        self.assertNotIn("Can you hear me", str(socket.events))
+        self.assertFalse(engine.stt_slot.locked())
 
     async def test_final_queue_overload_reports_specific_utterance(self):
         pipeline, socket, _ = await self.make_pipeline([[SpeechSnapshot(index, PACKET, True)] for index in range(1, 5)])

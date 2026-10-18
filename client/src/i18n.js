@@ -13,7 +13,7 @@ const resources = {
                 liveTitle: 'Ghi âm & dịch trực tiếp', starting: 'Đang khởi động nhận dạng…', listening: 'Cập nhật theo đoạn nói; bản dịch của đối phương đến ngay sau.',
                 emptyTitle: 'Đang chờ hội thoại', emptyDescription: 'Chọn ngôn ngữ đối phương nói ở bên trái và ngôn ngữ bạn đọc ở bên phải.',
                 original: 'Lời gốc', translation: 'Bản dịch', pending: 'Translating...', interrupted: 'Đã dừng dịch đoạn này; lời gốc được giữ lại.', translationError: 'Chưa dịch được đoạn này; lời gốc được giữ lại.', participant: 'Đối phương', you: 'Bạn',
-                skipped: 'Xử lý hoặc kết nối bị chậm; có đoạn lời nói bị gián đoạn. Lời gốc đã nhận vẫn được giữ lại.',
+                skipped: 'Một số đoạn bị gián đoạn hoặc chưa nhận dạng rõ. Lời gốc đã nhận vẫn được giữ lại; bạn có thể nói lại đoạn bị thiếu.',
                 reconnecting: 'Đang kết nối lại; tạm dừng nhận lời nói.', resumeAudio: 'Nhấn Thử lại để cho phép trình duyệt tiếp tục nhận âm thanh.',
                 expired: 'Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.', forbidden: 'Bạn không còn quyền dịch âm thanh trong phiên gọi này.',
                 unavailable: 'Chưa nhận được kết quả dịch. Lời gốc đã có vẫn được giữ lại.', unsupported: 'Trình duyệt không hỗ trợ AudioWorklet để nhận âm thanh liên tục.', recordingError: 'Không thể nhận âm thanh để ghi chú. Nhấn Thử lại.', retry: 'Thử lại'
@@ -188,7 +188,7 @@ const resources = {
                 liveTitle: 'Live speech & translation', starting: 'Starting speech recognition…', listening: 'Updates by speech segment; their translation follows immediately.',
                 emptyTitle: 'Waiting for speech', emptyDescription: 'Choose the language they speak on the left and the language you read on the right.',
                 original: 'Original speech', translation: 'Translation', pending: 'Translating...', interrupted: 'Translation stopped for this segment; original text is kept.', translationError: 'Could not translate this segment; original text is kept.', participant: 'Participant', you: 'You',
-                skipped: 'Processing or connection was slow; speech was interrupted. Received original text is kept.',
+                skipped: 'Some speech was interrupted or could not be recognized clearly. Received original text is kept; you can repeat the missing part.',
                 reconnecting: 'Reconnecting; speech capture is paused.', resumeAudio: 'Press Retry to let the browser resume audio capture.',
                 expired: 'Your session has expired. Please sign in again.', forbidden: 'You no longer have permission to translate audio in this call.',
                 unavailable: 'Translation did not return a result. Existing original text is kept.', unsupported: 'This browser does not support AudioWorklet for continuous audio capture.', recordingError: 'Could not capture speech for notes. Press Retry.', retry: 'Retry'
@@ -360,7 +360,7 @@ const resources = {
                 liveTitle: '实时语音与翻译', starting: '正在启动语音识别…', listening: '按语音片段更新；对方译文将随后显示。',
                 emptyTitle: '等待说话', emptyDescription: '左侧选择对方说的语言，右侧选择您想阅读的语言。',
                 original: '原文', translation: '译文', pending: 'Translating...', interrupted: '此片段的翻译已停止，原文已保留。', translationError: '无法翻译此片段，原文已保留。', participant: '对方', you: '你',
-                skipped: '处理或连接较慢，语音已中断。收到的原文已保留。',
+                skipped: '部分语音中断或未能清晰识别。已收到的原文会保留，您可以重复缺失的部分。',
                 reconnecting: '正在重新连接；语音接收已暂停。', resumeAudio: '请点击重试，允许浏览器继续接收音频。',
                 expired: '登录已过期，请重新登录。', forbidden: '您已无权翻译此次通话中的语音。',
                 unavailable: '尚未收到翻译结果，已有原文已保留。', unsupported: '此浏览器不支持翻译所需的录音功能。', recordingError: '无法录制语音以进行笔记。', retry: '重试'

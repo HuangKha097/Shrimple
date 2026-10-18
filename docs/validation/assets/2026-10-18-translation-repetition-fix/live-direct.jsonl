@@ -1,0 +1,4 @@
+{"kind": "direct", "case": "hear", "audio_seconds": 1.72, "elapsed_ms": 315, "text": "Can you hear me?", "calls": [{"audio_ctx": "136", "beam_size": "1"}]}
+{"kind": "direct", "case": "happening", "audio_seconds": 1.765, "elapsed_ms": 285, "text": "What is happening?", "calls": [{"audio_ctx": "139", "beam_size": "1"}]}
+{"kind": "direct", "case": "meeting", "audio_seconds": 2.415, "elapsed_ms": 3295, "text": "The meeting starts at 8 to 9.", "calls": [{"audio_ctx": "171", "beam_size": "1"}, {"audio_ctx": "0", "beam_size": "3"}]}
+{"kind": "direct", "case": "intentional_repeat", "audio_seconds": 2.735, "elapsed_ms": 379, "text": "Can you hear me?\n Can you hear me?", "calls": [{"audio_ctx": "187", "beam_size": "1"}]}

@@ -189,7 +189,8 @@ class PcmPipeline:
                 try:
                     result = await self.run_lane(self.backend.stt_slot,
                         lambda remaining: self.backend.transcribe_audio(pcm_wav(job.pcm), self.source,
-                            timeout=min(remaining, self.backend.WHISPER_TIMEOUT_SECONDS)),
+                            timeout=min(remaining, self.backend.WHISPER_TIMEOUT_SECONDS),
+                            retry_on_repetition=job.final, cancelled=self.stopped),
                         job.deadline, partial=not job.final, final_asr=job.final)
                     if result is None or self.stopped.is_set() or utterance.failed:
                         continue
@@ -278,7 +279,7 @@ class PcmPipeline:
 
 
 def error_status(exc):
-    if isinstance(exc, HTTPException) and exc.status_code in (429, 504):
+    if isinstance(exc, HTTPException) and exc.status_code in (422, 429, 504):
         return exc.status_code
     if isinstance(exc, (httpx.TimeoutException, TimeoutError)):
         return 504
@@ -286,7 +287,8 @@ def error_status(exc):
 
 
 def error_message(status):
-    return {429: "Inference is busy", 504: "Inference timed out"}.get(status, "Inference unavailable")
+    return {422: "Speech recognition was unclear; please repeat this part",
+            429: "Inference is busy", 504: "Inference timed out"}.get(status, "Inference unavailable")
 
 
 async def pcm_socket(websocket, backend):

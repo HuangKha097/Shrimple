@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-18",
+  "aiTests": 69,
+  "serverTests": 74,
+  "clientTests": 42,
+  "lintErrors": 0,
+  "lintWarnings": 3,
+  "clientBuild": "PASS",
+  "dockerBuild": "PASS",
+  "dockerLocalApplied": true,
+  "frontendHttp": 200,
+  "new422HandlerServed": true,
+  "backendWithoutJwt": 401,
+  "aiPcmHealth": 200,
+  "appSha256": "406b3ac9660c61a0fe3351bd3add8e01ed2c3c2a367a1f984b997d6656208a95",
+  "pcmSha256": "86fe678e80d3ea9cac806c456a296cf6ca83fd234b8e1cc1a90726150315c717",
+  "browserTwoDeviceCallVerified": false,
+  "vietnameseRealAudioVerified": false
+}

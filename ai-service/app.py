@@ -11,6 +11,8 @@ import urllib.request
 import wave
 import json
 import sys
+import re
+import unicodedata
 from array import array
 from pathlib import Path
 
@@ -253,38 +255,101 @@ def whisper_ready():
         return False
 
 
-def transcribe_audio(content, source_language, *, timeout=WHISPER_TIMEOUT_SECONDS):
+def recognition_words(text):
+    return re.findall(r"[^\W_]+", unicodedata.normalize("NFC", text).casefold())
+
+
+def abnormal_recognition(result, seconds):
+    """Reject implausible decoder output, never trim words the speaker may have repeated."""
+    text = result["text"]
+    if len(text) > 8192:
+        return True
+    words = recognition_words(text)
+    # Vietnamese is counted as syllables here. Allow generous speech speed and
+    # require a substantial periodic run, so normal emphasis/repetition survives.
+    if len(words) > max(16, math.ceil(seconds * 12)):
+        for width in range(1, min(32, len(words) // 4) + 1):
+            matched = 0
+            for index in range(width, len(words)):
+                matched = matched + 1 if words[index] == words[index - width] else 0
+                span = matched + width
+                if span >= max(16, width * 4, len(words) / 2):
+                    return True
+
+    previous_words, previous_end = [], 0
+    segments = result.get("segments")
+    for segment in segments if isinstance(segments, list) else []:
+        if not isinstance(segment, dict) or not isinstance(segment.get("text"), str):
+            continue
+        start, end = segment.get("start"), segment.get("end")
+        if (type(start) not in (int, float) or type(end) not in (int, float)
+                or not math.isfinite(start) or not math.isfinite(end) or end < start):
+            continue
+        segment_words = recognition_words(segment["text"])
+        available = max(0, min(end, seconds) - max(0, start))
+        if len(segment_words) >= 3 and start >= seconds + 0.1:
+            return True  # Words entirely beyond the audio that was actually sent.
+        if (len(segment_words) > max(6, available * 12) and end > seconds + 0.5):
+            return True  # A long invented tail after a short speech window.
+        if (len(segment_words) >= 4 and segment_words == previous_words
+                and (start < previous_end - 0.05 or len(segment_words) > max(3, available * 12))):
+            return True
+        previous_words, previous_end = segment_words, end
+    return False
+
+
+def transcribe_audio(content, source_language, *, timeout=WHISPER_TIMEOUT_SECONDS,
+                     retry_on_repetition=True, cancelled=None):
     # Whisper's full window is 30 seconds; keep a second of padding for short clips.
     with wave.open(io.BytesIO(content), "rb") as wav:
         seconds = wav.getnframes() / wav.getframerate()
     audio_context = min(1500, max(128, math.ceil((seconds + 1) * 50)))
-    response = httpx.post(
-        f"{WHISPER_CPP_URL}/inference",
-        files={"file": ("clip.wav", content, "audio/wav")},
-        data={
-            "language": source_language,
-            "translate": "false",
-            "response_format": "verbose_json",
-            "no_language_probabilities": "true",
-            "no_timestamps": "true",
-            "suppress_nst": "true",
-            "beam_size": "1",
-            "best_of": "1",
-            "temperature": "0.0",
-            "temperature_inc": "0.0",
-            "max_context": "0",
-            "audio_ctx": str(audio_context),
-        },
-        timeout=httpx.Timeout(timeout, connect=min(2, timeout), write=min(2, timeout), pool=min(2, timeout)),
-    )
-    response.raise_for_status()
-    result = response.json()
-    if not isinstance(result, dict) or not isinstance(result.get("text"), str):
-        raise ValueError("Invalid whisper.cpp response")
-    source = source_language if source_language != "auto" else {
-        "english": "en", "vietnamese": "vi", "en": "en", "vi": "vi"
-    }.get(str(result.get("language", "")).lower(), "")
-    return result["text"].strip(), source
+    deadline = time.monotonic() + timeout
+    data = {
+        "language": source_language,
+        "translate": "false",
+        "response_format": "verbose_json",
+        "no_language_probabilities": "true",
+        # Keep timestamp tokens so decoding can stop at the end of speech;
+        # per-token alignment is unnecessary for the notes UI.
+        "no_timestamps": "false",
+        "token_timestamps": "false",
+        "suppress_nst": "true",
+        "beam_size": "1",
+        "best_of": "1",
+        "temperature": "0.0",
+        "temperature_inc": "0.0",
+        "max_context": "0",
+        "audio_ctx": str(audio_context),
+    }
+    for attempt in range(2 if retry_on_repetition else 1):
+        if cancelled is not None and cancelled.is_set():
+            return None
+        remaining = remaining_timeout(deadline, timeout)
+        response = httpx.post(
+            f"{WHISPER_CPP_URL}/inference",
+            files={"file": ("clip.wav", content, "audio/wav")},
+            data=dict(data),
+            timeout=httpx.Timeout(remaining, connect=min(2, remaining),
+                                  write=min(2, remaining), pool=min(2, remaining)),
+        )
+        response.raise_for_status()
+        result = response.json()
+        if not isinstance(result, dict) or not isinstance(result.get("text"), str):
+            raise ValueError("Invalid whisper.cpp response")
+        if cancelled is not None and cancelled.is_set():
+            return None
+        remaining_timeout(deadline, timeout)
+        if not abnormal_recognition(result, seconds) and (attempt == 0 or result["text"].strip()):
+            source = source_language if source_language != "auto" else {
+                "english": "en", "vietnamese": "vi", "en": "en", "vi": "vi"
+            }.get(str(result.get("language", "")).lower(), "")
+            return result["text"].strip(), source
+        # Only a final/HTTP utterance retries, within the original job budget.
+        # Retain audio and language; do not forward a guessed, truncated sentence.
+        if attempt == 0:
+            data.update(audio_ctx="0", beam_size="3")
+    raise HTTPException(status_code=422, detail="Speech recognition was unclear; please repeat this part")
 
 
 def translate_qwen(original, source, target, *, timeout=65):
