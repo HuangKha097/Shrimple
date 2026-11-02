@@ -5,7 +5,7 @@ import classNames from 'classnames/bind';
 import { motion as Motion } from 'motion/react';
 import styles from '../../assets/css/Message.module.scss';
 import profilePic_test from "../../../public/favicon.png";
-import { X, MapPin, ExternalLink, File, Download, Pin, CornerUpRight, RotateCcw, Trash2, MoreHorizontal, PinOff, Check, CheckCheck, PhoneCall, PhoneOff, Radio, BarChart2 } from 'lucide-react';
+import { X, MapPin, ExternalLink, File, Download, Pin, CornerUpRight, RotateCcw, Trash2, MoreHorizontal, PinOff, Check, CheckCheck, PhoneCall, PhoneOff, Radio, BarChart2 } from '../icons';
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useGroupCallStore } from "../../stores/useGroupCallStore.js";

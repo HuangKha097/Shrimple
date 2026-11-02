@@ -17,9 +17,9 @@ export function reduceTranslationNotes(notes, event, time) {
         const isSelf = event.translate === false;
         const expectedState = isSelf ? 'self' : 'pending';
         if (!text(event.original) || !event.original.trim() || typeof event.isFinal !== 'boolean' ||
-            !validId(event.speakerId) || !['en', 'vi'].includes(event.sourceLanguage) ||
-            !['en', 'vi'].includes(event.targetLanguage) ||
-            (isSelf ? event.sourceLanguage !== event.targetLanguage : event.sourceLanguage === event.targetLanguage) ||
+            !validId(event.speakerId) || !['auto', 'en', 'vi', 'zh'].includes(event.sourceLanguage) ||
+            !['en', 'vi', 'zh'].includes(event.targetLanguage) ||
+
             (current && (current.isFinal || current.translationState !== expectedState || event.revision <= current.revision))) return notes;
         updated = { ...event, id, time: current?.time || time, translationState: expectedState };
     } else if (event.type === 'translation') {

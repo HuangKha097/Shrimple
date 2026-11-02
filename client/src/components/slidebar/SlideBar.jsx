@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import styles from '../../assets/css/SlideBar.module.scss';
 import SlidebarBody from './SlidebarBody.jsx';
 import NotificationDropdown from '../common/NotificationDropdown.jsx';
-import { SquarePen, Users, ArrowLeft, QrCode, Menu } from 'lucide-react';
+import { SquarePen, Users, ArrowLeft, QrCode, Menu } from '../icons';
 import { useNavigate } from 'react-router-dom';
 
 const cx = classNames.bind(styles);

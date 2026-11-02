@@ -1,0 +1,66 @@
+[
+  {
+    "name": "desktop-dark",
+    "width": 1280,
+    "lang": "vi",
+    "kind": "direct",
+    "theme": "dark",
+    "requests": 20,
+    "allSourcesFixed": true,
+    "errors": [],
+    "metrics": {
+      "clientWidth": 350,
+      "scrollWidth": 350,
+      "left": 912,
+      "right": 1264
+    }
+  },
+  {
+    "name": "desktop-light",
+    "width": 1280,
+    "lang": "en",
+    "kind": "direct",
+    "theme": "light",
+    "requests": 2,
+    "allSourcesFixed": true,
+    "errors": [],
+    "metrics": {
+      "clientWidth": 350,
+      "scrollWidth": 350,
+      "left": 912,
+      "right": 1264
+    }
+  },
+  {
+    "name": "mobile-group",
+    "width": 375,
+    "lang": "zh",
+    "kind": "group",
+    "theme": "dark",
+    "requests": 2,
+    "allSourcesFixed": true,
+    "errors": [],
+    "metrics": {
+      "clientWidth": 349,
+      "scrollWidth": 349,
+      "left": 12,
+      "right": 363
+    }
+  },
+  {
+    "name": "small-mobile",
+    "width": 320,
+    "lang": "vi",
+    "kind": "group",
+    "theme": "light",
+    "requests": 2,
+    "allSourcesFixed": true,
+    "errors": [],
+    "metrics": {
+      "clientWidth": 294,
+      "scrollWidth": 294,
+      "left": 12,
+      "right": 308
+    }
+  }
+]

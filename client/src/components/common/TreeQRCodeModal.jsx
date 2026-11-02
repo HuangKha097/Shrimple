@@ -20,9 +20,14 @@ import {
   PineIcon,
   WillowIcon,
   BirchIcon,
-} from '../magic-tree/ui/icons';
+  Download,
+  ScanLine,
+  X,
+  Camera,
+  Upload,
+  Trees,
+} from '../icons';
 import '../magic-tree/styles.css';
-import { Download, ScanLine, X, Camera, Upload, Trees } from 'lucide-react';
 
 const SEASON_ICONS = {
   spring: SpringIcon,
@@ -87,11 +92,29 @@ const TreeQRCodeModal = ({
     return { ...base, leaf: [...swatch.leaf], qrLeaf: [...swatch.qr] };
   }, [season, blossom]);
 
+  const sceneInitRef = useRef(null);
+  sceneInitRef.current = {
+    committed,
+    palette,
+    species: SPECIES[species],
+    mode,
+  };
+
   // ---- 3D Scene Lifecycle ----
   useEffect(() => {
     if (!isOpen || isScannerOpen || !canvasRef.current) return;
 
-    const scene = new MagicTreeScene(canvasRef.current, committed, palette, SPECIES[species]);
+    const {
+      committed: initCommitted,
+      palette: initPalette,
+      species: initSpecies,
+      mode: initMode,
+    } = sceneInitRef.current;
+
+    const scene = new MagicTreeScene(canvasRef.current, initCommitted, initPalette, initSpecies);
+    if (initMode !== 'tree') {
+      scene.setMode(initMode);
+    }
     sceneRef.current = scene;
 
     const onResize = () => scene.resize();

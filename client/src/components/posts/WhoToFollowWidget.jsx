@@ -5,7 +5,7 @@ import styles from '../../assets/css/PostsContainer.module.scss';
 import { useChatStore } from '../../stores/useChatStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { friendService } from '../../services/friendService';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2 } from '../icons';
 import { toast } from 'sonner';
 import default_avt from '../../../public/favicon.png';
 import { useNavigate } from 'react-router-dom';

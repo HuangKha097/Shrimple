@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import classNames from 'classnames/bind';
 import { motion as Motion } from 'motion/react';
-import { Search } from 'lucide-react';
+import { Search } from '../icons';
 import styles from '../../assets/css/SlideBarBody.module.scss';
 import BodyFriendsChat from "./BodyFriendsChat.jsx";
 import BodyGroupsChat from "./BodyGroupsChat.jsx";

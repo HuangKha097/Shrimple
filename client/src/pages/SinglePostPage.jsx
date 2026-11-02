@@ -4,7 +4,7 @@ import { usePostStore } from '../stores/usePostStore';
 import { useAuthStore } from '../stores/useAuthStore';
 import classNames from 'classnames/bind';
 import styles from '../assets/css/PostsContainer.module.scss';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from '../components/icons';
 import PostItem from '../components/posts/PostItem';
 import TrendsWidget from '../components/posts/TrendsWidget';
 import WhoToFollowWidget from '../components/posts/WhoToFollowWidget';

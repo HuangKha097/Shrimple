@@ -198,7 +198,7 @@ class PcmPipeline:
                         continue
                     original, detected = result
                     if (not isinstance(original, str) or len(original) > MAX_TEXT_CHARS
-                            or detected != self.source):
+                            or (detected not in ("en", "vi", "zh", "auto") if self.source == "auto" else detected != self.source)):
                         raise ValueError("Invalid recognition result")
                     if time.monotonic() >= job.deadline:
                         raise HTTPException(504, "Inference timed out")
@@ -211,7 +211,7 @@ class PcmPipeline:
                     utterance.final_emitted = job.final
                     event = {"type": "transcript", "utteranceId": utterance.identifier,
                         "revision": utterance.revision, "original": original,
-                        "sourceLanguage": self.source, "targetLanguage": self.target,
+                        "sourceLanguage": detected if detected in ("en", "vi", "zh") else self.source, "targetLanguage": self.target,
                         "isFinal": job.final}
                     if not self.translate_enabled:
                         event["translate"] = False
@@ -221,7 +221,7 @@ class PcmPipeline:
                         if len(self.translations) + self.running_text >= MAX_TRANSLATION_JOBS:
                             await self.error(429, "Translation queue is full", utterance)
                         else:
-                            self.translations.append((utterance, original, job.deadline))
+                            self.translations.append((utterance, original, detected if detected in ("en", "vi", "zh") else self.source, job.deadline))
                             self.text_signal.set()
                 except asyncio.CancelledError:
                     raise
@@ -244,11 +244,11 @@ class PcmPipeline:
             await self.text_signal.wait()
             self.text_signal.clear()
             while self.translations and not self.stopped.is_set():
-                utterance, original, deadline = self.translations.popleft()
+                utterance, original, source_lang, deadline = self.translations.popleft()
                 self.running_text = 1
                 try:
                     translated = await self.run_lane(self.backend.text_translation_slot,
-                        lambda remaining: self.backend.translate_text(original, self.source, self.target,
+                        lambda remaining: original if source_lang == self.target and source_lang in ("en", "vi", "zh") else self.backend.translate_text(original, source_lang, self.target,
                             timeout=min(65, remaining)), deadline)
                     if translated is None or self.stopped.is_set():
                         continue
@@ -317,8 +317,8 @@ async def pcm_socket(websocket, backend):
         if (not isinstance(config, dict)
                 or not set(config).issubset({"sourceLanguage", "targetLanguage", "translate"})
                 or not {"sourceLanguage", "targetLanguage"}.issubset(set(config))
-                or config["sourceLanguage"] not in ("en", "vi")
-                or config["targetLanguage"] not in ("en", "vi")
+                or config["sourceLanguage"] not in ("en", "vi", "zh")
+                or config["targetLanguage"] not in ("en", "vi", "zh")
                 or ("translate" in config and not isinstance(config["translate"], bool))):
             raise HTTPException(400, "Invalid stream configuration")
         translate_enabled = config.get("translate", True)

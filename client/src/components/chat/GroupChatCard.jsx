@@ -5,7 +5,7 @@ import default_avt from "../../../public/favicon.png";
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { ASSET_BASE_URL } from "../../config/env.js";
-import { Image, Mic, Video, FileText, MapPin, PhoneCall, BarChart2 } from 'lucide-react';
+import { Image, Mic, Video, FileText, MapPin, PhoneCall, BarChart2 } from '../icons';
 
 const cx = classNames.bind(styles);
 

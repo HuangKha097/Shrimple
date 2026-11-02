@@ -408,9 +408,7 @@ export const useAuthStore = create(
         {
             name: "auth-storage",
             partialize: (state) => ({
-                user: state.user
-                    ? { ...state.user, antiPeepData: undefined }
-                    : null,
+                user: state.user || null,
                 accessToken: state.accessToken,
             }),
         }

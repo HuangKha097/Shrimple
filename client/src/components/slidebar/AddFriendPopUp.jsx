@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/AddFriendPopUp.module.scss';
-import { Search, UserPlus, X, Check, UserCheck, Loader2, Sparkles, Users, QrCode } from 'lucide-react';
+import { Search, UserPlus, X, Check, UserCheck, Loader2, Sparkles, Users, QrCode } from '../icons';
 import { motion as Motion } from 'motion/react';
 import default_avt from "../../../public/favicon.png";
 import TreeQRCodeModal from "../common/TreeQRCodeModal.jsx";

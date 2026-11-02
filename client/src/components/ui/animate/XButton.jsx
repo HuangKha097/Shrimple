@@ -1,6 +1,6 @@
 
 import { motion as Motion } from 'motion/react';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '../../icons';
 import styles from './XButton.module.scss';
 
 /**

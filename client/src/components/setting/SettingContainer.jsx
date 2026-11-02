@@ -12,7 +12,7 @@ import {
     ChevronRight, 
     ArrowLeft, 
     LogOut 
-} from 'lucide-react';
+} from '../icons';
 import { useAuthStore } from '../../stores/useAuthStore';
 
 // Tab Components

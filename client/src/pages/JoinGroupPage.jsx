@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Loader2, Users } from 'lucide-react';
+import { Loader2, Users } from '../components/icons';
 import { toast } from 'sonner';
 import { chatService } from '../services/chatService.js';
 import { useChatStore } from '../stores/useChatStore.js';

@@ -6,7 +6,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import { useChatStore } from '../../stores/useChatStore';
 
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { Image, Video, Search, Globe, Users, Lock, ChevronDown, Check, X, Loader2, ArrowUp, AtSign } from 'lucide-react';
+import { Image, Video, Search, Globe, Users, Lock, ChevronDown, Check, X, Loader2, ArrowUp, AtSign } from '../icons';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import PostItem from './PostItem';
 import WhoToFollowWidget from './WhoToFollowWidget';

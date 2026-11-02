@@ -7,7 +7,7 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import PostItem from './PostItem';
 import TrendsWidget from './TrendsWidget';
 import LoadingSpin from '../common/loading/LoadingSpin';
-import { ArrowLeft, Search, Hash, Users, FileText, X } from 'lucide-react';
+import { ArrowLeft, Search, Hash, Users, FileText, X } from '../icons';
 import default_avt from '../../../public/favicon.png';
 
 const cx = classNames.bind(styles);

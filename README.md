@@ -46,9 +46,9 @@ React 19 + Vite
 
 Client gọi REST để xử lý dữ liệu nghiệp vụ và dùng Socket.IO cho trạng thái thời gian thực cũng như signaling WebRTC. Âm thanh/video cuộc gọi đi trực tiếp giữa các peer sau khi kết nối được thiết lập; server không phải media server.
 
-Khi mở note dịch, AudioWorklet lấy **audio đối phương**, chuyển thành PCM mono 16 kHz và gửi gói 128 ms qua Socket.IO đã xác thực. Express kiểm tra viewer/speaker còn thuộc đúng phiên gọi trước mỗi gói và kết quả, rồi nối WebSocket nội bộ đến FastAPI. Silero VAD v6.2 chạy CPU, giữ đệm đầu câu 256 ms và chốt câu sau 320 ms im lặng hoặc tối đa 8 giây. Chỉ đoạn có lời nói được đưa tới whisper.cpp; đường PCM tạo WAV trong RAM, không tạo clip MediaRecorder hoặc chạy FFmpeg theo gói. Transcript tạm cập nhật cùng note với `Translating...`; sau transcript cuối, Qwen3 dịch và cập nhật phía dưới. Nhận dạng và dịch có hai lượt xử lý độc lập, hàng chờ giới hạn và báo lỗi khi quá tải.
+Khi mở note dịch, người nghe chọn **A ⇒ B** trong vi/en/zh. Audio đối phương được nhận dạng theo A và dịch sang B; audio chính bạn nhận dạng theo B, không dịch. AudioWorklet chuyển từng nguồn thành PCM mono 16 kHz và gửi gói 128 ms qua Socket.IO đã xác thực. Express kiểm tra viewer/speaker còn thuộc đúng phiên gọi trước mỗi gói và kết quả, rồi nối WebSocket nội bộ đến FastAPI. Silero VAD v6.2 chạy CPU, giữ đệm đầu câu 256 ms và chốt sau 320 ms im lặng hoặc tối đa 8 giây. PCM tạo WAV trong RAM. Transcript tạm cập nhật cùng note; sau transcript cuối, CT2 hoặc Qwen3 dịch theo đúng revision. Hai làn nhận dạng/dịch độc lập, hàng chờ có giới hạn.
 
-Note giữ tối đa 50 mục trong RAM giao diện, không lưu audio/note vào MongoDB. Đóng bảng hoặc ẩn tab dừng gửi và đánh dấu phần đang chờ bị gián đoạn; đổi chiều, đổi/kết thúc cuộc gọi hoặc đăng xuất xóa note. Kết nối lại bắt đầu stream mới, không phát lại audio cũ. Đồ thị audio dịch được dọn riêng, không dừng track WebRTC của cuộc gọi. `/api/translation/chunk` và `/chunk-stream` vẫn giữ tương thích cho consumer HTTP cũ. [Contract và kiểm chứng PCM](docs/validation/2026-10-17-translation-pcm.md).
+Note giữ tối đa 50 mục trong RAM giao diện, không lưu audio/note vào MongoDB. Đóng bảng, ẩn tab hoặc đổi A/B dừng stream cũ, đánh dấu phần đang chờ bị gián đoạn và giữ note hoàn tất. Đổi/kết thúc cuộc gọi hoặc đăng xuất xóa note. Kết nối lại bắt đầu stream mới, không phát lại audio cũ; dọn audio dịch không dừng track WebRTC. `/api/translation/chunk` và `/chunk-stream` giữ tương thích HTTP cũ. [Contract khóa nguồn](docs/validation/2026-11-02-translation-language-lock.md).
 
 ### Chạy dịch thuật cục bộ
 
@@ -62,9 +62,19 @@ docker compose up -d --build
 
 Mở `http://localhost:5173`; backend local dùng `http://localhost:5001`. Script tạo khóa AI dùng chung backend/AI, không in hoặc ghi đè khóa đã có. Không chia sẻ output `docker compose config` thiếu `--quiet`, vì có thể chứa secrets.
 
-Compose mặc định Whisper CPU/base-q5_1 và Qwen3-0.6B Q8_0; Silero VAD dùng CPU. NVIDIA opt-in qua `compose.gpu.yaml`; chưa tự phát hiện/failover GPU khi chạy. Model nhỏ ưu tiên tốc độ và có thể giảm chính xác. [Cấu hình model, GPU và chạy ngoài Docker](docs/design.md#chạy-dịch-thuật-cục-bộ).
+Trên máy NVIDIA hiện tại, chạy thêm profile GPU/CPU sau khi đã khởi động stack:
 
-Chọn **Anh→Việt** khi đối phương nói Anh và bạn đọc Việt; **Việt→Anh** cho chiều ngược lại. UI vi/zh mặc định Anh→Việt, UI en mặc định Việt→Anh. Đổi chiều hủy xử lý/xóa note cũ. Chỉ bật note khi người tham gia đồng ý gửi audio tới AI. [Kiểm chứng PCM và giới hạn latency](docs/validation/2026-10-17-translation-pcm.md).
+~~~powershell
+.\ai-service\start-gpu.ps1
+# Lần sau, nếu image không đổi:
+.\ai-service\start-gpu.ps1 -SkipBuild
+# Biên dịch lại Whisper CUDA khi sửa source:
+.\ai-service\start-gpu.ps1 -Rebuild
+~~~
+
+Script dùng project `shrimple` với cả `compose.yaml` và `compose.gpu.yaml`: Whisper base-q5_1 nhận dạng trên GPU; Silero VAD, CT2 INT8 và Qwen3-0.6B Q8_0 dịch trên CPU. Hai làn chạy song song khi có việc, không phải cam kết mỗi thiết bị dùng 50% tải. Chạy Compose chỉ với file mặc định sẽ chọn lại CPU; chưa tự phát hiện/failover GPU. [Kiểm chứng GPU/CPU](docs/validation/2026-11-02-translation-gpu-cpu.md); [cấu hình chi tiết](docs/design.md#chạy-dịch-thuật-cục-bộ).
+
+Nguồn A là ngôn ngữ đối phương; đích B là ngôn ngữ bạn đọc và nói. Group dùng chung A cho các đối phương trong bảng Note của viewer, chưa chọn riêng từng speaker. Chỉ bật note khi người tham gia đồng ý gửi audio tới AI. GPU tăng tốc suy luận, không bảo đảm nhận dạng đúng giọng vùng miền hoặc dịch đúng nghĩa.
 
 ## Công nghệ
 

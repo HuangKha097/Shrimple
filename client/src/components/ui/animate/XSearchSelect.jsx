@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion as Motion, AnimatePresence } from "motion/react";
-import { Search, X, Loader2, ChevronDown } from "lucide-react";
+import { Search, X, Loader2, ChevronDown } from "../../icons";
 import styles from "./XSearchSelect.module.scss";
 
 /**

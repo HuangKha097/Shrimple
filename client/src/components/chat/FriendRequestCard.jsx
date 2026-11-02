@@ -1,7 +1,7 @@
 
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/FriendRequestCard.module.scss';
-import { Check, X, Loader2 } from 'lucide-react';
+import { Check, X, Loader2 } from '../icons';
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { ASSET_BASE_URL } from '../../config/env.js';

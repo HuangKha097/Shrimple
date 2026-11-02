@@ -1,0 +1,8 @@
+{"stage": "health", "status": 200, "state": "ready"}
+{"stage": "configuration", "source": "auto", "target": "vi", "translate": true, "event": {"type": "error", "status": 400, "message": "Invalid PCM stream"}}
+{"stage": "configuration", "source": "auto", "target": "vi", "translate": false, "event": {"type": "error", "status": 400, "message": "Invalid PCM stream"}}
+{"stage": "configuration", "source": "en", "target": "vi", "translate": true, "event": {"type": "ready", "sampleRate": 16000, "channels": 1, "packetSamples": 2048}}
+{"stage": "configuration", "source": "vi", "target": "zh", "translate": true, "event": {"type": "ready", "sampleRate": 16000, "channels": 1, "packetSamples": 2048}}
+{"stage": "configuration", "source": "zh", "target": "en", "translate": true, "event": {"type": "ready", "sampleRate": 16000, "channels": 1, "packetSamples": 2048}}
+{"stage": "configuration", "source": "vi", "target": "vi", "translate": false, "event": {"type": "ready", "sampleRate": 16000, "channels": 1, "packetSamples": 2048}}
+{"stage": "live_pcm_en_vi", "elapsed_ms": 2710, "finals": [{"type": "transcript", "utteranceId": "u1", "revision": 3, "original": "Can you hear me?", "sourceLanguage": "en", "targetLanguage": "vi", "isFinal": true}], "translations": [{"type": "translation", "utteranceId": "u1", "revision": 3, "translated": "Anh có nghe tôi nói không?"}], "errors": []}

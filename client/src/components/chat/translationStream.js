@@ -12,6 +12,36 @@ export class TranslationStreamError extends Error {
 export const defaultTranslationDirection = language =>
     language?.startsWith('en') ? 'vi-en' : 'en-vi';
 
+export const SUPPORTED_TARGET_LANGUAGES = ['vi', 'en', 'zh'];
+export const SUPPORTED_SOURCE_LANGUAGES = ['auto', 'vi', 'en', 'zh'];
+export const defaultTargetLanguage = language =>
+    language?.startsWith('zh') ? 'zh' : language?.startsWith('en') ? 'en' : 'vi';
+
+export function defaultTranslationPair(language) {
+    const targetLanguage = defaultTargetLanguage(language);
+    return { sourceLanguage: targetLanguage === 'en' ? 'vi' : 'en', targetLanguage };
+}
+
+export function updateTranslationPair(pair, field, language) {
+    if (!['sourceLanguage', 'targetLanguage'].includes(field) ||
+        !SUPPORTED_TARGET_LANGUAGES.includes(language) || pair[field] === language) return pair;
+    const next = { ...pair, [field]: language };
+    // Selecting the other side's language swaps the pair atomically.
+    return next.sourceLanguage === next.targetLanguage
+        ? { sourceLanguage: pair.targetLanguage, targetLanguage: pair.sourceLanguage }
+        : next;
+}
+
+export function createTranslationRequest({ kind, sessionId, speakerId, isSelf, sourceLanguage, targetLanguage }) {
+    if (!SUPPORTED_TARGET_LANGUAGES.includes(sourceLanguage) ||
+        !SUPPORTED_TARGET_LANGUAGES.includes(targetLanguage) || sourceLanguage === targetLanguage) {
+        throw new RangeError('A distinct, explicit source and target language are required.');
+    }
+    return isSelf
+        ? { kind, sessionId, speakerId, sourceLanguage: targetLanguage, targetLanguage, translate: false }
+        : { kind, sessionId, speakerId, sourceLanguage, targetLanguage };
+}
+
 const sourceId = value => typeof value === 'string' ? value.trim() :
     typeof value?._id === 'string' ? value._id.trim() : '';
 
@@ -75,9 +105,9 @@ export async function consumeTranslationStream(stream, onEvent, expected = {}, s
             if (typeof event.original !== 'string' || event.original.length > 32768 ||
                 typeof event.speakerId !== 'string' || !event.speakerId ||
                 (event.speakerName !== undefined && typeof event.speakerName !== 'string') ||
-                !['en', 'vi'].includes(event.sourceLanguage) || !['en', 'vi'].includes(event.targetLanguage) ||
+                !SUPPORTED_SOURCE_LANGUAGES.includes(event.sourceLanguage) || !SUPPORTED_TARGET_LANGUAGES.includes(event.targetLanguage) ||
                 (expected.speakerId && event.speakerId !== expected.speakerId) ||
-                (expected.sourceLanguage && event.sourceLanguage !== expected.sourceLanguage) ||
+                (expected.sourceLanguage && expected.sourceLanguage !== 'auto' && event.sourceLanguage !== expected.sourceLanguage) ||
                 (expected.targetLanguage && event.targetLanguage !== expected.targetLanguage)) throw protocolError();
             state = 'transcribed';
         } else if (state === 'transcribed' && event.type === 'translation') {

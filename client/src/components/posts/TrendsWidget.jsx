@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from '../icons';
 import { usePostStore } from '../../stores/usePostStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,7 +23,7 @@ const TrendsWidget = () => {
         fetchTrends();
     }, [fetchTrends]);
 
-    const displayTrends = trends && trends.length > 0 ? trends : DEFAULT_TRENDS;
+    const displayTrends = (trends && trends.length > 0 ? trends : DEFAULT_TRENDS).slice(0, 5);
 
     const handleTrendClick = (tagName) => {
         const cleanTag = tagName.replace(/^#/, '');

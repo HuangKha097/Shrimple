@@ -1,5 +1,5 @@
 import express from "express";
-import {authMe, getUserByUsername, test, toggleSavePost, getSavedPosts, getUserById, updateProfile, updateSettings, blockUser, unblockUser, getBlockedUsers, updateAntiPeepSettings, verifyAntiPeepPin, completeProfile, updatePrivacy, deleteAccount} from "../controllers/userController.js";
+import {authMe, getUserByUsername, test, toggleSavePost, getSavedPosts, getUserById, updateProfile, updateSettings, blockUser, unblockUser, getBlockedUsers, completeProfile, updatePrivacy, deleteAccount} from "../controllers/userController.js";
 import {protectedRoute} from "../middlewares/authMiddleware.js";
 import {upload} from "../middlewares/uploadMiddleware.js";
 
@@ -19,8 +19,6 @@ router.patch("/complete-profile", protectedRoute, completeProfile);
 
 // Settings
 router.put("/settings", protectedRoute, updateSettings);
-router.put("/anti-peep", protectedRoute, updateAntiPeepSettings);
-router.post("/anti-peep/verify-pin", protectedRoute, verifyAntiPeepPin);
 
 // Blocking
 router.post("/block", protectedRoute, blockUser);

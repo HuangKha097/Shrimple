@@ -23,7 +23,7 @@ import {
     UserPlus, 
     UserCheck,
     Loader2
-} from 'lucide-react';
+} from '../components/icons';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import { useAuthStore } from '../stores/useAuthStore';
 import { useChatStore } from '../stores/useChatStore';

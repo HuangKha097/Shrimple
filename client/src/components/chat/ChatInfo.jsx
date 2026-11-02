@@ -37,7 +37,7 @@ import {
     Pin,
     PinOff,
     QrCode
-} from "lucide-react";
+} from "../icons";
 import { toast } from 'sonner';
 
 const cx = classNames.bind(styles);

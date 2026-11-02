@@ -8,7 +8,7 @@ import {
     ArrowLeft, ArrowRight, Camera, Check, CheckCircle2, Compass,
     LocateFixed, UserRound, UsersRound, MapPin,
     GraduationCap, Briefcase
-} from "lucide-react";
+} from "../components/icons";
 import { toast } from "sonner";
 import styles from "../assets/css/CompleteProfile.module.scss";
 import { useAuthStore } from "../stores/useAuthStore";

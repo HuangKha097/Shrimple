@@ -7,7 +7,7 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  z-index: 9999999;
+  z-index: 1000;
 }
 
 .notif-btn {
@@ -56,10 +56,9 @@
 }
 
 .notif-popover {
-  position: absolute;
-  top: calc(100% + 8px);
+  position: fixed;
   width: 360px;
-  max-width: min(360px, calc(100vw - 32px));
+  max-width: calc(100vw - 24px);
   background-color: #000000;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 18px;
@@ -68,19 +67,13 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  box-sizing: border-box;
 
-  &.align-right {
-    right: 0;
-    left: auto;
-    width: 360px;
-    max-width: min(360px, calc(100vw - 32px));
-  }
-
-  &.align-left {
-    left: -50px;
-    right: auto;
-    width: 360px;
-    max-width: min(360px, calc(100vw - 32px));
+  @media (max-width: 768px) {
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-width: calc(100vw - 24px) !important;
   }
 
   .notif-header {
@@ -90,13 +83,13 @@
     gap: 12px;
     padding: 14px 16px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
 
     .notif-title-group {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-shrink: 0;
-      white-space: nowrap;
+      min-width: 0;
 
       .notif-title {
         font-size: 1.6rem;
@@ -140,6 +133,8 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
 
     &::-webkit-scrollbar {
       width: 5px;
@@ -157,6 +152,8 @@
       padding: 36px 20px;
       text-align: center;
       gap: 8px;
+      width: 100%;
+      box-sizing: border-box;
 
       .notif-empty-icon {
         color: #71767b;
@@ -168,11 +165,14 @@
         font-weight: 600;
         color: #e7e9ea;
         margin: 0;
+        word-break: break-word;
       }
 
       small {
         font-size: 1.2rem;
         color: #71767b;
+        line-height: 1.45;
+        word-break: break-word;
       }
     }
 
@@ -269,6 +269,7 @@
           align-items: center;
           gap: 8px;
           margin-top: 4px;
+          flex-wrap: wrap;
 
           button {
             padding: 6px 14px;

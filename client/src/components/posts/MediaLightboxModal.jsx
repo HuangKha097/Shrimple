@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Download } from '../icons';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/MediaLightboxModal.module.scss';

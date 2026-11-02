@@ -3,9 +3,8 @@ import { usePostStore } from '../../stores/usePostStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Bookmark } from '../icons';
 import { useNavigate } from 'react-router-dom';
-import { Bookmark } from 'lucide-react';
 
 import PostItem from './PostItem';
 

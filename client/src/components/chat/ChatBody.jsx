@@ -7,9 +7,9 @@ import { useAuthStore } from "../../stores/useAuthStore.js";
 import defaultAvatar from "../../../public/favicon.png";
 import LoadingSpin from "../common/loading/LoadingSpin.jsx";
 import GroupCallBanner from "./GroupCallBanner.jsx";
-import { ChatDrawScrollLayer } from "./ChatDrawOverlay.jsx";
+
 import { useNavigate } from 'react-router-dom';
-import { Calendar, GraduationCap, Users, ArrowDown } from 'lucide-react';
+import { Calendar, GraduationCap, Users, ArrowDown } from '../icons';
 import { ASSET_BASE_URL } from '../../config/env.js';
 
 const cx = classNames.bind(styles);
@@ -300,12 +300,6 @@ const ChatBody = () => {
                 </div>
             ) : (
                 <div ref={innerRef} data-chat-inner="true" className={cx('messages-inner-container')}>
-                    {activeConversationId && (
-                        <ChatDrawScrollLayer
-                            conversationId={activeConversationId}
-                            innerRef={innerRef}
-                        />
-                    )}
                     {/* Active Group Call Live Banner */}
                     {isGroup && activeConversationId && (
                         <GroupCallBanner

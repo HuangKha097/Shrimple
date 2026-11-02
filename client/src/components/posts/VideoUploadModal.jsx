@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { X, UploadCloud, Film, Loader2, Globe, Users, Lock, Sparkles } from 'lucide-react';
+import { X, UploadCloud, Film, Loader2, Globe, Users, Lock, Sparkles } from '../icons';
 import { usePostStore } from '../../stores/usePostStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import styles from '../../assets/css/VideoUploadModal.module.scss';

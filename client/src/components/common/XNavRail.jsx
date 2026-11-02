@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { User, LogOut, Feather, MoreHorizontal } from 'lucide-react';
+import { User, LogOut, Feather, MoreHorizontal } from '../icons';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/XNavRail.module.scss';
 import { useTranslation } from 'react-i18next';

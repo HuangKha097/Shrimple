@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion as Motion, useReducedMotion } from 'motion/react';
-import { ArrowLeft, Check, Mail, KeyRound, LockKeyhole } from 'lucide-react';
+import { ArrowLeft, Check, Mail, KeyRound, LockKeyhole } from '../components/icons';
 import { useAuthStore } from '../stores/useAuthStore';
 import authStyles from '../assets/css/SignInPage.module.scss';
 import styles from '../assets/css/ForgotPasswordPage.module.scss';

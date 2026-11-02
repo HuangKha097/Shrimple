@@ -7,14 +7,13 @@ import ChatHeader from "./ChatHeader.jsx";
 import ChatBody from "./ChatBody.jsx";
 import ChatInput from "./ChatInput.jsx";
 import ChatInfo from "./ChatInfo.jsx";
-import ChatDrawOverlay from "./ChatDrawOverlay.jsx";
 import { useChatStore } from "../../stores/useChatStore.js";
 import { Navigate, useSearchParams } from 'react-router-dom';
 
 const cx = classNames.bind(styles);
 
 const ChatContainer = ({ onCloseChatInfo, isShowChatInfo }) => {
-    const { activeConversationId, setActiveConversationId, conversations, fetchConversations, setIsDrawModeOpen } = useChatStore();
+    const { activeConversationId, setActiveConversationId, conversations, fetchConversations } = useChatStore();
     const [searchParams] = useSearchParams();
 
     // Đồng bộ URL -> Store
@@ -66,12 +65,11 @@ const ChatContainer = ({ onCloseChatInfo, isShowChatInfo }) => {
                 </div>
 
                 <div className={cx("body")}>
-                    <ChatDrawOverlay key={`draw-${selectedConvo._id}`} conversationId={selectedConvo._id} />
                     <ChatBody />
                 </div>
 
                 <div className={cx("footer")}>
-                    <ChatInput onOpenDrawTool={() => setIsDrawModeOpen(true)} />
+                    <ChatInput />
                 </div>
             </div>
 

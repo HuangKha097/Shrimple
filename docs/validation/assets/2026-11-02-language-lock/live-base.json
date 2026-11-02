@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-02",
+  "project": "shrimple",
+  "model": "base-q5_1",
+  "modelSha256": "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898",
+  "device": "CPU, 2 threads",
+  "health": {"status": 200, "state": "ready"},
+  "configurationChecks": [
+    {"source": "auto", "target": "vi", "translate": true, "status": 400},
+    {"source": "auto", "target": "vi", "translate": false, "status": 400},
+    {"source": "en", "target": "vi", "translate": true, "event": "ready"},
+    {"source": "vi", "target": "zh", "translate": true, "event": "ready"},
+    {"source": "zh", "target": "en", "translate": true, "event": "ready"},
+    {"source": "vi", "target": "vi", "translate": false, "event": "ready"}
+  ],
+  "probe": {
+    "transport": "AI WebSocket /stream/pcm, compression disabled to match bridge",
+    "audio": "Synthetic FFmpeg flite English, paced 128 ms packets",
+    "source": "en", "target": "vi", "elapsedMs": 2713,
+    "measurement": "Start of packet feed until final transcript and translation; includes audio feed time",
+    "final": {"utteranceId": "u1", "revision": 3, "original": "Can you hear me?", "sourceLanguage": "en", "targetLanguage": "vi", "isFinal": true},
+    "translation": {"utteranceId": "u1", "revision": 3, "translated": "Anh có nghe tôi nói không?"},
+    "errors": []
+  },
+  "limitations": "One internal synthetic English sample; not WebRTC, Vietnamese/Chinese quality, multiple-speaker or GPU acceptance."
+}

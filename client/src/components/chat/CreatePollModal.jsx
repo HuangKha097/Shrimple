@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import classNames from 'classnames/bind';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import styles from '../../assets/css/CreatePollModal.module.scss';
-import { BarChart2, X, Plus, Trash2 } from 'lucide-react';
+import { BarChart2, X, Plus, Trash2 } from '../icons';
 import { useChatStore } from '../../stores/useChatStore';
 import { toast } from 'sonner';
 

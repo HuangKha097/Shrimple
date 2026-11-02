@@ -1,0 +1,29 @@
+[
+  {
+    "gpuRequests": [
+      {
+        "Driver": "nvidia",
+        "Count": 1,
+        "DeviceIDs": null,
+        "Capabilities": [
+          [
+            "gpu"
+          ]
+        ],
+        "Options": null
+      }
+    ],
+    "name": "shrimple-whisper-1",
+    "image": "shrimple-whisper-cuda"
+  },
+  {
+    "gpuRequests": null,
+    "name": "shrimple-ai-1",
+    "image": "shrimple-ai"
+  },
+  {
+    "gpuRequests": null,
+    "name": "shrimple-qwen-1",
+    "image": "ghcr.io/ggml-org/llama.cpp@sha256:6257697a7f5d034b8fb499ddb07af3e250506352f94102054252a23f3b85e0af"
+  }
+]

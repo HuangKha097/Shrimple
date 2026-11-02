@@ -1,7 +1,7 @@
 
 import classNames from 'classnames/bind';
 import { useTranslation } from 'react-i18next';
-import { Check, Globe } from 'lucide-react';
+import { Check, Globe } from '../icons';
 import { toast } from 'sonner';
 import styles from '../../assets/css/SettingContainer.module.scss';
 

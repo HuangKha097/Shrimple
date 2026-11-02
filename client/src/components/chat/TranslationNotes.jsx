@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Languages, ArrowLeftRight, Trash2, Sparkles, ChevronUp } from 'lucide-react';
+import { Languages, Trash2, Sparkles, ChevronUp, ArrowLeftRight } from '../icons';
 import { useTranslation } from 'react-i18next';
 import api from '../../lib/axios.js';
 import { useAuthStore } from '../../stores/useAuthStore.js';
-import { conversationTranslationSources, defaultTranslationDirection } from './translationStream.js';
+import { SUPPORTED_TARGET_LANGUAGES, conversationTranslationSources, defaultTranslationPair, updateTranslationPair, createTranslationRequest } from './translationStream.js';
 import { createPcmAudioContext, createPcmCapture } from './translationPcmCapture.js';
 import { createTranslationPcmSocket } from './translationPcmSocket.js';
 import { interruptTranslationNotes, reduceTranslationNotes } from './translationNotesState.js';
@@ -27,13 +27,12 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     const [status, setStatus] = useState('idle');
     const [error, setError] = useState('');
     const [notes, setNotes] = useState([]);
-    const [direction, setDirection] = useState(() => defaultTranslationDirection(i18n.resolvedLanguage || i18n.language));
+    const [languagePair, setLanguagePair] = useState(() => defaultTranslationPair(i18n.resolvedLanguage || i18n.language));
+    const { sourceLanguage, targetLanguage } = languagePair;
     const [skippedClips, setSkippedClips] = useState(false);
     const [healthAttempt, setHealthAttempt] = useState(0);
     const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden');
     const [connected, setConnected] = useState(Boolean(socket?.connected));
-    const sourceLanguage = direction === 'vi-en' ? 'vi' : 'en';
-    const targetLanguage = direction === 'vi-en' ? 'en' : 'vi';
     const streams = useRef(new Map());
     const audioRef = useRef(null);
     const generation = useRef(0);
@@ -69,12 +68,12 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
         setOpen(true);
     };
 
-    const toggleDirection = () => {
+    const selectLanguagePair = nextPair => {
+        if (nextPair.sourceLanguage === sourceLanguage && nextPair.targetLanguage === targetLanguage) return;
         stop();
         try { prepareAudio(); } catch { /* Capture shows the actionable error. */ }
-        setNotes([]);
         setSkippedClips(false);
-        setDirection(previous => previous === 'vi-en' ? 'en-vi' : 'vi-en');
+        setLanguagePair(nextPair);
     };
 
     const retry = () => {
@@ -208,9 +207,8 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
             const startAttempt = () => {
                 if (stopped() || !socket.connected || track.readyState !== 'live') return;
                 source.streamId = null;
-                const request = source.isSelf
-                    ? { kind, sessionId, speakerId: id, sourceLanguage: targetLanguage, targetLanguage, translate: false }
-                    : { kind, sessionId, speakerId: id, sourceLanguage, targetLanguage };
+                const request = createTranslationRequest({ kind, sessionId, speakerId: id,
+                    isSelf: source.isSelf, sourceLanguage, targetLanguage });
                 source.transport = createTranslationPcmSocket({
                     socket, request,
                     onReady: streamId => {
@@ -244,7 +242,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
             startAttempt();
         };
         desired.forEach(startSource);
-    }, [open, active, visible, user?._id, status, kind, sessionId, sources, connected, socket, targetLanguage, sourceLanguage, stop, prepareAudio, t]);
+    }, [open, active, visible, user?._id, status, kind, sessionId, sources, connected, socket, sourceLanguage, targetLanguage, stop, prepareAudio, t]);
     if (!active) return null;
     return (
         <>
@@ -260,9 +258,18 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                     <div className="translation-header">
                         <div className="translation-title-area">
                             <div className="translation-icon-badge"><Languages size={16} /></div>
-                            <span className="translation-title">{t('translationNotes.title')}</span>
+                            <div className="translation-title-stack">
+                                <span className="translation-title">{t('translationNotes.title')}</span>
+                                <div className="translation-live-inline" role="status">
+                                    <span className={`translation-pulse-dot ${status === 'loading' ? 'loading' : processingCount > 0 ? 'processing' : 'live'}`} />
+                                    <span className="translation-live-inline-text">
+                                        {t(!connected ? 'translationNotes.reconnecting' : status === 'loading' ? 'translationNotes.starting' : 'translationNotes.liveTitle')}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                         <div className="translation-header-actions">
+                            <div className={`translation-waveform ${status === 'ready' && processingCount > 0 ? 'active' : ''}`} aria-hidden="true"><span /><span /><span /><span /><span /></div>
                             {notes.length > 0 && <button type="button" className="translation-action-btn"
                                 onClick={() => setNotes([])} title={t('translationNotes.clear')} aria-label={t('translationNotes.clear')}><Trash2 size={15} /></button>}
                             <button type="button" className="translation-close-btn" onClick={togglePanel}
@@ -270,33 +277,46 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                         </div>
                     </div>
                     <div className="translation-setting-card">
-                        <div className="translation-direction-row">
-                            <div className="translation-lang-box source"><div className="translation-lang-info">
-                                <span className="translation-lang-role">{t('translationNotes.counterpartSpeech')}</span>
-                                <span className="translation-lang-name">{t(`translationNotes.${sourceLanguage}`)}</span>
-                            </div></div>
-                            <button type="button" className="translation-swap-btn" onClick={toggleDirection}
-                                title={t('translationNotes.swap')} aria-label={t('translationNotes.swap')}><ArrowLeftRight size={15} /></button>
-                            <div className="translation-lang-box target"><div className="translation-lang-info">
-                                <span className="translation-lang-role">{t('translationNotes.readTranslation')}</span>
-                                <span className="translation-lang-name">{t(`translationNotes.${targetLanguage}`)}</span>
-                            </div></div>
+                        <div className="translation-direction-header">
+                            <span className="translation-direction-label">{t('translationNotes.direction')}</span>
+                            <button type="button" className="translation-swap" title={t('translationNotes.swap')}
+                                aria-label={t('translationNotes.swap')}
+                                onClick={() => selectLanguagePair({ sourceLanguage: targetLanguage, targetLanguage: sourceLanguage })}>
+                                <ArrowLeftRight size={15} />
+                            </button>
                         </div>
-                        <p className="translation-direction-hint">{t('translationNotes.directionHint')}</p>
+                        <div className="translation-language-fields">
+                            <label className="translation-language-field">
+                                <span>{t('translationNotes.counterpartSpeech')}</span>
+                                <select value={sourceLanguage}
+                                    onChange={event => selectLanguagePair(updateTranslationPair(languagePair, 'sourceLanguage', event.target.value))}>
+                                    {SUPPORTED_TARGET_LANGUAGES.map(lang => <option key={lang} value={lang}>{t(`translationNotes.${lang}`)}</option>)}
+                                </select>
+                            </label>
+                            <span className="translation-direction-arrow" aria-hidden="true">⇒</span>
+                            <label className="translation-language-field">
+                                <span>{t('translationNotes.readTranslation')}</span>
+                                <select value={targetLanguage}
+                                    onChange={event => selectLanguagePair(updateTranslationPair(languagePair, 'targetLanguage', event.target.value))}>
+                                    {SUPPORTED_TARGET_LANGUAGES.map(lang => <option key={lang} value={lang}>{t(`translationNotes.${lang}`)}</option>)}
+                                </select>
+                            </label>
+                        </div>
+                        <p className="translation-direction-hint">{t(kind === 'group' ? 'translationNotes.groupPairHint' : 'translationNotes.pairHint', {
+                            source: t(`translationNotes.${sourceLanguage}`), target: t(`translationNotes.${targetLanguage}`),
+                        })}</p>
                     </div>
-                    <div className="translation-status-bar">
-                        {status === 'error' ? <div className="translation-error" role="alert">
-                            <span>{error}</span><button type="button" className="translation-retry" onClick={retry}>{t('translationNotes.retry')}</button>
-                        </div> : <div className="translation-status-card" role="status">
-                            <div className="translation-status-copy">
-                                <div className="translation-state"><span className={`translation-pulse-dot ${status === 'loading' ? 'loading' : processingCount > 0 ? 'processing' : 'live'}`} />
-                                    <span className="translation-state-title">{t('translationNotes.liveTitle')}</span></div>
-                                <div className="translation-state-sub">{t(!connected ? 'translationNotes.reconnecting' : status === 'loading' ? 'translationNotes.starting' : 'translationNotes.listening')}</div>
-                            </div>
-                            <div className={`translation-waveform ${status === 'ready' && processingCount > 0 ? 'active' : ''}`} aria-hidden="true"><span /><span /><span /><span /><span /></div>
-                        </div>}
-                        {skippedClips && <div className="translation-warning" role="status">{t('translationNotes.skipped')}</div>}
-                    </div>
+                    {(status === 'error' || skippedClips) && (
+                        <div className="translation-status-bar">
+                            {status === 'error' && (
+                                <div className="translation-error" role="alert">
+                                    <span>{error}</span>
+                                    <button type="button" className="translation-retry" onClick={retry}>{t('translationNotes.retry')}</button>
+                                </div>
+                            )}
+                            {skippedClips && <div className="translation-warning" role="status">{t('translationNotes.skipped')}</div>}
+                        </div>
+                    )}
                     <div className="translation-list" role="log" aria-live="polite" aria-relevant="additions text" aria-label={t('translationNotes.title')}>
                         {notes.length === 0 ? <div className="translation-empty">
                             <div className="translation-empty-icon"><Sparkles size={20} /></div>
@@ -304,27 +324,32 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                             <div className="translation-empty-desc">{t('translationNotes.emptyDescription')}</div>
                         </div> : notes.map(note => {
                             const isSelfNote = note.translationState === 'self' || note.translate === false || String(note.speakerId || '') === String(user?._id || '');
+                            const spokenLangKey = ['vi', 'en', 'zh'].includes(note.sourceLanguage) ? note.sourceLanguage : 'auto';
                             return (
                                 <div className={`translation-msg-wrapper ${isSelfNote ? 'self' : 'other'}`} key={note.id}>
                                     <div className="translation-msg-content">
                                         <div className="translation-note-header">
-                                            <span className={`translation-msg-sender ${isSelfNote ? 'speaker-amber' : 'speaker-blue'}`}>
-                                                {isSelfNote ? (note.speakerName || t('translationNotes.you')) : (note.speakerName || t('translationNotes.participant'))}
-                                            </span>
+                                            <div className="translation-note-meta">
+                                                <span className={`translation-msg-sender ${isSelfNote ? 'speaker-amber' : 'speaker-blue'}`}>
+                                                    {isSelfNote ? (note.speakerName || t('translationNotes.you')) : (note.speakerName || t('translationNotes.participant'))}
+                                                </span>
+                                                <span className="translation-lang-badge">
+                                                    {t(`translationNotes.${spokenLangKey}`)}
+                                                </span>
+                                            </div>
                                             <span className="translation-msg-time">{note.time}</span>
                                         </div>
                                         <div className="translation-msg-bubble">
-                                            <div className="translation-note-language">{t('translationNotes.original')} · {t(`translationNotes.${note.sourceLanguage}`)}</div>
-                                            <div className="translation-msg-original" lang={note.sourceLanguage}>{note.original}</div>
+                                            <div className="translation-msg-original" lang={spokenLangKey !== 'auto' ? spokenLangKey : undefined}>{note.original}</div>
                                             {!isSelfNote && (
-                                                <>
+                                                <div className="translation-msg-translated-block">
                                                     <div className="translation-note-language">{t('translationNotes.translation')} · {t(`translationNotes.${note.targetLanguage}`)}</div>
                                                     <div className={`translation-msg-text ${note.translationState !== 'complete' ? `translation-${note.translationState}` : ''}`} lang={note.translationState === 'complete' ? note.targetLanguage : undefined}>
                                                         {note.translationState === 'complete' ? note.translated :
                                                             note.translationState === 'error' && note.message ? note.message :
                                                                 t(note.translationState === 'pending' ? 'translationNotes.pending' : note.translationState === 'interrupted' ? 'translationNotes.interrupted' : 'translationNotes.translationError')}
                                                     </div>
-                                                </>
+                                                </div>
                                             )}
                                         </div>
                                     </div>

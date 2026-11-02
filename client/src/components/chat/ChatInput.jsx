@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import classNames from 'classnames/bind';
 import { motion as Motion } from 'motion/react';
 import styles from '../../assets/css/ChatInput.module.scss';
-import { Image as ImageIcon, Smile, Mic, Plus, Send, X, File, MapPin, BarChart2, AtSign, PenTool } from 'lucide-react';
+import { Image as ImageIcon, Smile, Mic, Plus, Send, X, File, MapPin, BarChart2, AtSign } from '../icons';
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import EmojiPicker from 'emoji-picker-react';
@@ -29,7 +29,7 @@ const resolveRecipientId = (currentConvo, currentUser) => {
     return null;
 };
 
-const ChatInput = ({ onOpenDrawTool }) => {
+const ChatInput = () => {
     const [text, setText] = useState("");
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [showActionsMenu, setShowActionsMenu] = useState(false);
@@ -498,16 +498,6 @@ const ChatInput = ({ onOpenDrawTool }) => {
                             {/* Actions Popup Menu */}
                             {showActionsMenu && (
                                 <div className={cx('actions-menu')}>
-                                    {onOpenDrawTool && (
-                                        <button
-                                            type="button"
-                                            className={cx('action-menu-btn')}
-                                            onClick={() => { onOpenDrawTool(); setShowActionsMenu(false); }}
-                                            title="Cây bút vẽ lên màn hình chat (Instagram Draw)"
-                                        >
-                                            <PenTool size={18} />
-                                        </button>
-                                    )}
                                     <button
                                         type="button"
                                         className={cx('action-menu-btn')}

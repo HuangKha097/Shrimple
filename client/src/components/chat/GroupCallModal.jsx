@@ -22,7 +22,7 @@ import {
     ExternalLink,
     X,
     LayoutGrid,
-} from 'lucide-react';
+} from '../icons';
 
 const defaultAvatar = '/favicon.png';
 import { ASSET_BASE_URL } from '../../config/env';

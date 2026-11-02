@@ -22,19 +22,6 @@ export const useChatStore = create(
             activeReactionMessageId: null,
             setActiveReactionMessageId: (id) => set({ activeReactionMessageId: id }),
 
-            // Instagram-Style Chat Screen Draw State
-            chatDrawings: {},
-            isDrawModeOpen: false,
-            setIsDrawModeOpen: (val) => set({ isDrawModeOpen: Boolean(val) }),
-            toggleDrawMode: () => set((state) => ({ isDrawModeOpen: !state.isDrawModeOpen })),
-            setChatDrawing: (conversationId, payload) =>
-                set((state) => ({
-                    chatDrawings: {
-                        ...state.chatDrawings,
-                        [conversationId]: payload,
-                    },
-                })),
-
             upsertConversation: (conversation) => {
                 if (!conversation?._id) return;
                 const myId = useAuthStore.getState().user?._id?.toString();
@@ -1151,16 +1138,6 @@ export const useChatStore = create(
                     }
                 });
 
-                socket.off("chatScreenDrawingUpdated");
-                socket.on("chatScreenDrawingUpdated", (payload) => {
-                    if (!payload?.conversationId) return;
-                    set((state) => ({
-                        chatDrawings: {
-                            ...state.chatDrawings,
-                            [payload.conversationId]: payload,
-                        },
-                    }));
-                });
             },
 
             unsubscribeFromMessages: () => {
@@ -1178,7 +1155,6 @@ export const useChatStore = create(
                     socket.off("newFriendRequest");
                     socket.off("friendRequestAccepted");
                     socket.off("friendRequestDeclined");
-                    socket.off("chatScreenDrawingUpdated");
                 }
             },
 
@@ -1191,7 +1167,6 @@ export const useChatStore = create(
                 friends: state.friends,
                 friendRequests: state.friendRequests,
                 activeConversationId: state.activeConversationId,
-                chatDrawings: state.chatDrawings,
             }),
         }
     )

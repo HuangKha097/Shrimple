@@ -292,7 +292,7 @@ Audio cuộc gọi vẫn đi qua WebRTC giữa peer. Bảng note lấy cả mic 
 
 | Socket.IO event | Contract |
 | --- | --- |
-| `translation:start` | `{kind, sessionId, speakerId, sourceLanguage, targetLanguage, translate?}`; đối phương: hai language en/vi khác nhau; lời của chính viewer (`speakerId === viewerId`): `translate: false` và `sourceLanguage === targetLanguage`. Ack thành công `{ok:true, streamId, sampleRate:16000, channels:1, packetSamples:2048}`; lỗi `{ok:false,status,message}` |
+| `translation:start` | `{kind, sessionId, speakerId, sourceLanguage, targetLanguage, translate?}`; PCM bắt buộc nguồn/đích cụ thể `vi/en/zh`, không nhận `auto`. Cặp UI A ⇒ B: đối phương dùng A/B khác nhau; chính viewer dùng B/B và `translate:false`. Ack thành công `{ok:true, streamId, sampleRate:16000, channels:1, packetSamples:2048}`; lỗi `{ok:false,status,message}` |
 | `translation:audio` | `{streamId,seq,audio}`; seq bắt đầu0 tăng1, ArrayBuffer đúng4096bytes=2048samples=128ms; ack báo gói đã chuyển tới AI |
 | `translation:stop` | `{streamId}`; dừng đúng stream thuộc socket |
 | `translation:event` | Thêm `streamId,speakerId,speakerName` do backend xác định vào transcript/translation/status/error đã kiểm tra schema; nội dung lỗi được lọc |
@@ -311,13 +311,13 @@ Bridge mở WebSocket `/stream/pcm` từ TRANSLATION_AI_URL, gửi x-api-key b�
 
 `pcm_vad.py` nạp Silero VAD v6.2 ONNX đã pin checksum, CPUExecutionProvider một thread; recurrent state/context riêng mỗi stream. Xét frame512samples/32ms, pre-roll8frames/256ms; bắt đầu ngưỡng0.5, giữ câu ngưỡng0.35, chốt sau10frames/320ms im lặng hoặc250frames/8s gồm đầu/đuôi. Partial sau19frames lời nói/608ms, nhịp16frames/512ms. PCM chỉ được bọc WAV trong RAM cho Whisper, không gọi decode_audio/FFmpeg.
 
-`pcm_stream.py` tách ASR và dịch văn bản, dùng chung hai lock model độc lập; ưu tiên câu cuối hơn partial, có deadline và giới hạn queue. Khi `translate=false`, pipeline chỉ phát `transcript` (kèm `translate:false`) và bỏ qua hàng đợi dịch. Whisper chạy greedy decoding độ trễ thấp (`beam_size=1`, `best_of=1`, `temperature=0.0`, `temperature_inc=0.0`, `max_context=0`, `--no-fallback`), local `base-q5_1` (hoặc `WHISPER_MODEL=medium-q5_0`), `audio_ctx` theo thời lượng WAV+1s đệm (min128/max1500). Giải mã giữ timestamp tokens (`no_timestamps=false`) để xác định cuối lời nói; tắt căn chỉnh từng token (`token_timestamps=false`).
+`pcm_stream.py` tách ASR và dịch văn bản, dùng chung hai lock model độc lập; ưu tiên câu cuối hơn partial, có deadline và giới hạn queue. Khi `translate=false`, pipeline chỉ phát `transcript` (kèm `translate:false`) và bỏ qua hàng đợi dịch. Whisper chạy greedy decoding độ trễ thấp (`beam_size=1`, `best_of=1`, `temperature=0.0`, `temperature_inc=0.0`, `max_context=0`, `--no-fallback`), mặc định `base-q5_1` cho cả en/vi/zh; đã thử medium rồi rollback ngày 2026-11-02 theo phản hồi tốc độ, `audio_ctx` theo thời lượng WAV+1s đệm (min128/max1500). Giải mã giữ timestamp tokens (`no_timestamps=false`) để xác định cuối lời nói; tắt căn chỉnh từng token (`token_timestamps=false`).
 
 `app.abnormal_recognition` kiểm tra trước khi phát original/gửi dịch: kết quả >8192chars, chuỗi tuần hoàn dài có mật độ từ vượt ngưỡng, segment lặp chồng thời gian hoặc lời sinh ngoài độ dài audio. Ngưỡng là heuristic bảo thủ, không cắt/xóa câu lặp trong chuỗi. Partial bất thường chỉ cảnh báo503/chờ snapshot mới; final/HTTP được thử lại tối đa1lần, giữ audio/ngôn ngữ và deadline cũ, dùng full audio context (`audio_ctx=0`) + beam3. Nếu vẫn bất thường hoặc retry rỗng thì422; giữ partial hợp lệ trước đó, kết thúc đúng utterance và tiếp tục câu mới. UI báo có đoạn chưa rõ/cần nói lại, kể cả khi chưa có original. Đóng stream ngăn retry mới; slot inference chỉ nhả khi công việc sync thực sự kết thúc. [Kiểm chứng chống lặp](./validation/2026-10-18-translation-repetition-fix.md).
 
 Dịch văn bản hai chiều (`en-vi`, `vi-en`) ưu tiên CTranslate2 INT8 MarianMT (`dekthedev/opus-mt-en-vi-ct2-int8` và `dekthedev/opus-mt-vi-en-ct2-int8`, kiểm tra SHA-256 tại `/models/ct2` trong volume `qwen-model-cache`), fallback sang Qwen3 GGUF (`QWEN_URL`) khi CTranslate2 không khả dụng. `compute_profile()` chia tải 50/50: khi có GPU (`cpu_gpu_50_50`), 50% tải (Whisper ASR) chạy trên GPU và 50% tải (Silero VAD + CTranslate2 MarianMT) chạy trên CPU; khi không có GPU (`cpu_only_50_50`), chia 50/50 số luồng CPU giữa nhánh ASR và nhánh VAD+MT.
 
-Anh→Việt nghĩa đối phương nói Anh, viewer đọc/nói Việt; Việt→Anh ngược lại. UI vi/zh mặc định Anh→Việt, UI en mặc định Việt→Anh. Đổi direction hủy stream/xóa notes. Đóng bảng/hidden/disconnect dọn worklet, port, node, context, timer/listener và đánh dấu pending bị gián đoạn; đóng bảng giữ note cùng cuộc gọi. Visible/reconnect bắt đầu stream mới, không replay audio. Đổi phiên/end/logout xóa note, unmount dọn xử lý; không stop WebRTC track. Health client dùng mode=pcm(timeout20s/retry3s tới10phút); kiểm tra Silero+Whisper và làm nóng CTranslate2 nếu đã có trong `/models/ct2`, không phụ thuộc Qwen. Proxy health15s.
+Người nghe chọn **Hướng dịch A ⇒ B** bằng hai danh sách `vi/en/zh` và có nút đảo chiều; không có Auto. A là ngôn ngữ đối phương nói, B là ngôn ngữ viewer đọc và nói. Whisper nhận nguồn A cụ thể cho remote; self nhận B/B với `translate:false`. Group dùng chung A cho mọi đối phương trong bảng Note của viewer, chưa cấu hình riêng từng speaker. B mặc định theo ngôn ngữ giao diện, A là `vi` nếu B=`en`, còn lại A=`en`; chọn trùng phía còn lại sẽ đảo cặp nguyên tử, không phát cấu hình A=A để dịch. Đổi bất kỳ phía nào/đảo chiều dừng luồng cũ, đánh dấu note chờ bị gián đoạn và mở PCM mới; giữ note đã hoàn tất cùng nhãn cặp cũ. Đóng bảng/hidden/disconnect dọn worklet, port, node, context, timer/listener; đóng bảng giữ note cùng cuộc gọi. Visible/reconnect bắt đầu stream mới với cặp hiện tại, không replay audio. Đổi phiên/end/logout xóa note, unmount dọn xử lý; không stop WebRTC track. Health client dùng mode=pcm(timeout20s/retry3s tới10phút); kiểm tra Silero+Whisper và làm nóng CTranslate2 nếu đã có trong `/models/ct2`, không phụ thuộc Qwen. Proxy health15s. [Kiểm chứng khóa nguồn](./validation/2026-11-02-translation-language-lock.md).
 
 ### HTTP tương thích cũ
 
@@ -339,25 +339,25 @@ Script tạo `ai-service/.env` với khóa ngẫu nhiên, không in khóa và kh
 
 Compose này dành cho local: mở `http://localhost:5173`; API, Socket.IO và media đều dùng `http://localhost:5001`. Các URL này được Compose ưu tiên hơn giá trị trong env client, tránh gọi nhầm Render hoặc HTTPS vào backend HTTP. Backend dùng cổng 5001, chế độ development và CORS cho `http://localhost:5173`. Khi sửa cấu hình Compose, áp dụng bằng `docker compose up -d --no-deps frontend backend`; không cần tải lại model.
 
-Compose mặc định chạy **CPU**, phù hợp máy không có NVIDIA GPU; `whisper` build từ `ai-service/whisper/Dockerfile`, không tải CUDA. Dùng whisper.cpp v1.9.4 và mặc định `ggml-base-q5_1.bin` đa ngôn ngữ (59.7 MB), kiểm tra SHA-256 và giữ model trong volume `whisper-model-cache`. Service `qwen` mặc định Qwen3 0.6B GGUF Q8_0 bằng llama.cpp, giữ model trong volume `qwen-model-cache`. Đây là lựa chọn ưu tiên tốc độ local; model nhỏ có thể giảm độ chính xác. Cache medium/1.7B đã tải vẫn được giữ. Lần đầu cần mạng để tải model. Chọn model qua `WHISPER_MODEL` (base-q5_1 hoặc medium-q5_0) và `QWEN_MODEL`. [Kiểm tra hiệu năng local](./validation/2026-10-17-translation-speed.md).
+Compose mặc định chạy **CPU**, phù hợp máy không có NVIDIA GPU; `whisper` build từ `ai-service/whisper/Dockerfile`, không tải CUDA. Dùng whisper.cpp v1.9.4 và mặc định `ggml-base-q5_1.bin` đa ngôn ngữ sau rollback ngày 2026-11-02, kiểm tra SHA-256 và giữ model trong volume `whisper-model-cache`. Một model ASR xử lý cả en/vi/zh; chưa xác nhận chất lượng giọng vùng miền Việt hoặc realtime nhiều người. Service `qwen` vẫn mặc định Qwen3 0.6B GGUF Q8_0 bằng llama.cpp, giữ model trong volume `qwen-model-cache`. Cache model trước đó được giữ. Lần đầu cần mạng để tải model. Chọn model qua `WHISPER_MODEL` (base-q5_1 hoặc medium-q5_0) và `QWEN_MODEL`. [Thử nghiệm medium](./validation/2026-11-02-whisper-medium-trial.md); [snapshot hiệu năng base trước đây](./validation/2026-10-17-translation-speed.md).
 
-Để quay lại cấu hình model lớn đã dùng trước đó, đặt hai biến trong terminal hiện tại rồi áp dụng (cache cũ được tái sử dụng):
+Áp dụng rõ model thử nghiệm cho riêng Whisper (cache cũ được tái sử dụng, không đổi Qwen):
 
 ```powershell
-$env:WHISPER_MODEL="medium-q5_0"
-$env:QWEN_MODEL="Qwen/Qwen3-1.7B-GGUF:Q8_0"
-docker compose up -d --no-deps whisper qwen
+$env:WHISPER_MODEL="base-q5_1"
+docker compose -p shrimple up -d --no-deps whisper
 ```
 
-Xóa hai biến môi trường này khỏi terminal khi muốn dùng lại mặc định nhỏ.
+Lệnh trên áp dụng model base hiện tại. Xóa biến `WHISPER_MODEL` khỏi terminal cũng dùng mặc định base; không xóa volume model. Phần khóa A ⇒ B được giữ sau rollback. Nếu đã chạy GPU override, giữ cả hai file Compose khi áp dụng đổi model.
 
-Máy có NVIDIA GPU và Docker Desktop WSL2 GPU support có thể dùng cấu hình riêng:
+Máy NVIDIA hiện tại dùng GPU cho ASR, CPU cho VAD/MT. Khởi chạy bằng script để luôn giữ đúng override:
 
 ~~~powershell
-docker compose -f compose.yaml -f compose.gpu.yaml up -d --build
+.\ai-service\start-gpu.ps1
+# Lần sau, khi image không đổi: thêm -SkipBuild
 ~~~
 
-Override này dùng `Dockerfile.cuda`, GPU reservation và mặc định Whisper medium-q5_0; Qwen vẫn theo QWEN_MODEL. Silero VAD và xử lý audio chạy CPU; Whisper dùng GPU khi cấu hình NVIDIA được hỗ trợ, hoặc cấu hình CPU mặc định khi không có GPU phù hợp. Đây là hai cấu hình khởi chạy, chưa tự chuyển GPU lỗi sang CPU lúc đang chạy. Build CUDA lần đầu phải tải các lớp lớn và biên dịch riêng. Model-cache volumes dùng chung; FastAPI dùng `/tmp` trên tmpfs cho multipart HTTP cũ, PCM/WAV xử lý trong RAM. [Kiểm tra build CPU](./validation/2026-10-17-whisper-cpu-build.md).
+Override này dùng `Dockerfile.cuda`, GPU reservation và mặc định Whisper base-q5_1; Qwen vẫn theo QWEN_MODEL. Silero VAD và xử lý audio chạy CPU; Whisper dùng GPU khi cấu hình NVIDIA được hỗ trợ, hoặc cấu hình CPU mặc định khi không có GPU phù hợp. Đây là hai cấu hình khởi chạy, chưa tự chuyển GPU lỗi sang CPU lúc đang chạy. Build CUDA lần đầu phải tải các lớp lớn và biên dịch riêng. Model-cache volumes dùng chung; FastAPI dùng `/tmp` trên tmpfs cho multipart HTTP cũ, PCM/WAV xử lý trong RAM. [Kiểm tra build CPU](./validation/2026-10-17-whisper-cpu-build.md). [Kiểm chứng GPU/CPU hiện tại](./validation/2026-11-02-translation-gpu-cpu.md): GTX1650SUPER, CUDA ASR + CPU CT2/VAD, hai worker chạy chồng thời gian; không phải tỷ lệ tải 50/50. Dùng image shrimple-whisper-cuda riêng, giữ QtmShrimple. Kết quả mẫu tổng hợp không xác nhận chất lượng Việt/Trung hoặc WebRTC.
 
 Nếu Docker Engine trả lỗi 500 khi chạy `docker info`, cần khởi động/khôi phục Docker Desktop Linux Engine trước khi build hoặc chạy model. Kết quả kiểm tra code, Compose và giới hạn thử nghiệm ngày 2026-10-17: [translation review](./validation/2026-10-17-translation.md).
 
@@ -386,7 +386,7 @@ Kết quả kỳ vọng là một câu tiếng Việt ngắn như `Chúng ta nê
 
 Compose tự nối backend đến `http://ai:8001`; không dùng `127.0.0.1` giữa hai container. `/health` kiểm tra Whisper/Qwen; `/health?mode=transcribe` chỉ kiểm tra Whisper. Bảng note dùng `/health?mode=pcm` qua proxy: kiểm tra Whisper và Silero, cho phép hiện chữ gốc khi Qwen chưa sẵn sàng. Chưa sẵn sàng trả HTTP503 với status=loading. Model Qwen mặc định `Qwen/Qwen3-0.6B-GGUF:Q8_0`; QWEN_MODEL cho phép quay lại1.7B.
 
-Chỉ hỗ trợ Việt ↔ Anh, chỉ ghi lời đối phương/thành viên khác. Chọn **Anh → Việt** khi đối phương nói Anh và bạn muốn đọc Việt; **Việt → Anh** cho chiều ngược lại. UI tiếng Việt/Trung mặc định Anh→Việt, UI tiếng Anh mặc định Việt→Anh. Đổi chiều hủy xử lý và xóa note cũ. Chữ gốc tạm có thể được sửa tới khi câu chốt; `Translating...` được thay bằng bản dịch hoặc trạng thái lỗi, vẫn giữ chữ gốc. Gói audio128ms không đồng nghĩa transcript/model trả trong128ms hoặc bảo đảm1–2giây. [Contract và giới hạn hiện tại](./validation/2026-10-17-translation-pcm.md).
+Người nghe chọn cặp **A ⇒ B** (`vi` / `en` / `zh`, hai phía khác nhau). Whisper được truyền nguồn A cho đối phương, B cho chính viewer; CT2 (cặp `en-vi`/`vi-en`) hoặc Qwen dịch remote sang B. Khóa nguồn không bảo đảm mọi âm/từ theo giọng vùng miền đều đúng; không coi nhãn nguồn đã khóa là kết quả phát hiện ngôn ngữ. Chữ gốc tạm có thể được sửa tới khi câu chốt; `Translating...` được thay bằng bản dịch hoặc trạng thái lỗi, vẫn giữ chữ gốc. Gói audio128ms không đồng nghĩa transcript/model trả trong128ms hoặc bảo đảm1–2giây. [Contract và giới hạn hiện tại](./validation/2026-11-02-translation-language-lock.md); [snapshot PCM trước khóa](./validation/2026-10-17-translation-pcm.md).
 
 Whisper dùng cửa sổ audio theo độ dài WAV cộng1giây đệm, tối đa30giây. PCM giữ partial mới nhất và tối đa3công việc nhận dạng câu cuối/3công việc dịch mỗi stream; ưu tiên câu cuối, quá tải báo lỗi rõ và giữ chữ gốc đã có. Client tối đa2gói chưa được xác nhận; chậm hoặc mất kết nối dừng stream rồi mở mới, không tích audio để phát lại. Local mặc định2thread/model và tắt Qwen polling; điều chỉnh WHISPER_THREADS/QWEN_THREADS theo phần cứng. Cảnh báo status không kết thúc note; lỗi từng câu chỉ kết thúc câu đó, lỗi stream/quyền dừng stream. Chỉ bật note khi người tham gia đồng ý gửi audio đến dịch vụ AI.
 

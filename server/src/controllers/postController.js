@@ -5,8 +5,6 @@ import User from "../models/User.js";
 import Notification from "../models/Notification.js";
 import Hashtag from "../models/Hashtag.js";
 import { io } from "../socket/socket.js";
-import { spawn } from "child_process";
-import path from "path";
 import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
 
 export const postPopulateOptions = [
@@ -118,57 +116,6 @@ export const notifyMentionedUsers = async (text, senderId, postId, commentId = n
     }
 };
 
-const checkFakeNews = (text) => {
-    return new Promise((resolve, reject) => {
-        // Path to python script relative to server root
-        const scriptPath = path.join(process.cwd(), 'src', 'algorithms', 'TF-IDF_RandomForest', 'predict_news.py');
-        
-        const pythonProcess = spawn('python', [scriptPath], {
-             stdio: ['pipe', 'pipe', 'pipe']
-        });
-
-        let dataString = '';
-        let errorString = '';
-
-        // Write text to stdin
-        pythonProcess.stdin.write(text);
-        pythonProcess.stdin.end();
-
-        pythonProcess.stdout.on('data', (data) => {
-            dataString += data.toString();
-        });
-
-        pythonProcess.stderr.on('data', (data) => {
-            errorString += data.toString();
-        });
-
-        pythonProcess.on('close', (code) => {
-            if (code !== 0) {
-                console.error("Python script error:", errorString)
-                // Fallback: If python fails (e.g. missing libs), we might allow the post or block. 
-                // Let's log and allow for now to avoid blocking service, OR reject specific error.
-                // But user requested feature, so let's try to parse error or default to false (Real) 
-                // ONLY IF it's a system error. If it's a model error, we might want to know.
-                // For now, resolve as Real to prevent blocking valid posts if system is buggy.
-                // BUT better to log.
-                console.log("Fake news check failed, assuming real (default fallback).");
-                resolve({ isFake: false }); 
-                return;
-            }
-
-            try {
-                // Find JSON in output (in case of other prints)
-                // We expect just JSON
-                const result = JSON.parse(dataString);
-                resolve(result);
-            } catch (err) {
-                console.error("Failed to parse Python output:", dataString);
-                resolve({ isFake: false });
-            }
-        });
-    });
-};
-
 export const createPost = async (req, res) => {
     try {
         const { content, privacy } = req.body;
@@ -245,25 +192,6 @@ export const createPost = async (req, res) => {
         if (!content && imagesArray.length === 0 && !videoUrl) {
             return res.status(400).json({ message: "Post content or media is required" });
         }
-
-        // --- Fake News Detection ---
-        if (content && content.length > 50) { // Only check if text is substantial (> 50 chars)
-            try {
-                const detectionResult = await checkFakeNews(content);
-                if (detectionResult.error) {
-                     console.error("Model error:", detectionResult.error);
-                } else if (detectionResult.isFake) {
-                    return res.status(400).json({ 
-                        message: "Your post appears to contain fake news or misleading information and cannot be posted.",
-                        isFake: true,
-                        confidence: detectionResult.confidence
-                    });
-                }
-            } catch (err) {
-                console.error("Fake news detection exception:", err);
-            }
-        }
-        // ---------------------------
 
         const validPrivacy = (privacy && ["public", "friends", "private"].includes(privacy)) ? privacy : "public";
         const tags = extractHashtags(content);
@@ -893,7 +821,7 @@ export const getTrends = async (req, res) => {
     try {
         const trends = await Hashtag.find({ count: { $gt: 0 } })
             .sort({ count: -1, lastUsedAt: -1 })
-            .limit(10)
+            .limit(5)
             .lean();
 
         res.status(200).json(trends);

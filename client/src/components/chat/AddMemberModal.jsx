@@ -4,7 +4,7 @@ import classNames from 'classnames/bind';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import styles from '../../assets/css/AddMemberModal.module.scss';
 import defaultAvatar from "../../../public/favicon.png";
-import { UserPlus, X, Search, Check } from 'lucide-react';
+import { UserPlus, X, Search, Check } from '../icons';
 import { useChatStore } from '../../stores/useChatStore';
 import { toast } from 'sonner';
 import { ASSET_BASE_URL } from '../../config/env.js';

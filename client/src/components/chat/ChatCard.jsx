@@ -6,7 +6,7 @@ import { useChatStore } from "../../stores/useChatStore.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useNavigate } from "react-router-dom";
 import { ASSET_BASE_URL } from "../../config/env.js";
-import { Image, Mic, Video, FileText, MapPin, PhoneCall } from 'lucide-react';
+import { Image, Mic, Video, FileText, MapPin, PhoneCall } from '../icons';
 
 const cx = classNames.bind(styles);
 

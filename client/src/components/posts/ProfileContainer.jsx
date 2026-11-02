@@ -6,7 +6,7 @@ import { useChatStore } from '../../stores/useChatStore';
 import { authService } from '../../services/authService';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/PostsContainer.module.scss';
-import { ArrowLeft, Calendar, MapPin, Briefcase, GraduationCap, BookOpen, Cake, Lock, MessageSquare, UserPlus, UserCheck, FileText, Repeat, Video, Bookmark } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Briefcase, GraduationCap, BookOpen, Cake, Lock, MessageSquare, UserPlus, UserCheck, FileText, Repeat, Video, Bookmark } from '../icons';
 import { motion as Motion } from 'motion/react';
 import PostItem from './PostItem';
 import TrendsWidget from './TrendsWidget';

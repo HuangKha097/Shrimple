@@ -2,7 +2,7 @@
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/GroupCall.module.scss';
 import { useGroupCallStore } from '../../stores/useGroupCallStore';
-import { Mic, MicOff, PhoneOff } from 'lucide-react';
+import { Mic, MicOff, PhoneOff } from '../icons';
 
 const cx = classNames.bind(styles);
 

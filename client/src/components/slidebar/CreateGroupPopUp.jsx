@@ -4,7 +4,7 @@ import styles from '../../assets/css/CreateGroupPopUp.module.scss';
 import {
     X, Camera, Search, Check, Users,
     Loader2
-} from 'lucide-react';
+} from '../icons';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import default_avt from "../../../public/favicon.png";
 

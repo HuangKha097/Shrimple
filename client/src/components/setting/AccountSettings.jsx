@@ -11,7 +11,7 @@ import {
     searchMajors 
 } from '../../services/vnProvincesService';
 import XSearchSelect from '../ui/animate/XSearchSelect';
-import { Camera, Pencil, Calendar, MapPin, GraduationCap, Briefcase, BookOpen, User as UserIcon, Eye, Save, X, Loader2 } from 'lucide-react';
+import { Camera, Pencil, Calendar, MapPin, GraduationCap, Briefcase, BookOpen, User as UserIcon, Eye, Save, X, Loader2 } from '../icons';
 import { toast } from 'sonner';
 
 const cx = classNames.bind(styles);

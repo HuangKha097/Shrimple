@@ -1,0 +1,15 @@
+{
+  "scope": "Local CPU 2-thread medium-q5_0 trial; synthetic English only",
+  "whisper_health": 200,
+  "ai_health": {"status": 200, "state": "ready"},
+  "asr": [
+    {"case": "hear", "audio_seconds": 1.72, "elapsed_ms": 26157, "text": "Can you veer me?", "language": "en"},
+    {"case": "meeting", "audio_seconds": 2.415, "elapsed_ms": 4735, "text": "The meeting starts at 8 tonight.", "language": "en"},
+    {"case": "intentional_repeat", "audio_seconds": 2.735, "elapsed_ms": 5274, "text": "Can you hear me? Can you hear me?", "language": "en"}
+  ],
+  "pcm": {
+    "elapsed_ms": 9257,
+    "finals": [{"type": "transcript", "utteranceId": "u1", "revision": 2, "original": "Can you hear me?", "sourceLanguage": "en", "targetLanguage": "en", "isFinal": true, "translate": false}],
+    "errors": []
+  }
+}

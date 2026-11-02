@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { MailCheck, X } from "lucide-react";
+import { MailCheck, X } from "../icons";
 import { motion as Motion, AnimatePresence } from "motion/react";
 import { useAuthStore } from "../../stores/useAuthStore";
 import XButton from "../ui/animate/XButton";

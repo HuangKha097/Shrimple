@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import classNames from 'classnames/bind';
-import { Users } from 'lucide-react';
+import { Users } from '../icons';
 import styles from '../../assets/css/MentionAutocomplete.module.scss';
 import { useAuthStore } from '../../stores/useAuthStore.js';
 

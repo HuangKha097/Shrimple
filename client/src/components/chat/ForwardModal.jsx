@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/ForwardModal.module.scss';
 import defaultAvatar from "../../../public/favicon.png";
-import { Search, X, Check } from 'lucide-react';
+import { Search, X, Check } from '../icons';
 import { useChatStore } from '../../stores/useChatStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { toast } from 'sonner';

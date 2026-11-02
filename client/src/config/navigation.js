@@ -1,4 +1,4 @@
-import { Newspaper, MessageSquare, Video, Users, User, Settings } from 'lucide-react';
+import { Newspaper, MessageSquare, Video, Users, User, Settings } from '../components/icons';
 
 export const getNavigationItems = (userId) => [
     { id: 'feed', path: '/feed', icon: Newspaper, labelKey: 'nav.feed' },

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { Copy, Crown, Download, Link2, Loader2, Pencil, RefreshCw, Trash2, X } from 'lucide-react';
+import { Copy, Crown, Download, Link2, Loader2, Pencil, RefreshCw, Trash2, X } from '../icons';
 import { toast } from 'sonner';
 import { useAuthStore } from '../../stores/useAuthStore.js';
 import { useChatStore } from '../../stores/useChatStore.js';

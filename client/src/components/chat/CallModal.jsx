@@ -1,8 +1,8 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import Peer from 'simple-peer';
 import { useCallStore } from '../../stores/useCallStore';
 import { useAuthStore } from '../../stores/useAuthStore';
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from '../icons';
 import { toast } from 'sonner';
 import TranslationNotes from './TranslationNotes.jsx';
 
@@ -27,34 +27,71 @@ const CallModal = () => {
     const myVideo = useRef(null);
     const userVideo = useRef(null);
     const connectionRef = useRef(null);
+    const streamRef = useRef(null);
     const translationSources = useMemo(() => [
         { id: user?._id, stream, muted: !micOn },
         { id: callerInfo?.id, stream: remoteStream, muted: false },
     ], [user?._id, stream, micOn, callerInfo?.id, remoteStream]);
 
+    const stopLocalStream = useCallback(() => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach((track) => track.stop());
+            streamRef.current = null;
+        }
+        setStream((prev) => {
+            if (prev) {
+                prev.getTracks().forEach((track) => track.stop());
+            }
+            return null;
+        });
+    }, []);
+
+    // 4. Handle Leaving Call
+    const leaveCall = useCallback(() => {
+        if (connectionRef.current) {
+            connectionRef.current.destroy();
+            connectionRef.current = null;
+        }
+        stopLocalStream();
+        setRemoteStream(null);
+        setCallAcceptedState(false);
+        if (socket && callerInfo?.id) {
+            socket.emit('endCall', { to: callerInfo.id });
+        }
+        setCallEnded();
+    }, [stopLocalStream, socket, callerInfo?.id, setCallEnded]);
+
     // 1. Handle user media (Camera/Mic)
     useEffect(() => {
-        if (isCallIncoming || isCallActive) {
-            const hasVideo = callType === 'video';
-            navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: true })
-                .then((currentStream) => {
-                    setStream(currentStream);
-                })
-                .catch(err => {
-                    console.error("Failed to get media", err);
-                    toast.error("Không thể truy cập camera hoặc micro");
-                    leaveCall();
-                });
-        } else {
-             // Stop stream if call ended
-             if (stream) {
-                 stream.getTracks().forEach(track => track.stop());
-                 setStream(null);
-             }
-             setRemoteStream(null);
-             setCallAcceptedState(false);
+        if (!isCallIncoming && !isCallActive) {
+            stopLocalStream();
+            setRemoteStream(null);
+            setCallAcceptedState(false);
+            return undefined;
         }
-    }, [isCallIncoming, isCallActive, callType]);
+
+        let cancelled = false;
+        const hasVideo = callType === 'video';
+        navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: true })
+            .then((currentStream) => {
+                if (cancelled) {
+                    currentStream.getTracks().forEach((track) => track.stop());
+                    return;
+                }
+                streamRef.current = currentStream;
+                setStream(currentStream);
+            })
+            .catch((err) => {
+                if (cancelled) return;
+                console.error("Failed to get media", err);
+                toast.error("Không thể truy cập camera hoặc micro");
+                leaveCall();
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [isCallIncoming, isCallActive, callType, leaveCall, stopLocalStream]);
 
     // Attach local stream to myVideo
     useEffect(() => {
@@ -112,7 +149,7 @@ const CallModal = () => {
                  socket.off('callUserOffline', handleCallUserOffline);
              };
         }
-    }, [isCallActive, isCallIncoming, stream, callerInfo, socket, user, callType]);
+    }, [isCallActive, isCallIncoming, stream, callerInfo, socket, user, callType, leaveCall]);
 
     // 3. Handle Incoming Call Answer
     const answerCall = async () => {
@@ -121,6 +158,7 @@ const CallModal = () => {
             if (!activeStream) {
                 const hasVideo = callType === 'video';
                 activeStream = await navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: true });
+                streamRef.current = activeStream;
                 setStream(activeStream);
             }
 
@@ -146,24 +184,6 @@ const CallModal = () => {
             toast.error("Không thể kết nối micro/camera để trả lời");
             leaveCall();
         }
-    };
-
-    // 4. Handle Leaving Call
-    const leaveCall = () => {
-        if (connectionRef.current) {
-            connectionRef.current.destroy();
-            connectionRef.current = null;
-        }
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            setStream(null);
-        }
-        setRemoteStream(null);
-        setCallAcceptedState(false);
-        if (socket && callerInfo?.id) {
-            socket.emit('endCall', { to: callerInfo.id });
-        }
-        setCallEnded();
     };
 
     // Toggle Mic

@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import api from "../lib/axios.js";
 import { toast } from "sonner";
+import { useAuthStore } from "./useAuthStore.js";
+
+const replacePostInCollections = (state, postId, updatedPost) => ({
+    posts: state.posts.map((p) => (p._id === postId ? updatedPost : p)),
+    videoPosts: state.videoPosts.map((p) => (p._id === postId ? updatedPost : p)),
+    userPosts: state.userPosts.map((p) => (p._id === postId ? updatedPost : p)),
+    savedPosts: state.savedPosts.map((p) => (p._id === postId ? updatedPost : p)),
+});
 
 export const usePostStore = create((set, get) => ({
     posts: [],
@@ -139,12 +147,7 @@ export const usePostStore = create((set, get) => ({
             const res = await api.put(`/api/posts/${postId}/repost`);
             const updatedPost = res.data;
 
-            set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+            set(state => replacePostInCollections(state, postId, updatedPost));
             return updatedPost;
         } catch (error) {
             console.error(error);
@@ -157,12 +160,7 @@ export const usePostStore = create((set, get) => ({
             const res = await api.put(`/api/posts/${postId}/privacy`, { privacy });
             const updatedPost = res.data;
 
-            set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+            set(state => replacePostInCollections(state, postId, updatedPost));
             toast.success("Đã cập nhật quyền riêng tư bài viết!");
             return updatedPost;
         } catch (error) {
@@ -176,12 +174,7 @@ export const usePostStore = create((set, get) => ({
             const res = await api.put(`/api/posts/like/${postId}`);
             const updatedPost = res.data;
 
-            set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+            set(state => replacePostInCollections(state, postId, updatedPost));
         } catch (error) {
             console.error(error);
             toast.error("Failed to like post");
@@ -193,12 +186,7 @@ export const usePostStore = create((set, get) => ({
             const res = await api.put(`/api/posts/comment/${postId}`, { text });
             const updatedPost = res.data;
 
-            set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+            set(state => replacePostInCollections(state, postId, updatedPost));
             toast.success("Comment added");
         } catch (error) {
             console.error(error);
@@ -211,12 +199,7 @@ export const usePostStore = create((set, get) => ({
             const res = await api.put(`/api/posts/${postId}/comment/${commentId}/like`, { reaction });
             const updatedPost = res.data;
 
-             set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+             set(state => replacePostInCollections(state, postId, updatedPost));
         } catch (error) {
             console.error(error);
             toast.error("Failed to react to comment");
@@ -232,12 +215,7 @@ export const usePostStore = create((set, get) => ({
             });
             const updatedPost = res.data;
 
-             set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+             set(state => replacePostInCollections(state, postId, updatedPost));
             toast.success("Đã gửi phản hồi");
         } catch (error) {
             console.error(error);
@@ -249,12 +227,7 @@ export const usePostStore = create((set, get) => ({
         try {
             const res = await api.put(`/api/posts/${postId}/edit`, { content });
             const updatedPost = res.data;
-            set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+            set(state => replacePostInCollections(state, postId, updatedPost));
             toast.success("Chỉnh sửa bài viết thành công!");
             return { success: true, post: updatedPost };
         } catch (error) {
@@ -268,7 +241,7 @@ export const usePostStore = create((set, get) => ({
     fetchTrends: async () => {
         try {
             const res = await api.get("/api/posts/trends");
-            set({ trends: res.data || [] });
+            set({ trends: (res.data || []).slice(0, 5) });
             return res.data;
         } catch (error) {
             console.error("Failed to fetch trends:", error);
@@ -296,12 +269,7 @@ export const usePostStore = create((set, get) => ({
              const res = await api.put(`/api/posts/${postId}/comment/${commentId}/reply/${replyId}/like`, { reaction });
              const updatedPost = res.data;
 
-              set(state => ({
-                posts: state.posts.map(p => p._id === postId ? updatedPost : p),
-                videoPosts: state.videoPosts.map(p => p._id === postId ? updatedPost : p),
-                userPosts: state.userPosts.map(p => p._id === postId ? updatedPost : p),
-                savedPosts: state.savedPosts.map(p => p._id === postId ? updatedPost : p)
-            }));
+              set(state => replacePostInCollections(state, postId, updatedPost));
         } catch (error) {
             console.error(error);
             toast.error("Failed to react to reply");
@@ -387,21 +355,18 @@ export const usePostStore = create((set, get) => ({
             }
 
             // Update AuthStore User object too, so UI relying on user.savedPosts updates immediately
-             import("./useAuthStore.js").then(({ useAuthStore }) => {
-                 const user = useAuthStore.getState().user;
-                 if (user) {
-                     let newSavedPosts = user.savedPosts || [];
-                     // Check if it's already in the user's list (which might be just IDs or Objects)
-                     const exists = newSavedPosts.some(id => (typeof id === 'string' ? id : id._id) === postId);
+            const user = useAuthStore.getState().user;
+            if (user) {
+                let newSavedPosts = user.savedPosts || [];
+                const exists = newSavedPosts.some(id => (typeof id === 'string' ? id : id._id) === postId);
 
-                     if (exists) {
-                         newSavedPosts = newSavedPosts.filter(id => (typeof id === 'string' ? id : id._id) !== postId);
-                     } else {
-                         newSavedPosts = [...newSavedPosts, postId];
-                     }
-                     useAuthStore.getState().updateUser({ savedPosts: newSavedPosts });
-                 }
-             });
+                if (exists) {
+                    newSavedPosts = newSavedPosts.filter(id => (typeof id === 'string' ? id : id._id) !== postId);
+                } else {
+                    newSavedPosts = [...newSavedPosts, postId];
+                }
+                useAuthStore.getState().updateUser({ savedPosts: newSavedPosts });
+            }
 
             return res.data;
         } catch (error) {

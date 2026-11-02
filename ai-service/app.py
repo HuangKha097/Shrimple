@@ -26,7 +26,7 @@ from pcm_vad import get_model
 
 logger = logging.getLogger("uvicorn.error")
 API_KEY = os.getenv("TRANSLATION_AI_KEY", "")
-LANGUAGE_NAMES = {"en": "English", "vi": "Vietnamese"}
+LANGUAGE_NAMES = {"en": "English", "vi": "Vietnamese", "zh": "Chinese"}
 QWEN_URL = os.getenv("QWEN_URL", "http://qwen:8080").rstrip("/")
 WHISPER_CPP_URL = os.getenv("WHISPER_CPP_URL", "http://127.0.0.1:8080").rstrip("/")
 WHISPER_TIMEOUT_SECONDS = 70
@@ -342,8 +342,8 @@ def transcribe_audio(content, source_language, *, timeout=WHISPER_TIMEOUT_SECOND
         remaining_timeout(deadline, timeout)
         if not abnormal_recognition(result, seconds) and (attempt == 0 or result["text"].strip()):
             source = source_language if source_language != "auto" else {
-                "english": "en", "vietnamese": "vi", "en": "en", "vi": "vi"
-            }.get(str(result.get("language", "")).lower(), "")
+                "english": "en", "vietnamese": "vi", "chinese": "zh", "mandarin": "zh", "en": "en", "vi": "vi", "zh": "zh"
+            }.get(str(result.get("language", "")).strip().lower(), "auto" if str(result.get("language", "")).strip() else "")
             return result["text"].strip(), source
         # Only a final/HTTP utterance retries, within the original job budget.
         # Retain audio and language; do not forward a guessed, truncated sentence.
@@ -356,10 +356,12 @@ def translate_qwen(original, source, target, *, timeout=65):
     time_terms = (
         "- In Vietnamese, tonight means tối nay; today means hôm nay. Do not confuse them.\n"
         if target == "vi" else
+        "- In Chinese, tonight means 今晚; today means 今天. Do not confuse them.\n"
+        if target == "zh" else
         "- In English, tối nay means tonight; hôm nay means today. Do not confuse them.\n"
     )
     prompt = (
-        f"Translate the following text from {LANGUAGE_NAMES[source]} to {LANGUAGE_NAMES[target]}.\n\n"
+        f"Translate the following text {f'from {LANGUAGE_NAMES[source]} to {LANGUAGE_NAMES[target]}' if source in LANGUAGE_NAMES and source != target else f'into {LANGUAGE_NAMES[target]}'}.\n\n"
         "Rules:\n"
         "- Return only the translation.\n"
         "- Do not explain.\n"
@@ -485,9 +487,9 @@ def translate(
     stream: bool = Form(False),
 ):
     authorize(x_api_key)
-    if target_language not in ("en", "vi"):
+    if target_language not in ("en", "vi", "zh"):
         raise HTTPException(status_code=400, detail="Unsupported target language")
-    if source_language not in ("en", "vi", "auto"):
+    if source_language not in ("en", "vi", "zh", "auto"):
         raise HTTPException(status_code=400, detail="Unsupported source language")
     if (audio.content_type or "").split(";")[0].strip().lower() not in AUDIO_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported audio type")
@@ -525,7 +527,7 @@ def translate(
         remaining_timeout(deadline, 1)
         stt_ms = round((time.perf_counter() - started) * 1000)
         logger.info("STT source=%s duration_ms=%s text_chars=%s", source, stt_ms, len(original))
-        if original and source not in LANGUAGE_NAMES:
+        if original and source not in LANGUAGE_NAMES and source != "auto":
             raise HTTPException(status_code=422, detail="Only English and Vietnamese are supported")
         if stream is True:
             # No lane is owned by an unconsumed response. The endpoint's finally

@@ -4,7 +4,7 @@ import styles from '../../assets/css/PostsContainer.module.scss';
 import { useChatStore } from '../../stores/useChatStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, X, Users, UserPlus, UserCheck, UserMinus, MessageSquare, ExternalLink, Sparkles, Check, Loader2, Briefcase, GraduationCap, MapPin } from 'lucide-react';
+import { ArrowLeft, Search, X, Users, UserPlus, UserCheck, UserMinus, MessageSquare, ExternalLink, Sparkles, Check, Loader2, Briefcase, GraduationCap, MapPin } from '../icons';
 import { motion as Motion, AnimatePresence } from 'motion/react';
 import TrendsWidget from './TrendsWidget';
 import WhoToFollowWidget from './WhoToFollowWidget';

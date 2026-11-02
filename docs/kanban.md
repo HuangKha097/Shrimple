@@ -163,6 +163,10 @@ Backlog Q01/Q02/Q03 mở rộng kiểm tra poll vote/close concurrent/caps, tran
 
 QS-I23 / Q01/Q03, 2026-10-18: [khảo sát model trước sửa](./validation/2026-10-18-translation-quality.md) tái hiện Whisper medium lặp44/55lần ở ASR; base sai cụm thời gian, MarianMT sai nghĩa và Qwen0.6B fallback sai yêu cầu. [Bản sửa chống lặp](./validation/2026-10-18-translation-repetition-fix.md) giữ model/PCM, bật timestamp decoding, guard output trước note/dịch; final retry tối đa1lần trong deadline cũ,422 chỉ kết thúc utterance. T: AI69, server74, client42; build/lint và live model/PCM ghi phạm vi ở evidence. Đã áp dụng Docker local, chưa commit/push/deploy cloud. Chất lượng từ/nghĩa, guard với audio Việt thật, GPU và nhiều speaker vẫn là gap Q01/Q03; không nâng trạng thái QA/release.
 
+QS-I23 / Q01/Q03, 2026-11-02: [thử nghiệm medium](./validation/2026-11-02-whisper-medium-trial.md) đổi mặc định Whisper sang `medium-q5_0`, một model ASR en/vi/zh; Qwen/VAD/decoder/PCM giữ nguyên. Đã áp dụng riêng Whisper của `shrimple` trên CPU 2 luồng, checksum đúng, healthy và AI PCM health200/ready. Ba mẫu Anh tổng hợp: ASR26.157/4.735/5.274s, vẫn sai một từ ở mẫu đầu; PCM nội bộ có final, không error. Word cập nhật bảng/sơ đồ và giới hạn. Chưa xác nhận chất lượng Việt/Trung, GPU, WebRTC hoặc nhiều speaker; Q01/Q03 tiếp tục mở, chưa commit/push/deploy cloud.
+
+QS-I23 / Q01/Q03, cập nhật tiếp ngày 2026-11-02: [khóa A ⇒ B và rollback base](./validation/2026-11-02-translation-language-lock.md). UI chọn hai ngôn ngữ vi/en/zh; remote A/B, self B/B chỉ ASR; PCM bridge và AI từ chối Auto. Đổi cặp dừng/mở stream mới và giữ note hoàn tất. 10/10 test JS, 5/5 test AI, lint phạm vi và build pass; component harness kiểm tra 4 kích thước/theme/ngôn ngữ. Đã build/recreate frontend/backend/AI local. Theo phản hồi medium chậm, đã đưa cả default CPU/GPU/start.sh và runtime Whisper shrimple về base-q5_1 đúng checksum. Probe AI PCM en→vi sau rollback nhận final và bản dịch, không error, 2.713s cho một mẫu tổng hợp. Word có 3 hình, gồm 2 sequence diagram chi tiết các loop/par/alt/opt. Chưa nghiệm thu mic/WebRTC, Việt vùng miền, Trung, GPU hoặc nhiều speaker thật; Q01/Q03 vẫn mở.
+
 Kết quả tree sau pull: xem [pull conflict resolution](./validation/pull-conflict-resolution.md). Bảng baseline ở mục10 giữ lịch sử, không được dùng làm kết quả lint/build của tree sau merge.
 
 ## Chạy thử và sửa lỗi 2026-10-17
@@ -182,3 +186,7 @@ hoạt động. Server21/21, client8/8, lint0errors3warnings, build/syntax/diff 
 pass. Người dùng xác nhận push toàn bộ source bằng GitHub Desktop;
 [evidence cleanup](./validation/2026-10-17-cleanup-push.md). Các AC Q01/Q02/Q03
 và cảnh báo lifecycle CallModal/TreeQRCodeModal vẫn cần kiểm chứng riêng.
+
+QS-M01 cập nhật 2026-11-01: thay toàn bộ icon sang IonIcons (https://www.shadcn.io/icons/ion) tại client/src/components/icons/index.js, gỡ lucide-react khỏi client/package.json và client/package-lock.json, xóa client/src/components/magic-tree/ui/icons.tsx, sửa 3 cảnh báo hook lifecycle còn lại (CallModal.jsx, TreeQRCodeModal.jsx) và bỏ dynamic import useAuthStore trong usePostStore.js. Kết quả: client lint 0 errors/0 warnings, client test 42/42, server PCM test 23/23, syntax 38 file JS backend pass, Vite build pass (1865 modules, không còn cảnh báo mixed import; các test server cần MongoMemoryServer binary vẫn giữ yêu cầu cache binary).
+
+QS-I23 / Q01/Q03, 2026-11-02 GPU/CPU: [bật CUDA ASR](./validation/2026-11-02-translation-gpu-cpu.md), giữ base và A ⇒ B. CPU VAD/CT2/Qwen, GPU Whisper; probe hai câu final xác nhận overlap 46.24ms và hai bản dịch không lỗi. Trung vị ASR của ba câu Anh tổng hợp CPU/GPU: 2479/460ms; không phải latency WebRTC. Word GPU/CPU lưu riêng vì bản trước đang mở; Q01/Q03 vẫn mở.

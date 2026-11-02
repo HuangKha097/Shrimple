@@ -62,17 +62,18 @@
     position: absolute;
     z-index: 35;
     right: 16px;
-    top: 80px;
+    top: 76px;
     bottom: 16px;
-    width: min(336px, calc(100vw - 32px));
+    width: min(352px, calc(100vw - 32px));
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: var(--primary-blockBackgroundColor);
     border: 1px solid var(--primary-borderColor);
     border-radius: 16px;
-    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+    box-shadow: var(--surface-shadow, 0 18px 48px rgba(0, 0, 0, 0.55));
     color: var(--primary-textColor);
-    padding: 16px;
+    padding: 14px;
     text-align: left;
     box-sizing: border-box;
     font-family: inherit;
@@ -90,12 +91,13 @@
     }
 }
 
-/* Header */
+/* Compact Header with Integrated Live Status */
 .translation-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 14px;
+    gap: 8px;
+    padding-bottom: 10px;
     flex-shrink: 0;
 }
 
@@ -103,32 +105,60 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .translation-icon-badge {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
     background: var(--surface-subtle);
     border: 1px solid var(--primary-borderColor);
     color: var(--primary-textColor);
     flex-shrink: 0;
 }
 
+.translation-title-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
 .translation-title {
-    font-size: 14.5px;
+    font-size: 14px;
     font-weight: 700;
     color: var(--primary-textColor);
     letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.translation-live-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.translation-live-inline-text {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .translation-header-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 6px;
+    flex-shrink: 0;
 }
 
 .translation-action-btn,
@@ -136,8 +166,8 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 8px;
     background: transparent;
     border: none;
@@ -156,152 +186,115 @@
     color: #ef4444;
 }
 
-/* Language Selector Row */
+/* Explicit source => target language pair. */
 .translation-setting-card {
-    margin: 0 0 12px 0;
+    margin: 0 0 10px 0;
+    padding: 8px 10px;
+    background: var(--surface-subtle);
+    border: 1px solid var(--primary-borderColor);
+    border-radius: 12px;
     flex-shrink: 0;
 }
 
-.translation-direction-row {
+.translation-direction-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
 }
 
-.translation-lang-box {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    background: var(--surface-subtle);
-    border: 1px solid var(--primary-borderColor);
-    border-radius: 12px;
-    padding: 8px 12px;
-    text-align: left;
-    transition: all 0.2s ease;
-}
-
-
-.translation-lang-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-}
-
-.translation-lang-role {
-    font-size: 11px;
-    font-weight: 500;
+.translation-direction-label {
+    font-size: 11.5px;
+    font-weight: 600;
     color: var(--text-muted);
-    line-height: 1.2;
-}
-
-.translation-lang-name {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--primary-textColor);
-    line-height: 1.25;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.translation-lang-chevron {
-    color: var(--text-muted);
     flex-shrink: 0;
 }
 
-.translation-swap-btn {
+.translation-language-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+    align-items: end;
+    gap: 5px;
+    margin-top: 6px;
+}
+
+.translation-language-field {
     display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.translation-language-field select {
+    width: 100%;
+    min-width: 0;
+    min-height: 38px;
+    padding: 5px 3px;
+    border: 1px solid var(--primary-borderColor);
+    border-radius: 7px;
+    background: var(--primary-blockBackgroundColor);
+    color: var(--primary-textColor);
+    font: inherit;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.translation-direction-arrow {
+    align-self: end;
+    padding-bottom: 8px;
+    color: var(--primary-textColor);
+    font-size: 20px;
+    text-align: center;
+}
+
+.translation-swap {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: var(--surface-subtle);
+    width: 30px;
+    height: 28px;
+    padding: 0;
     border: 1px solid var(--primary-borderColor);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-    flex-shrink: 0;
-}
-
-.translation-swap-btn:hover {
-    background: var(--primary-hoverBackgroundColor);
+    border-radius: 7px;
+    background: var(--primary-blockBackgroundColor);
     color: var(--primary-textColor);
-    border-color: rgba(255, 255, 255, 0.2);
-    transform: rotate(180deg);
+    cursor: pointer;
 }
 
-/* Status Card */
-.translation-status-bar {
-    margin-bottom: 12px;
-    flex-shrink: 0;
-}
-
-.translation-status-card {
-    background: var(--surface-subtle);
-    border: 1px solid var(--primary-borderColor);
-    border-radius: 12px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-}
-
-.translation-status-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    min-width: 0;
-}
-
-.translation-state {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.translation-state-title {
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--accent-text);
-    line-height: 1.2;
-}
-
-.translation-state-sub {
-    font-size: 12px;
+.translation-direction-hint {
+    margin: 8px 0 0;
+    font-size: 11px;
+    line-height: 1.45;
     color: var(--text-muted);
-    padding-left: 16px;
-    line-height: 1.3;
 }
 
+/* Pulse Dot & Audio Waveform */
 .translation-pulse-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     flex-shrink: 0;
 }
 
 .translation-pulse-dot.live {
     background: #22c55e;
-    box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+    box-shadow: 0 0 7px rgba(34, 197, 94, 0.75);
     animation: statusPulse 1.8s infinite;
 }
 
 .translation-pulse-dot.processing {
     background: #22c55e;
-    box-shadow: 0 0 10px #22c55e;
+    box-shadow: 0 0 9px #22c55e;
     animation: statusPulse 0.8s infinite;
 }
 
 .translation-pulse-dot.loading {
     background: var(--accent-text);
-    box-shadow: 0 0 8px var(--accent-text);
+    box-shadow: 0 0 7px var(--accent-text);
     animation: statusPulse 1s infinite;
 }
 
@@ -316,30 +309,32 @@
     }
 }
 
-/* Audio Waveform Equalizer Icon */
 .translation-waveform {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
-    height: 20px;
+    gap: 2.5px;
+    height: 16px;
+    padding-right: 2px;
     flex-shrink: 0;
 }
 
 .translation-waveform span {
-    width: 2.5px;
+    width: 2px;
     border-radius: 999px;
     background: var(--text-muted);
-    transition: height 0.2s ease, background 0.2s ease;
+    opacity: 0.65;
+    transition: height 0.2s ease, background 0.2s ease, opacity 0.2s ease;
 }
 
-.translation-waveform span:nth-child(1) { height: 7px; }
-.translation-waveform span:nth-child(2) { height: 14px; }
-.translation-waveform span:nth-child(3) { height: 18px; }
-.translation-waveform span:nth-child(4) { height: 11px; }
-.translation-waveform span:nth-child(5) { height: 6px; }
+.translation-waveform span:nth-child(1) { height: 6px; }
+.translation-waveform span:nth-child(2) { height: 11px; }
+.translation-waveform span:nth-child(3) { height: 14px; }
+.translation-waveform span:nth-child(4) { height: 9px; }
+.translation-waveform span:nth-child(5) { height: 5px; }
 
 .translation-waveform.active span {
-    background: var(--text-muted);
+    background: var(--accent-text);
+    opacity: 1;
     animation: waveBounce 0.9s ease-in-out infinite;
 }
 
@@ -353,47 +348,63 @@
     50% { transform: scaleY(1.25); }
 }
 
+/* Alerts & Warnings */
+.translation-status-bar {
+    margin-bottom: 10px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .translation-warning {
     color: #f59e0b;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.22);
+    border-radius: 10px;
     font-size: 11.5px;
-    padding: 6px 4px 0 4px;
+    line-height: 1.35;
+    padding: 7px 10px;
 }
 
 .translation-error {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.25);
     color: #f87171;
     font-size: 12px;
-    padding: 10px 12px;
-    border-radius: 12px;
+    padding: 8px 10px;
+    border-radius: 10px;
 }
 
-.translation-error-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: #ef4444;
-    color: var(--primary-textColor);
-    font-size: 11px;
-    font-weight: 700;
+.translation-error > span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.translation-retry {
     flex-shrink: 0;
+    padding: 5px 8px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
 }
 
 /* Translation Feed / Note Cards List */
 .translation-list {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
-    min-height: 160px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding-right: 2px;
+    gap: 8px;
+    padding: 2px 2px 4px 0;
 }
 
 .translation-list::-webkit-scrollbar {
@@ -415,9 +426,9 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 32px 14px;
+    padding: 28px 14px;
     color: var(--text-muted);
-    gap: 8px;
+    gap: 6px;
     margin: auto 0;
 }
 
@@ -425,8 +436,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     background: var(--surface-subtle);
     border: 1px solid var(--primary-borderColor);
@@ -444,17 +455,14 @@
     font-size: 12px;
     line-height: 1.45;
     color: var(--text-muted);
-    max-width: 260px;
-}
-
-.translation-empty-desc strong {
-    color: var(--primary-textColor);
+    max-width: 265px;
 }
 
 /* Individual Translation Note Card */
 .translation-msg-wrapper {
     width: 100%;
     box-sizing: border-box;
+    flex-shrink: 0;
 }
 
 .translation-msg-content {
@@ -464,26 +472,36 @@
     background: var(--surface-subtle);
     border: 1px solid var(--primary-borderColor);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     box-sizing: border-box;
     transition: border-color 0.2s ease;
 }
 
-.translation-msg-content:hover {
-    border-color: var(--primary-borderColor);
+.translation-msg-wrapper.self .translation-msg-content {
+    background: rgba(255, 255, 255, 0.025);
 }
 
 .translation-note-header {
     display: flex;
-    align-items: baseline;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
-    margin-bottom: 6px;
+    margin-bottom: 5px;
+}
+
+.translation-note-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
 
 .translation-msg-sender {
     font-size: 12.5px;
     font-weight: 700;
     color: #fbbf24;
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
 
 .translation-msg-sender.speaker-amber {
@@ -494,10 +512,25 @@
     color: var(--accent-text);
 }
 
+.translation-lang-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--primary-blockBackgroundColor);
+    border: 1px solid var(--primary-borderColor);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
 .translation-msg-time {
-    font-size: 11.5px;
+    font-size: 11px;
     color: var(--text-muted);
     font-weight: 500;
+    flex-shrink: 0;
 }
 
 .translation-msg-bubble {
@@ -517,23 +550,54 @@
     word-wrap: break-word;
 }
 
-.translation-msg-text {
-    font-size: 12.5px;
-    line-height: 1.42;
+.translation-msg-translated-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding-top: 6px;
+    margin-top: 1px;
+    border-top: 1px solid var(--primary-borderColor);
+}
+
+.translation-note-language {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
     color: var(--text-muted);
+    line-height: 1.3;
+}
+
+.translation-msg-text {
+    font-size: 13px;
+    line-height: 1.45;
+    color: var(--primary-textColor);
+    font-weight: 600;
     white-space: pre-wrap;
     word-wrap: break-word;
 }
 
-.translation-msg-text.primary-only {
-    font-size: 13px;
-    color: var(--primary-textColor);
-    font-weight: 500;
+.translation-msg-text.translation-pending,
+.translation-msg-text.translation-interrupted {
+    font-size: 12px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--text-muted);
+}
+
+.translation-msg-text.translation-error {
+    display: block;
+    padding: 0;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 400;
+    color: #f87171;
 }
 
 /* Reserve right column space in Group Call when Translation Notes panel is open */
 div[class*="group-call-container"]:has(.translation-panel) > div[class*="call-stage"] {
-    padding-right: 368px;
+    padding-right: 380px;
 }
 
 /* Responsive / Small Screens */
@@ -548,66 +612,18 @@ div[class*="group-call-container"]:has(.translation-panel) > div[class*="call-st
         bottom: 92px;
         width: auto;
         border-radius: 16px;
-        padding: 14px;
+        padding: 12px;
     }
 }
 
-/* Original text remains visible while translation is pending or interrupted. */
-.translation-direction-hint {
-    margin: 8px 0 0;
-    color: var(--text-muted);
-    font-size: 11.5px;
-    line-height: 1.45;
-}
-
-.translation-note-language {
-    font-size: 10.5px;
-    color: var(--text-muted);
-    line-height: 1.4;
-}
-
-.translation-msg-original + .translation-note-language {
-    padding-top: 7px;
-    margin-top: 2px;
-    border-top: 1px solid var(--primary-borderColor);
-}
-
-.translation-msg-sender,
-.translation-title-area,
-.translation-error > span {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.translation-msg-time { flex-shrink: 0; }
-
-.translation-msg-text.translation-error {
-    display: block;
-    padding: 0;
-    border: none;
-    background: transparent;
-}
-
-.translation-retry {
-    flex-shrink: 0;
-    padding: 6px 8px;
-    border: 1px solid currentColor;
-    border-radius: 6px;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-}
-
-.translation-panel { min-height: 0; box-shadow: var(--surface-shadow); }
-.translation-list { min-height: 0; }
-
 .translation-toggle:focus-visible,
-.translation-panel button:focus-visible {
+.translation-panel button:focus-visible,
+.translation-panel select:focus-visible {
     outline: 2px solid var(--accent-text);
-    outline-offset: 3px;
+    outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {
     .translation-panel, .translation-panel *, .translation-toggle * { animation: none; transition: none; }
-    .translation-swap-btn:hover, .translation-toggle:hover .translation-toggle-pill { transform: none; }
+    .translation-toggle:hover .translation-toggle-pill { transform: none; }
 }

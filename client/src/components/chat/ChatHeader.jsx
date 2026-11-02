@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/ChatHeader.module.scss';
 import defaultAvatar from "../../../public/favicon.png";
-import { Info, Phone, Video, ChevronLeft, MoreVertical, Pin, PinOff, ChevronDown, ChevronUp, X, PenTool } from 'lucide-react';
+import { Info, Phone, Video, ChevronLeft, MoreVertical, Pin, PinOff, ChevronDown, ChevronUp, X } from '../icons';
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useCallStore } from '../../stores/useCallStore';
@@ -15,7 +15,7 @@ const cx = classNames.bind(styles);
 
 const ChatHeader = ({ onCloseChatInfo, chat }) => {
     const { user: currentUser, onlineUsers } = useAuthStore();
-    const { friends, setActiveConversationId, pinnedMessages, fetchPinnedMessages, togglePinMessageAction, isDrawModeOpen, toggleDrawMode, chatDrawings } = useChatStore();
+    const { friends, setActiveConversationId, pinnedMessages, fetchPinnedMessages, togglePinMessageAction } = useChatStore();
     const { initiateCall } = useCallStore();
     const { activeGroupCalls, isInCall, currentConversationId, joinGroupCall, setModalOpen } = useGroupCallStore();
     const navigate = useNavigate();
@@ -271,33 +271,6 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
 
                     <button
                         type="button"
-                        className={cx('btn', { active: isDrawModeOpen })}
-                        title="Cây bút vẽ đính trên màn hình chat (Instagram Draw)"
-                        onClick={toggleDrawMode}
-                        style={{
-                            position: 'relative',
-                            color: isDrawModeOpen || (chatDrawings?.[chat._id]?.strokes?.length > 0) ? '#f97316' : undefined,
-                        }}
-                    >
-                        <PenTool size={19} />
-                        {chatDrawings?.[chat._id]?.strokes?.length > 0 && (
-                            <span
-                                style={{
-                                    position: 'absolute',
-                                    top: '6px',
-                                    right: '6px',
-                                    width: '7px',
-                                    height: '7px',
-                                    borderRadius: '50%',
-                                    backgroundColor: '#f97316',
-                                    boxShadow: '0 0 6px #f97316',
-                                }}
-                            />
-                        )}
-                    </button>
-
-                    <button
-                        type="button"
                         className={cx('btn')}
                         title={isGroup ? "Thông tin nhóm" : "Thông tin hội thoại"}
                         onClick={onCloseChatInfo}
@@ -316,10 +289,6 @@ const ChatHeader = ({ onCloseChatInfo, chat }) => {
 
                         {showMenu && (
                             <div className={cx('dropdown-menu')}>
-                                <button className={cx('menu-item')} onClick={() => { toggleDrawMode(); setShowMenu(false); }}>
-                                    <PenTool size={18} />
-                                    <span>{isDrawModeOpen ? "Đóng bút vẽ màn hình" : "Vẽ lên màn hình chat"}</span>
-                                </button>
                                 <button className={cx('menu-item')} onClick={() => { onCloseChatInfo(); setShowMenu(false); }}>
                                     <Info size={18} />
                                     <span>{isGroup ? "Thông tin nhóm" : "Thông tin hội thoại"}</span>

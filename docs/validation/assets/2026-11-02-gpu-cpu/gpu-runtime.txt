@@ -1,0 +1,4 @@
+whisper_init_with_params_no_state: use gpu    = 1
+ggml_cuda_init: found 1 CUDA devices (Total VRAM: 4095 MiB):
+whisper_model_load:        CUDA0 total size =    59.12 MB
+whisper_backend_init_gpu: using CUDA0 backend
