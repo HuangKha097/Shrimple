@@ -1,0 +1,10 @@
+{
+  "scope": "CPU fp32 sanity check on one pinned validation example only",
+  "trial": "control",
+  "sample_id": "VIVOSSPK38_288",
+  "adapter_vs_merged_max_abs_logit_error": 2.288818359375e-05,
+  "adapter_vs_merged_returned_token_ids_equal": true,
+  "logit_error_below_0_001": true,
+  "test_accessed": false,
+  "note": "Checks merge export on one sample, not global model quality or CPU/GPU identity"
+}

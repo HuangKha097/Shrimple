@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" width="740pt" height="450pt" viewBox="0 0 740 450">
+<rect width="100%" height="100%" fill="white" />
+<rect x="5.0" y="8" width="180" height="27" fill="white" stroke="black" stroke-width="0.8" />
+<text x="95" y="26.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="black">TRÌNH DUYỆT</text>
+<line x1="95" y1="37" x2="95" y2="440" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<rect x="280.0" y="8" width="180" height="27" fill="white" stroke="black" stroke-width="0.8" />
+<text x="370" y="26.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="black">BACKEND</text>
+<line x1="370" y1="37" x2="370" y2="440" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<rect x="555.0" y="8" width="180" height="27" fill="white" stroke="black" stroke-width="0.8" />
+<text x="645" y="26.0" font-family="Segoe UI, Arial, sans-serif" font-size="10" font-weight="bold" text-anchor="middle" fill="black">AI SERVICE</text>
+<line x1="645" y1="37" x2="645" y2="440" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<rect x="8" y="49" width="724" height="105" fill="none" stroke="black" stroke-width="0.65" />
+<rect x="8" y="49" width="218.4205078125" height="16" fill="#F2F2F2" stroke="black" stroke-width="0.45" />
+<text x="13" y="60.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.2" font-weight="bold" text-anchor="start" fill="black">loop [AI loading: thử lại mỗi 3 s; tối đa 10 phút]</text>
+<line x1="95" y1="80" x2="370" y2="80" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="80" x2="364.4280121865409" y2="82.22552281647789" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="80" x2="364.4280121865409" y2="77.77447718352211" stroke="black" stroke-width="0.8" />
+<text x="232.5" y="75.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">1  GET /api/translation/health?mode=pcm</text>
+<line x1="370" y1="103" x2="645" y2="103" stroke="black" stroke-width="0.8" />
+<line x1="645" y1="103" x2="639.428012186541" y2="105.22552281647789" stroke="black" stroke-width="0.8" />
+<line x1="645" y1="103" x2="639.428012186541" y2="100.77447718352211" stroke="black" stroke-width="0.8" />
+<text x="507.5" y="98.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">GET /health?mode=pcm + x-api-key</text>
+<line x1="645" y1="127" x2="370" y2="127" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<line x1="370" y1="127" x2="375.5719878134591" y2="124.77447718352211" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="127" x2="375.5719878134591" y2="129.2255228164779" stroke="black" stroke-width="0.8" />
+<text x="507.5" y="122.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">Silero + hai ASR: ready / loading</text>
+<line x1="370" y1="148" x2="95" y2="148" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<line x1="95" y1="148" x2="100.57198781345906" y2="145.7744771835221" stroke="black" stroke-width="0.8" />
+<line x1="95" y1="148" x2="100.57198781345906" y2="150.2255228164779" stroke="black" stroke-width="0.8" />
+<text x="232.5" y="143.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">200 ready / 503 loading</text>
+<rect x="8" y="166" width="724" height="177" fill="none" stroke="black" stroke-width="0.65" />
+<rect x="8" y="166" width="217.23457031249998" height="16" fill="#F2F2F2" stroke="black" stroke-width="0.45" />
+<text x="13" y="177.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.2" font-weight="bold" text-anchor="start" fill="black">loop [mỗi người nói có audio live, không mute]</text>
+<text x="370" y="194.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">Remote: en ↔ vi  |  Self: B/B, translate=false  |  Không nhận auto</text>
+<line x1="95" y1="215" x2="370" y2="215" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="215" x2="364.4280121865409" y2="217.2255228164779" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="215" x2="364.4280121865409" y2="212.7744771835221" stroke="black" stroke-width="0.8" />
+<text x="232.5" y="210.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">2  translation:start (kind, session, speaker, A/B)</text>
+<line x1="370" y1="226" x2="401" y2="226" stroke="black" stroke-width="0.8" />
+<line x1="401" y1="226" x2="401" y2="238" stroke="black" stroke-width="0.8" />
+<line x1="401" y1="238" x2="370" y2="238" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="238" x2="375.5719878134591" y2="235.7744771835221" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="238" x2="375.5719878134591" y2="240.2255228164779" stroke="black" stroke-width="0.8" />
+<text x="525" y="232.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.3" font-weight="normal" text-anchor="middle" fill="black">Kiểm tra cặp và quyền phiên gọi</text>
+<rect x="18" y="243" width="704" height="94" fill="none" stroke="black" stroke-width="0.65" />
+<rect x="18" y="243" width="130.692578125" height="16" fill="#F2F2F2" stroke="black" stroke-width="0.45" />
+<text x="23" y="254.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.2" font-weight="bold" text-anchor="start" fill="black">alt [sai cặp hoặc hết quyền]</text>
+<line x1="370" y1="274" x2="95" y2="274" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<line x1="95" y1="274" x2="100.57198781345906" y2="271.7744771835221" stroke="black" stroke-width="0.8" />
+<line x1="95" y1="274" x2="100.57198781345906" y2="276.2255228164779" stroke="black" stroke-width="0.8" />
+<text x="232.5" y="269.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">400 / 403; không mở stream</text>
+<line x1="18" y1="281" x2="722" y2="281" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<text x="25" y="294.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.2" font-weight="normal" text-anchor="start" fill="black">[hợp lệ]</text>
+<line x1="370" y1="310" x2="645" y2="310" stroke="black" stroke-width="0.8" />
+<line x1="645" y1="310" x2="639.428012186541" y2="312.2255228164779" stroke="black" stroke-width="0.8" />
+<line x1="645" y1="310" x2="639.428012186541" y2="307.7744771835221" stroke="black" stroke-width="0.8" />
+<text x="507.5" y="305.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">WS /stream/pcm + cấu hình khóa</text>
+<line x1="645" y1="330" x2="370" y2="330" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<line x1="370" y1="330" x2="375.5719878134591" y2="327.7744771835221" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="330" x2="375.5719878134591" y2="332.2255228164779" stroke="black" stroke-width="0.8" />
+<text x="507.5" y="325.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">Xác thực khóa; kiểm tra cấu hình; ready</text>
+<line x1="370" y1="330" x2="95" y2="330" stroke="black" stroke-width="0.8" stroke-dasharray="3 3" />
+<line x1="95" y1="330" x2="100.57198781345906" y2="327.7744771835221" stroke="black" stroke-width="0.8" />
+<line x1="95" y1="330" x2="100.57198781345906" y2="332.2255228164779" stroke="black" stroke-width="0.8" />
+<text x="232.5" y="325.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">ACK streamId → chạy AudioWorklet</text>
+<rect x="8" y="355" width="724" height="83" fill="none" stroke="black" stroke-width="0.65" />
+<rect x="8" y="355" width="222.351171875" height="16" fill="#F2F2F2" stroke="black" stroke-width="0.45" />
+<text x="13" y="366.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.2" font-weight="bold" text-anchor="start" fill="black">opt [đổi A/B / ẩn tab / disconnect / kết thúc gọi]</text>
+<line x1="95" y1="386" x2="370" y2="386" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="386" x2="364.4280121865409" y2="388.2255228164779" stroke="black" stroke-width="0.8" />
+<line x1="370" y1="386" x2="364.4280121865409" y2="383.7744771835221" stroke="black" stroke-width="0.8" />
+<text x="232.5" y="381.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">3  translation:stop / ngắt kết nối</text>
+<line x1="370" y1="386" x2="645" y2="386" stroke="black" stroke-width="0.8" />
+<line x1="645" y1="386" x2="639.428012186541" y2="388.2255228164779" stroke="black" stroke-width="0.8" />
+<line x1="645" y1="386" x2="639.428012186541" y2="383.7744771835221" stroke="black" stroke-width="0.8" />
+<text x="507.5" y="381.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">Đóng WS; hủy pipeline / công việc chờ</text>
+<text x="370" y="409.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">Client dọn worklet, context, timer; note chờ → interrupted; giữ note đã hoàn tất.</text>
+<text x="370" y="430.0" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-weight="normal" text-anchor="middle" fill="black">Visible / reconnect và còn quyền: lặp lại bước 2 với seq=0; không replay audio cũ.</text>
+</svg>

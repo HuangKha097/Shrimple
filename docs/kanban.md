@@ -20,11 +20,11 @@ Mức bằng chứng: **C** = đọc code, **T** = test tự động trong phạ
 | Cột | Ticket |
 | --- | --- |
 | Done | QS-I01–QS-I23, QS-M01, QS-M02 |
-| In Progress | Chưa có ticket sản phẩm được giao trong tài liệu baseline |
+| In Progress | QS-AI01 (nhánh nghiên cứu bổ sung 2026-11-02, ngoài 42 ticket baseline) |
 | Review | Chưa có ticket riêng được chuyển Review |
 | Backlog | QS-B01–QS-B14, QS-Q01–QS-Q03 |
 
-**42 ticket: 25 Done về triển khai, 17 Backlog.** Đây là tỷ lệ theo board mới tái dựng, không phải coverage test, mức hoàn thành sản phẩm hay phần trăm sẵn sàng phát hành. Ticket QS-I21 Done chỉ là endpoint yêu cầu xóa User; xóa toàn bộ dữ liệu vẫn là QS-B05.
+**Baseline: 42 ticket, 25 Done về triển khai, 17 Backlog; bổ sung QS-AI01 In Progress ngày 2026-11-02.** Đây là số lượng ticket, không phải coverage test, mức hoàn thành sản phẩm hay phần trăm sẵn sàng phát hành. Ticket QS-I21 Done chỉ là endpoint yêu cầu xóa User; xóa toàn bộ dữ liệu vẫn là QS-B05.
 
 ## 3. Các phase
 
@@ -190,3 +190,59 @@ và cảnh báo lifecycle CallModal/TreeQRCodeModal vẫn cần kiểm chứng r
 QS-M01 cập nhật 2026-11-01: thay toàn bộ icon sang IonIcons (https://www.shadcn.io/icons/ion) tại client/src/components/icons/index.js, gỡ lucide-react khỏi client/package.json và client/package-lock.json, xóa client/src/components/magic-tree/ui/icons.tsx, sửa 3 cảnh báo hook lifecycle còn lại (CallModal.jsx, TreeQRCodeModal.jsx) và bỏ dynamic import useAuthStore trong usePostStore.js. Kết quả: client lint 0 errors/0 warnings, client test 42/42, server PCM test 23/23, syntax 38 file JS backend pass, Vite build pass (1865 modules, không còn cảnh báo mixed import; các test server cần MongoMemoryServer binary vẫn giữ yêu cầu cache binary).
 
 QS-I23 / Q01/Q03, 2026-11-02 GPU/CPU: [bật CUDA ASR](./validation/2026-11-02-translation-gpu-cpu.md), giữ base và A ⇒ B. CPU VAD/CT2/Qwen, GPU Whisper; probe hai câu final xác nhận overlap 46.24ms và hai bản dịch không lỗi. Trung vị ASR của ba câu Anh tổng hợp CPU/GPU: 2479/460ms; không phải latency WebRTC. Word GPU/CPU lưu riêng vì bản trước đang mở; Q01/Q03 vẫn mở.
+
+## QS-AI01 — fine-tune Whisper base và bằng chứng đồ án (2026-11-02)
+
+**In Progress, P1 AI/research; dependency FR-23/Q01/Q03.** Được người dùng yêu cầu.
+Đã có prepare/draft/audit/LoRA train/evaluate/merge và private evidence theo run;
+16/16regression pass. Người dùng xác nhận13/13nhãn, chọn mục tiêu nhiều người dùng.
+Đã chạy CUDA40steps trên VIVOS280câu/14người tách speaker: test WER33.87→34.74%,
+validation27.92→30.20%; diagnostic người dùng46.55→45.91%. Chưa đạt cải thiện nhiều
+người; không thay runtime. [Pilot](./validation/2026-11-02-whisper-vivos-pilot.md).
+
+AC còn lại: khép chất lượng nhiều người/thuật ngữ bằng thí nghiệm phù hợp; tái kiểm chứng
+GGMLQ5_1, ngôn ngữ khác và cuộc gọi trước tích hợp. Nhãn/split/pilotCUDA đã có evidence
+riêng, không là QA toàn feature. Không suy tính mới từ việc dùng LoRA.
+[Protocol](./whisper-finetuning.md), [evidence và giới hạn](./validation/2026-11-02-whisper-finetuning.md).
+
+QS-AI01, phân tích sau pilot: train WER28.03→27.43%,validation27.92→30.20%;16/18lỗi
+tăng thuộcSPK38. Nhãn HOA làm số text token lớn hơn bản lowercase hơn2lần; nguyên nhân
+chất lượng vẫn là giả thuyết. Đã chuẩn bị development2,150train/43speaker, pin60validation,
+đặt trước16speaker test chưa đánh giá; bốn config warmup/LR/case không đọc test.
+21/21tests và development smoke2steps pass; chưa chạy vòng nghiên cứu mới.
+[Analysis/evidence](./validation/2026-11-02-whisper-train-validation-analysis.md). Vẫn In Progress.
+
+QS-AI01,2026-11-03: người dùng yêu cầu thực thi cả4cấu hình và giữ bằng chứng báo cáo.
+Đã hoàn thành4/4lượt600steps theo plan/hash, development-only, không mở test cuối.
+WER validation control88.07%,warmup86.29%,low-lr71.57%,lowercase29.82%,base27.92%.
+Chưa có ứng viên vượt base; giữ runtime và In Progress cho chất lượng.249artifact hashes
+đã kiểm, đủCSV/PNG/log/model và21/21unit tests; [report](./validation/2026-11-03-whisper-development.md).
+
+QS-AI01, nghiên cứu nguồn/benchmark2026-11-03: [protocol và catalog](./vietnamese-accent-benchmark.md)
+phân biệt gate/licence/nhãn từng nguồn; người dùng chưa có quyền Bud500/VLSP. Đã có
+VietMed diagnostic210câu/21người và mẫu ViMD valid90câu/90người đủ nhãn ba vùng, nhưng
+chưa đủ coverage thời lượng/tỉnh/hội thoại, nhanh/nặng. Chưa train nguồn mới hoặc mở
+test cuối; vẫn **In Progress**. [Kết quả/giới hạn](./validation/2026-11-03-accent-benchmark.md).
+
+QS-AI01, user yêu cầu train tiếp2026-11-03: official ViMD train ba vùng + VIVOS replay,
+576train/284người; giữ150validation/93người, không test rows.600steps LoRA từ base/LR1e-5
+đã hoàn thành. ViMD WER53,56→46,86% (Bắc45,87→39,46; Trung64,98→52,86; Nam50,59→48,20),
+VIVOS27,92→28,68%: cải thiện ViMD nhưng tăng lỗi giọng đọc nhẹ.35tests/verify72artifacts,
+726WAV/3Parquet pass; giữ serving, vẫn In Progress. [Evidence](./validation/2026-11-03-whisper-accent-training.md).
+
+Lịch sử QS-AI01, lần nhập nhãn trước khi người dùng chốt: đã nhập13đoạn từ Markdown sang
+CSV version mới, giữ source snapshots/checksums. ID/thời gian/audio đủ; checkbox rà
+vẫn0/13,8đoạn có ellipsis và một cách viết Vercek cần đối chiếu. Chưa auto reviewed,
+chưa tạo manifest/train; [evidence import](./validation/2026-11-02-whisper-finetuning.md#bổ-sung--nhận-lời-chép-người-dùng-chỉnh-sửa-2026-11-02).
+
+QS-I23/Q01/Q03,2026-11-03 nói liên tục: sửa cap8s cắt cứng thành soft pause sau4s + valley/tail;7regression pass (PCM120s bảo toàn bytes, pipeline giả lập dịch khi input còn chạy, Silero thực). [Evidence](./validation/2026-11-03-continuous-speech.md). Chưa rebuild AI/kiểm cuộc gọi; giữ trạng thái acceptance hiện có.
+
+QS-I23 / QS-AI01 / Q01/Q03,2026-11-03: thử PhoWhisper-base trên90ViMD validation, WER53.56→20.45%;5câu SAPI Anh lại7.89→136.84%. User chốt hai checkpoint: PhoWhisper vi, Whisper-base en, MarianMT en↔vi. Đã đổi source/config và export GGML có checksum; bỏ zh/Auto ở đầu vào dịch. [Evidence, checks và gates](./validation/2026-11-03-phowhisper.md). Docker Engine chưa chạy, chưa xác nhận GGML serving/WebRTC; QS-AI01 In Progress, Q01/Q03 mở. Các mốc en/vi/zh trước là lịch sử.
+
+QS-I23 / Q01/Q03,2026-11-03 runtime follow-up: phản ánh ảnh nhận sai/chậm; diagnostic6VIVOS xác nhận profile ASR ảnh hưởng WER35.34→3.01% trên mẫu nhỏ; Docker đang CPU2threads. Đã sửa decoder/nhãn chờ, AI25/25 và JS2/2pass. [Tiến độ áp dụng/đo runtime](./validation/2026-11-03-phowhisper-runtime-fix.md); Q01/Q03 vẫn mở tới kiểm mic/WebRTC thật.
+
+QS-I23 / Q01/Q03, kết quả runtime follow-up: đã áp dụng frontend/AI/2ASR local, hai model CUDA0, PCM health200/ready. Replay vi↔en riêng và hai nguồn đồng thời đều đủ3final/3translation mỗi nguồn, không event error; status partial có phục hồi. Profile mới GPU median0.336s, WER3.01% trên6WAV, so cấu hình CPU cũ0.870s/35.34%. [Evidence](./validation/2026-11-03-phowhisper-runtime-fix.md). Giữ Q01/Q03 mở cho mic/WebRTC/giọng người dùng thật.
+
+QS-I23 / QS-AI01 / Q01/Q03, LocalAgreement2026-11-03: prototype cửa sổ trượt/LA-2, DTW cho PhoWhisper, AI30/30pass; replay sáu đoạn dài151,052s có26/26final/MT, không event error ở v4. WER24,37%/CER20,08% so segmented23,78%/17,90%; chưa chọn làm mặc định. [Kết quả, bản bị loại và gates](./validation/2026-11-03-localagreement-trial.md). Giữ acceptance hiện có, không đánh Done chất lượng hoặc WebRTC.
+
+QS-I23 / QS-AI01, chốt và cleanup2026-11-03: user xác nhận ổn, giữ model. Gỡ nhánh LocalAgreement, overlay và18test chỉ phục vụ nhánh này; giữ12test AI cho phân đoạn/ngôn ngữ cùng2test JS cho UI/bridge, đều pass. Cập nhật Word và docs, dọn runner/cache tạm; không xóa model/data/cache phục vụ. [Evidence hiện hành](./validation/2026-11-03-translation-finalization.md). Không đổi gate Q01/Q03 hoặc tự commit/deploy cloud.

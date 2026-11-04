@@ -1,0 +1,21 @@
+{
+  "run_id": "20261102T112141Z-e2c93419",
+  "status": "experiment_completed",
+  "purpose": "smoke",
+  "device": "cpu",
+  "checkpoint": "openai/whisper-base",
+  "resolved_revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+  "parameters": {
+    "trainable": 294912,
+    "total": 72888832
+  },
+  "steps": 1,
+  "input": "3 distinct artificial tone fixtures, no real speech",
+  "artifact_hashes_verified": 50,
+  "source_hashes_match_current": true,
+  "adapter_lora_B_updated": true,
+  "merged_checkpoint_reloaded": true,
+  "research_quality_claim": false,
+  "gpu_training_verified": false,
+  "runtime_deployment": false
+}

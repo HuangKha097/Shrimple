@@ -1,0 +1,13 @@
+{
+  "status": "blocked_missing_region_data",
+  "ready_for_auto_train": false,
+  "missing": [
+    "central"
+  ],
+  "selected_ids": [],
+  "unique_seconds_by_region": {
+    "north": 7644.0,
+    "central": 0,
+    "south": 8881.0
+  }
+}

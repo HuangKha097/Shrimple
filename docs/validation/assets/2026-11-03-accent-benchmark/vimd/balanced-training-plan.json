@@ -1,0 +1,6 @@
+{
+  "status": "validation_only_no_train_rows_acquired",
+  "ready_for_auto_train": false,
+  "selected_ids": [],
+  "note": "Validation source must never be recycled into training to fill a regional gap."
+}

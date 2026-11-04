@@ -1,0 +1,47 @@
+{
+  "north": {
+    "wer_percent": 45.874934314240676,
+    "cer_percent": 32.83108643933386,
+    "word_errors": 873,
+    "reference_words": 1903,
+    "char_errors": 2070,
+    "reference_chars": 6305,
+    "samples": 30,
+    "operations": {
+      "substitution": 660,
+      "deletion": 139,
+      "insertion": 74
+    },
+    "substitutions_differing_only_in_diacritics": 66
+  },
+  "central": {
+    "wer_percent": 64.97844827586206,
+    "cer_percent": 46.16634178037687,
+    "word_errors": 1206,
+    "reference_words": 1856,
+    "char_errors": 2842,
+    "reference_chars": 6156,
+    "samples": 30,
+    "operations": {
+      "substitution": 843,
+      "insertion": 243,
+      "deletion": 120
+    },
+    "substitutions_differing_only_in_diacritics": 120
+  },
+  "south": {
+    "wer_percent": 50.586113615870154,
+    "cer_percent": 36.73666758773142,
+    "word_errors": 1122,
+    "reference_words": 2218,
+    "char_errors": 2659,
+    "reference_chars": 7238,
+    "samples": 30,
+    "operations": {
+      "deletion": 235,
+      "substitution": 788,
+      "insertion": 99
+    },
+    "substitutions_differing_only_in_diacritics": 82
+  }
+}

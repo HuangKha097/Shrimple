@@ -1,0 +1,38 @@
+[
+  {
+    "Service": "ai",
+    "Image": "shrimple-ai",
+    "State": "running",
+    "Health": ""
+  },
+  {
+    "Service": "backend",
+    "Image": "shrimple-backend",
+    "State": "running",
+    "Health": ""
+  },
+  {
+    "Service": "frontend",
+    "Image": "shrimple-frontend",
+    "State": "running",
+    "Health": ""
+  },
+  {
+    "Service": "phowhisper",
+    "Image": "shrimple-whisper-cuda",
+    "State": "running",
+    "Health": "healthy"
+  },
+  {
+    "Service": "qwen",
+    "Image": "ghcr.io/ggml-org/llama.cpp@sha256:6257697a7f5d034b8fb499ddb07af3e250506352f94102054252a23f3b85e0af",
+    "State": "running",
+    "Health": "healthy"
+  },
+  {
+    "Service": "whisper",
+    "Image": "shrimple-whisper-cuda",
+    "State": "running",
+    "Health": "healthy"
+  }
+]

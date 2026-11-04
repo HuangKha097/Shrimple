@@ -1,17 +1,67 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import classNames from 'classnames/bind';
 import styles from '../../assets/css/CustomAudioPlayer.module.scss';
-import { Play, Pause, Volume2, VolumeX } from '../icons';
+import { Play, Pause, Volume2, VolumeX, Languages } from '../icons';
 
 const cx = classNames.bind(styles);
 
-const CustomAudioPlayer = ({ src }) => {
+const CustomAudioPlayer = ({
+    src,
+    isVoiceToVoice = false,
+    muteOriginalByDefault = false,
+    targetLangMeta = null,
+    translatedText = null,
+    translatedAudioUrl = null,
+}) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
+    const [muteOriginalForV2V, setMuteOriginalForV2V] = useState(
+        Boolean(isVoiceToVoice && muteOriginalByDefault)
+    );
 
     const audioRef = useRef(null);
+    const translatedAudioRef = useRef(null);
+
+    const stopSpeechSynthesis = useCallback(() => {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+    }, []);
+
+    const speakTranslatedFallback = useCallback(() => {
+        if (
+            typeof window === 'undefined' ||
+            !('speechSynthesis' in window) ||
+            !isVoiceToVoice ||
+            !muteOriginalForV2V
+        ) {
+            return;
+        }
+        const textToSpeak =
+            translatedText ||
+            (targetLangMeta?.code === 'en'
+                ? 'Voice-to-voice translation preview is active.'
+                : targetLangMeta?.code === 'zh'
+                  ? '语音转语音翻译预览已启用。'
+                  : 'Chế độ dịch giọng nói trực tiếp đang bật.');
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = targetLangMeta?.speechLang || 'en-US';
+        window.speechSynthesis.speak(utterance);
+    }, [isVoiceToVoice, muteOriginalForV2V, translatedText, targetLangMeta]);
+
+    useEffect(() => {
+        setMuteOriginalForV2V(Boolean(isVoiceToVoice && muteOriginalByDefault));
+    }, [isVoiceToVoice, muteOriginalByDefault]);
+
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+        audio.muted = Boolean(isMuted || (isVoiceToVoice && muteOriginalForV2V));
+    }, [isMuted, isVoiceToVoice, muteOriginalForV2V]);
 
     useEffect(() => {
         const audio = audioRef.current;
@@ -28,13 +78,17 @@ const CustomAudioPlayer = ({ src }) => {
         const onEnded = () => {
             setIsPlaying(false);
             setCurrentTime(0);
+            stopSpeechSynthesis();
+            if (translatedAudioRef.current) {
+                translatedAudioRef.current.pause();
+                translatedAudioRef.current.currentTime = 0;
+            }
         };
 
         audio.addEventListener('timeupdate', onTimeUpdate);
         audio.addEventListener('loadedmetadata', onLoadedMetadata);
         audio.addEventListener('ended', onEnded);
 
-        // Try load metadata immediately in case it's cached
         if (audio.readyState >= 1) {
             setDuration(audio.duration || 0);
         }
@@ -43,8 +97,9 @@ const CustomAudioPlayer = ({ src }) => {
             audio.removeEventListener('timeupdate', onTimeUpdate);
             audio.removeEventListener('loadedmetadata', onLoadedMetadata);
             audio.removeEventListener('ended', onEnded);
+            stopSpeechSynthesis();
         };
-    }, [src]);
+    }, [src, stopSpeechSynthesis]);
 
     const togglePlay = () => {
         const audio = audioRef.current;
@@ -52,13 +107,29 @@ const CustomAudioPlayer = ({ src }) => {
 
         if (isPlaying) {
             audio.pause();
+            if (translatedAudioRef.current) {
+                translatedAudioRef.current.pause();
+            }
+            stopSpeechSynthesis();
             setIsPlaying(false);
         } else {
-            audio.play().then(() => {
-                setIsPlaying(true);
-            }).catch(err => {
-                console.error("Audio playback failed:", err);
-            });
+            audio.muted = Boolean(isMuted || (isVoiceToVoice && muteOriginalForV2V));
+            audio
+                .play()
+                .then(() => {
+                    setIsPlaying(true);
+                    if (isVoiceToVoice && muteOriginalForV2V && !isMuted) {
+                        if (translatedAudioUrl && translatedAudioRef.current) {
+                            translatedAudioRef.current.currentTime = audio.currentTime || 0;
+                            translatedAudioRef.current.play().catch(() => {});
+                        } else {
+                            speakTranslatedFallback();
+                        }
+                    }
+                })
+                .catch((err) => {
+                    console.error("Audio playback failed:", err);
+                });
         }
     };
 
@@ -68,6 +139,9 @@ const CustomAudioPlayer = ({ src }) => {
 
         const newTime = parseFloat(e.target.value);
         audio.currentTime = newTime;
+        if (translatedAudioRef.current) {
+            translatedAudioRef.current.currentTime = newTime;
+        }
         setCurrentTime(newTime);
     };
 
@@ -75,37 +149,101 @@ const CustomAudioPlayer = ({ src }) => {
         const audio = audioRef.current;
         if (!audio) return;
 
-        audio.muted = !isMuted;
-        setIsMuted(!isMuted);
+        const nextMuted = !isMuted;
+        setIsMuted(nextMuted);
+        audio.muted = Boolean(nextMuted || (isVoiceToVoice && muteOriginalForV2V));
+        if (translatedAudioRef.current) {
+            translatedAudioRef.current.muted = nextMuted;
+        }
+        if (nextMuted) {
+            stopSpeechSynthesis();
+        }
+    };
+
+    const toggleOriginalTrack = () => {
+        const nextMuteOriginal = !muteOriginalForV2V;
+        setMuteOriginalForV2V(nextMuteOriginal);
+        if (audioRef.current) {
+            audioRef.current.muted = Boolean(isMuted || (isVoiceToVoice && nextMuteOriginal));
+        }
+        if (!nextMuteOriginal) {
+            stopSpeechSynthesis();
+            if (translatedAudioRef.current) {
+                translatedAudioRef.current.pause();
+            }
+        }
     };
 
     const formatTime = (time) => {
-        if (isNaN(time)) return '0:00';
+        if (isNaN(time) || !isFinite(time)) return '0:00';
         const mins = Math.floor(time / 60);
         const secs = Math.floor(time % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     };
 
     return (
-        <div className={cx('player-container')}>
+        <div className={cx('player-container', { 'v2v-player': isVoiceToVoice })}>
             <audio ref={audioRef} src={src} preload="metadata" />
-            
-            <button className={cx('play-btn')} onClick={togglePlay}>
-                {isPlaying ? <Pause size={18} fill="currentColor" /> : <Play size={18} fill="currentColor" style={{ marginLeft: '2px' }} />}
+            {translatedAudioUrl && (
+                <audio ref={translatedAudioRef} src={translatedAudioUrl} preload="metadata" />
+            )}
+
+            <button
+                type="button"
+                className={cx('play-btn')}
+                onClick={togglePlay}
+                title={
+                    isVoiceToVoice && muteOriginalForV2V
+                        ? `Phát giọng dịch (${targetLangMeta?.label || 'Voice-to-Voice'})`
+                        : "Phát tin nhắn thoại"
+                }
+            >
+                {isPlaying ? (
+                    <Pause size={18} fill="currentColor" />
+                ) : (
+                    <Play size={18} fill="currentColor" style={{ marginLeft: '2px' }} />
+                )}
             </button>
 
             <div className={cx('player-body')}>
-                <div className={cx('waveform-simulation')}>
-                    <span className={cx('bar', { active: isPlaying })} style={{ height: '30%', animationDelay: '0.1s' }}></span>
-                    <span className={cx('bar', { active: isPlaying })} style={{ height: '60%', animationDelay: '0.3s' }}></span>
-                    <span className={cx('bar', { active: isPlaying })} style={{ height: '40%', animationDelay: '0.2s' }}></span>
-                    <span className={cx('bar', { active: isPlaying })} style={{ height: '80%', animationDelay: '0.4s' }}></span>
-                    <span className={cx('bar', { active: isPlaying })} style={{ height: '50%', animationDelay: '0.1s' }}></span>
-                    <span className={cx('bar', { active: isPlaying })} style={{ height: '70%', animationDelay: '0.3s' }}></span>
-                    <span className={cx('bar', { active: isPlaying })} style={{ height: '30%', animationDelay: '0.2s' }}></span>
+                <div className={cx('player-top-row')}>
+                    <div className={cx('waveform-simulation')}>
+                        <span className={cx('bar', { active: isPlaying })} style={{ height: '30%', animationDelay: '0.1s' }}></span>
+                        <span className={cx('bar', { active: isPlaying })} style={{ height: '60%', animationDelay: '0.3s' }}></span>
+                        <span className={cx('bar', { active: isPlaying })} style={{ height: '40%', animationDelay: '0.2s' }}></span>
+                        <span className={cx('bar', { active: isPlaying })} style={{ height: '80%', animationDelay: '0.4s' }}></span>
+                        <span className={cx('bar', { active: isPlaying })} style={{ height: '50%', animationDelay: '0.1s' }}></span>
+                        <span className={cx('bar', { active: isPlaying })} style={{ height: '70%', animationDelay: '0.3s' }}></span>
+                        <span className={cx('bar', { active: isPlaying })} style={{ height: '30%', animationDelay: '0.2s' }}></span>
+                    </div>
+
+                    {isVoiceToVoice && (
+                        <button
+                            type="button"
+                            className={cx('v2v-track-pill', { 'muted-original': muteOriginalForV2V })}
+                            onClick={toggleOriginalTrack}
+                            title={
+                                muteOriginalForV2V
+                                    ? "Đang tắt tiếng gốc và phát giọng dịch. Nhấn để nghe âm gốc"
+                                    : "Đang mở tiếng gốc. Nhấn để chuyển lại phát giọng dịch"
+                            }
+                        >
+                            {muteOriginalForV2V ? (
+                                <>
+                                    <VolumeX size={11} />
+                                    <span>Mute gốc • V2V {targetLangMeta?.short || 'EN'}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Languages size={11} />
+                                    <span>Đang bật âm gốc</span>
+                                </>
+                            )}
+                        </button>
+                    )}
                 </div>
-                
-                <input 
+
+                <input
                     type="range"
                     className={cx('timeline')}
                     min={0}
@@ -124,7 +262,7 @@ const CustomAudioPlayer = ({ src }) => {
                 </div>
             </div>
 
-            <button className={cx('volume-btn')} onClick={toggleMute}>
+            <button type="button" className={cx('volume-btn')} onClick={toggleMute} title={isMuted ? "Bật tiếng" : "Tắt tiếng"}>
                 {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
         </div>

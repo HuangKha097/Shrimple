@@ -8,10 +8,15 @@
   padding: 0.8rem 1.4rem;
   border-radius: 3rem;
   min-width: 28rem;
-  max-width: 32rem;
+  max-width: 34rem;
   user-select: none;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
+
+  &.v2v-player {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(24, 24, 27, 0.85);
+  }
 
   &:hover {
     background: rgba(255, 255, 255, 0.06);
@@ -50,6 +55,40 @@
     flex-grow: 1;
     gap: 0.4rem;
     min-width: 0;
+  }
+
+  .player-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+  }
+
+  .v2v-track-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #a1a1aa;
+    font-size: 1.02rem;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+
+    &.muted-original {
+      border-color: rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.09);
+      color: #fafafa;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fafafa;
+    }
   }
 
   .waveform-simulation {

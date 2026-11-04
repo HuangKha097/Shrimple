@@ -1,0 +1,444 @@
+{
+  "run_id": "20261102T125916Z-5464619c",
+  "scope": "train_validation_only; no test predictions opened",
+  "model_revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+  "prefix_matches_official_tokenizer": true,
+  "source_sha256": "e96606e64fdfc2d56d1698eedd7eed647d313d3c23026d6c483864e7e5f76bf7",
+  "splits": {
+    "train": {
+      "baseline": {
+        "wer_percent": 28.027385537013267,
+        "cer_percent": 16.544637122671805,
+        "word_errors": 655,
+        "reference_words": 2337,
+        "char_errors": 1288,
+        "reference_chars": 7785,
+        "samples": 160,
+        "operations": {
+          "substitution": 602,
+          "deletion": 40,
+          "insertion": 13
+        },
+        "substitutions_differing_only_in_diacritics": 164
+      },
+      "tuned": {
+        "wer_percent": 27.428326914848096,
+        "cer_percent": 15.542710340398202,
+        "word_errors": 641,
+        "reference_words": 2337,
+        "char_errors": 1210,
+        "reference_chars": 7785,
+        "samples": 160,
+        "operations": {
+          "substitution": 603,
+          "deletion": 31,
+          "insertion": 7
+        },
+        "substitutions_differing_only_in_diacritics": 173
+      },
+      "by_speaker": {
+        "vivos:VIVOSSPK10": {
+          "baseline": {
+            "wer_percent": 35.031847133757964,
+            "cer_percent": 19.4,
+            "word_errors": 55,
+            "reference_words": 157,
+            "char_errors": 97,
+            "reference_chars": 500,
+            "samples": 20,
+            "operations": {
+              "substitution": 54,
+              "deletion": 1
+            },
+            "substitutions_differing_only_in_diacritics": 17
+          },
+          "tuned": {
+            "wer_percent": 36.30573248407644,
+            "cer_percent": 18.4,
+            "word_errors": 57,
+            "reference_words": 157,
+            "char_errors": 92,
+            "reference_chars": 500,
+            "samples": 20,
+            "operations": {
+              "insertion": 1,
+              "substitution": 56
+            },
+            "substitutions_differing_only_in_diacritics": 21
+          }
+        },
+        "vivos:VIVOSSPK11": {
+          "baseline": {
+            "wer_percent": 45.348837209302324,
+            "cer_percent": 25.12998266897747,
+            "word_errors": 78,
+            "reference_words": 172,
+            "char_errors": 145,
+            "reference_chars": 577,
+            "samples": 20,
+            "operations": {
+              "substitution": 76,
+              "deletion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 14
+          },
+          "tuned": {
+            "wer_percent": 41.86046511627907,
+            "cer_percent": 22.87694974003466,
+            "word_errors": 72,
+            "reference_words": 172,
+            "char_errors": 132,
+            "reference_chars": 577,
+            "samples": 20,
+            "operations": {
+              "substitution": 70,
+              "deletion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 14
+          }
+        },
+        "vivos:VIVOSSPK19": {
+          "baseline": {
+            "wer_percent": 45.39877300613497,
+            "cer_percent": 29.33579335793358,
+            "word_errors": 74,
+            "reference_words": 163,
+            "char_errors": 159,
+            "reference_chars": 542,
+            "samples": 20,
+            "operations": {
+              "substitution": 58,
+              "deletion": 15,
+              "insertion": 1
+            },
+            "substitutions_differing_only_in_diacritics": 13
+          },
+          "tuned": {
+            "wer_percent": 47.239263803680984,
+            "cer_percent": 30.44280442804428,
+            "word_errors": 77,
+            "reference_words": 163,
+            "char_errors": 165,
+            "reference_chars": 542,
+            "samples": 20,
+            "operations": {
+              "substitution": 65,
+              "deletion": 10,
+              "insertion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 11
+          }
+        },
+        "vivos:VIVOSSPK22": {
+          "baseline": {
+            "wer_percent": 47.682119205298015,
+            "cer_percent": 34.008097165991906,
+            "word_errors": 72,
+            "reference_words": 151,
+            "char_errors": 168,
+            "reference_chars": 494,
+            "samples": 20,
+            "operations": {
+              "substitution": 56,
+              "insertion": 10,
+              "deletion": 6
+            },
+            "substitutions_differing_only_in_diacritics": 11
+          },
+          "tuned": {
+            "wer_percent": 43.70860927152318,
+            "cer_percent": 29.554655870445345,
+            "word_errors": 66,
+            "reference_words": 151,
+            "char_errors": 146,
+            "reference_chars": 494,
+            "samples": 20,
+            "operations": {
+              "substitution": 61,
+              "deletion": 4,
+              "insertion": 1
+            },
+            "substitutions_differing_only_in_diacritics": 11
+          }
+        },
+        "vivos:VIVOSSPK24": {
+          "baseline": {
+            "wer_percent": 18.248175182481752,
+            "cer_percent": 10.093056549749463,
+            "word_errors": 75,
+            "reference_words": 411,
+            "char_errors": 141,
+            "reference_chars": 1397,
+            "samples": 20,
+            "operations": {
+              "substitution": 73,
+              "deletion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 26
+          },
+          "tuned": {
+            "wer_percent": 18.491484184914842,
+            "cer_percent": 9.87831066571224,
+            "word_errors": 76,
+            "reference_words": 411,
+            "char_errors": 138,
+            "reference_chars": 1397,
+            "samples": 20,
+            "operations": {
+              "substitution": 74,
+              "deletion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 27
+          }
+        },
+        "vivos:VIVOSSPK29": {
+          "baseline": {
+            "wer_percent": 24.94432071269488,
+            "cer_percent": 12.75033377837116,
+            "word_errors": 112,
+            "reference_words": 449,
+            "char_errors": 191,
+            "reference_chars": 1498,
+            "samples": 20,
+            "operations": {
+              "substitution": 111,
+              "deletion": 1
+            },
+            "substitutions_differing_only_in_diacritics": 35
+          },
+          "tuned": {
+            "wer_percent": 23.385300668151448,
+            "cer_percent": 11.548731642189587,
+            "word_errors": 105,
+            "reference_words": 449,
+            "char_errors": 173,
+            "reference_chars": 1498,
+            "samples": 20,
+            "operations": {
+              "substitution": 104,
+              "deletion": 1
+            },
+            "substitutions_differing_only_in_diacritics": 37
+          }
+        },
+        "vivos:VIVOSSPK30": {
+          "baseline": {
+            "wer_percent": 15.330188679245284,
+            "cer_percent": 10.522548317823908,
+            "word_errors": 65,
+            "reference_words": 424,
+            "char_errors": 147,
+            "reference_chars": 1397,
+            "samples": 20,
+            "operations": {
+              "substitution": 55,
+              "deletion": 10
+            },
+            "substitutions_differing_only_in_diacritics": 19
+          },
+          "tuned": {
+            "wer_percent": 16.037735849056602,
+            "cer_percent": 10.307802433786685,
+            "word_errors": 68,
+            "reference_words": 424,
+            "char_errors": 144,
+            "reference_chars": 1397,
+            "samples": 20,
+            "operations": {
+              "substitution": 58,
+              "deletion": 10
+            },
+            "substitutions_differing_only_in_diacritics": 19
+          }
+        },
+        "vivos:VIVOSSPK34": {
+          "baseline": {
+            "wer_percent": 30.24390243902439,
+            "cer_percent": 17.391304347826086,
+            "word_errors": 124,
+            "reference_words": 410,
+            "char_errors": 240,
+            "reference_chars": 1380,
+            "samples": 20,
+            "operations": {
+              "substitution": 119,
+              "insertion": 2,
+              "deletion": 3
+            },
+            "substitutions_differing_only_in_diacritics": 29
+          },
+          "tuned": {
+            "wer_percent": 29.26829268292683,
+            "cer_percent": 15.942028985507246,
+            "word_errors": 120,
+            "reference_words": 410,
+            "char_errors": 220,
+            "reference_chars": 1380,
+            "samples": 20,
+            "operations": {
+              "substitution": 115,
+              "insertion": 3,
+              "deletion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 33
+          }
+        }
+      },
+      "utterance_changes": {
+        "same": 118,
+        "worse": 19,
+        "better": 23
+      },
+      "quality": {
+        "uppercase_references": 160,
+        "zero_rms": 0,
+        "rms_below_0_001": 0,
+        "files_with_clipped_samples": 2,
+        "max_clipped_fraction": 9.09090909090909e-05,
+        "max_label_tokens": 124,
+        "original_text_tokens": 8322,
+        "lowercase_text_tokens": 3857
+      }
+    },
+    "validation": {
+      "baseline": {
+        "wer_percent": 27.918781725888326,
+        "cer_percent": 16.10558530986993,
+        "word_errors": 220,
+        "reference_words": 788,
+        "char_errors": 421,
+        "reference_chars": 2614,
+        "samples": 60,
+        "operations": {
+          "substitution": 206,
+          "deletion": 12,
+          "insertion": 2
+        },
+        "substitutions_differing_only_in_diacritics": 42
+      },
+      "tuned": {
+        "wer_percent": 30.20304568527919,
+        "cer_percent": 16.832440703902066,
+        "word_errors": 238,
+        "reference_words": 788,
+        "char_errors": 440,
+        "reference_chars": 2614,
+        "samples": 60,
+        "operations": {
+          "substitution": 227,
+          "deletion": 9,
+          "insertion": 2
+        },
+        "substitutions_differing_only_in_diacritics": 55
+      },
+      "by_speaker": {
+        "vivos:VIVOSSPK04": {
+          "baseline": {
+            "wer_percent": 21.390374331550802,
+            "cer_percent": 11.285266457680251,
+            "word_errors": 40,
+            "reference_words": 187,
+            "char_errors": 72,
+            "reference_chars": 638,
+            "samples": 20,
+            "operations": {
+              "substitution": 40
+            },
+            "substitutions_differing_only_in_diacritics": 12
+          },
+          "tuned": {
+            "wer_percent": 22.459893048128343,
+            "cer_percent": 11.912225705329154,
+            "word_errors": 42,
+            "reference_words": 187,
+            "char_errors": 76,
+            "reference_chars": 638,
+            "samples": 20,
+            "operations": {
+              "substitution": 42
+            },
+            "substitutions_differing_only_in_diacritics": 12
+          }
+        },
+        "vivos:VIVOSSPK13": {
+          "baseline": {
+            "wer_percent": 29.545454545454547,
+            "cer_percent": 17.53472222222222,
+            "word_errors": 52,
+            "reference_words": 176,
+            "char_errors": 101,
+            "reference_chars": 576,
+            "samples": 20,
+            "operations": {
+              "substitution": 44,
+              "deletion": 8
+            },
+            "substitutions_differing_only_in_diacritics": 11
+          },
+          "tuned": {
+            "wer_percent": 29.545454545454547,
+            "cer_percent": 16.666666666666668,
+            "word_errors": 52,
+            "reference_words": 176,
+            "char_errors": 96,
+            "reference_chars": 576,
+            "samples": 20,
+            "operations": {
+              "substitution": 49,
+              "deletion": 3
+            },
+            "substitutions_differing_only_in_diacritics": 17
+          }
+        },
+        "vivos:VIVOSSPK38": {
+          "baseline": {
+            "wer_percent": 30.11764705882353,
+            "cer_percent": 17.714285714285715,
+            "word_errors": 128,
+            "reference_words": 425,
+            "char_errors": 248,
+            "reference_chars": 1400,
+            "samples": 20,
+            "operations": {
+              "substitution": 122,
+              "deletion": 4,
+              "insertion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 19
+          },
+          "tuned": {
+            "wer_percent": 33.88235294117647,
+            "cer_percent": 19.142857142857142,
+            "word_errors": 144,
+            "reference_words": 425,
+            "char_errors": 268,
+            "reference_chars": 1400,
+            "samples": 20,
+            "operations": {
+              "substitution": 136,
+              "deletion": 6,
+              "insertion": 2
+            },
+            "substitutions_differing_only_in_diacritics": 26
+          }
+        }
+      },
+      "utterance_changes": {
+        "better": 3,
+        "same": 45,
+        "worse": 12
+      },
+      "quality": {
+        "uppercase_references": 60,
+        "zero_rms": 0,
+        "rms_below_0_001": 0,
+        "files_with_clipped_samples": 0,
+        "max_clipped_fraction": 0.0,
+        "max_label_tokens": 104,
+        "original_text_tokens": 2787,
+        "lowercase_text_tokens": 1284
+      }
+    }
+  },
+  "metric_note": "Diacritic-only means Unicode mark difference, not a verified phonetic cause; numbers are not rewritten; metrics unchanged"
+}

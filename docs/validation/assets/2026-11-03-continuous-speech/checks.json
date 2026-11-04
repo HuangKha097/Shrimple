@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "tests": 7,
+  "elapsed_seconds": 0.511,
+  "source_execution": "separate Docker AI python process, modules compiled in RAM from workspace; running service unchanged",
+  "asr_mt": "mocked",
+  "silero": "real pinned ONNX CPU inference",
+  "continuous_audio_seconds": 120.064,
+  "sample_conservation": "all final PCM + retained tail byte-identical to synthetic continuous input",
+  "sha256": {
+    "ai-service/pcm_vad.py": "47ee51c0e33169a53c34e09ec97c30314771472ca64c8c1361826ffdbd6b8c9a",
+    "ai-service/pcm_stream.py": "09935b304aa455221082f8ea750c5f7545f5c33ef500a8ff10ae682bca0476c3",
+    "ai-service/tests/test_pcm_segmentation.py": "12a6e570fc895aa78d5f199fb19dda420ff53a5cd52910facfa9c65f83ea7c54"
+  },
+  "real_call_quality_verified": false,
+  "service_updated": false,
+  "git_diff_check": "passed"
+}

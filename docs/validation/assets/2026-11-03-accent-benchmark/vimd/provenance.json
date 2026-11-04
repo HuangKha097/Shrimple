@@ -1,0 +1,20 @@
+{
+  "private_run": "accent-vimd-20261103-baseline-v1",
+  "manifest_sha256": "54fa6a3e75da1058a7d7a348cc7c934011e11e2d4444626c4a81b273735928b5",
+  "predictions_sha256": "f7dfda3385258a9758d6280e568480c52739df4e977a3c27dab6b32bc2314b38",
+  "evaluation_used_script_sha256": "3c4a9ecfd06c5e428a51dc6456752380f96126c83200377ab2c438e541703c24",
+  "preparation_used_script_sha256": "5d4c8d5dfd5fb3643d87649bebaa25834c094fa1f16419f25f1b6ba5c4b33d01",
+  "report_time_source_sha256": {
+    "accent_benchmark.py": "edb7facbb6b494a4927a4ab0cabf2baaecfcb00f08d04d8d93110ef3a2cfc315",
+    "benchmark.protocol.json": "5477c968a297a4de3c24b8aee5bbc4af95980eaf955c69198c79def45b9663d6",
+    "evaluate_accent.py": "3c4a9ecfd06c5e428a51dc6456752380f96126c83200377ab2c438e541703c24",
+    "prepare_vietmed.py": "07678d0f17e3a1c45173c527f2e4caf207683a3e033d34ce9cded09bda7dc526",
+    "prepare_vimd.py": "5d4c8d5dfd5fb3643d87649bebaa25834c094fa1f16419f25f1b6ba5c4b33d01",
+    "report_accent.py": "97fbaf2c75e87a04d9d4dcdcf5d66e9e0dde8cfe3234199b36600b28a42075bb",
+    "evidence.py": "7759ac672ad932b8866637adefaee69499bbe3df9f61825bd8be639944a78ad3",
+    "analyze_asr.py": "e96606e64fdfc2d56d1698eedd7eed647d313d3c23026d6c483864e7e5f76bf7"
+  },
+  "raw_audio_transcripts_exported": false,
+  "test_evaluated": false,
+  "trained_model_created": false
+}

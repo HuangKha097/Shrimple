@@ -194,7 +194,7 @@ Working tree đã hợp nhất upstream; baseline kiểm tra trước pull ở K
 | ID | Yêu cầu đã triển khai | Bằng chứng / giới hạn |
 | --- | --- | --- |
 | FR-22 | Member nhóm tạo/vote poll, một hoặc nhiều lựa chọn; creator/admin/leader đóng poll | `server/src/controllers/messageController.js`, `client/src/components/chat/CreatePollModal.jsx`, Message.jsx; caps server và race vote/close cần test thêm |
-| FR-23 | Note direct/group chọn cặp cố định A ⇒ B (vi/en/zh, không Auto): đối phương nhận dạng A và dịch sang B, chính viewer nhận dạng B chỉ hiện lời gốc; PCM liên tục, VAD giữ đầu câu; lời gốc tạm và bản dịch theo revision | `client/src/components/chat/TranslationNotes.jsx`, `server/src/socket/translationPcm.js`, `ai-service/pcm_stream.py`, `ai-service/pcm_vad.py`; [khóa ngôn ngữ](./validation/2026-11-02-translation-language-lock.md), chất lượng/latency thiết bị thật chưa nghiệm thu |
+| FR-23 | Note direct/group chọn cặp cố định A ⇒ B (chỉ en→vi hoặc vi→en, không Auto): đối phương nhận dạng A và dịch sang B, chính viewer nhận dạng B chỉ hiện lời gốc; PCM liên tục, VAD giữ đầu câu; lời gốc tạm và bản dịch theo revision | `client/src/components/chat/TranslationNotes.jsx`, `server/src/socket/translationPcm.js`, `ai-service/pcm_stream.py`, `ai-service/pcm_vad.py`; [khóa ngôn ngữ](./validation/2026-11-02-translation-language-lock.md), chất lượng/latency thiết bị thật chưa nghiệm thu |
 | BR-17 | Admin lưu role, creator DTO leader; role/delete/rotate chỉ creator; leave chuyển creator hoặc giải tán nhóm trống | Không cấp quyền từ role client; xem ma trận group-roles |
 | BR-18 | Poll embedded Message; >=2 options hợp lệ; single-choice chuyển/toggle, multiple toggle; closed không vote | Backend membership trước create/vote/close; UI caps không phải cap server |
 | BR-19 | Dịch direct chỉ sau người nhận answer; group viewer và speaker phải ở phòng gọi; end/disconnect thu hồi và kết quả phải thuộc đúng phiên ban đầu | State RAM; sessionId direct là userId đối tác, group là conversationId; không lọt note giữa hai cuộc gọi cùng ID |
@@ -207,4 +207,41 @@ FR-23 / AC-21, delta2026-10-18: output nhận dạng có lặp bất thường p
 
 FR-23 / AC-21, delta2026-11-02: khóa A ⇒ B ngay từ UI tới bridge và AI PCM; reject `auto` trước inference. Đổi nguồn/đích hoặc đảo chiều thu hồi stream cũ, giữ lịch sử đã hoàn tất; mọi transcript phải khớp nguồn đã khóa. Group áp dụng cùng A cho các đối phương trong bảng Note của viewer. Quyền JWT/member/session và ranh giới self/remote giữ nguyên. HTTP upload tương thích cũ vẫn có thể nhận Auto; không dùng trong bảng Note PCM mới.
 
-Audio đối phương được gửi tới các service cấu hình; cần thông báo rõ việc xử lý âm thanh và chốt consent/retention/logging trước release. Notes client giữ tối đa50 entries trong RAM, xóa khi đổi chiều/đổi hoặc kết thúc cuộc gọi/đăng xuất; audio/note không lưu DB. UI vi/zh mặc định Anh→Việt, UI en mặc định Việt→Anh; chiều này mô tả ngôn ngữ đối phương→ngôn ngữ viewer. Transcript tạm có thể sửa tới câu cuối; dịch cập nhật đúng câu/revision, lỗi dịch giữ original. Cảnh báo status không kết thúc note. Quá tải có thể bỏ partial cũ hoặc trả lỗi câu cuối/dịch; stream chậm/mất kết nối khởi động mới, không giữ audio để phát lại. Health PCM chỉ cần Whisper+Silero. VAD chạy CPU; Whisper dùng cấu hình CPU mặc định hoặc NVIDIA opt-in, chưa tự chọn/fallback GPU lúc chạy. Độ dài gói128ms không bảo đảm latency1–2s; cần đo riêng ASR/dịch trên từng phần cứng. [Số đo clip6s](./validation/2026-10-17-translation-speed.md) và [progressive HTTP](./validation/2026-10-17-translation-progressive.md) là evidence lịch sử, không thay nghiệm thu PCM/WebRTC.
+FR-23 / QS-AI01, nghiên cứu được yêu cầu 2026-11-02: chuẩn bị fine-tune Whisper base
+bằng LoRA và lưu bằng chứng phục vụ báo cáo. Audio/lời chép phải có nguồn/quyền sử dụng,
+nhãn đã rà và phân tách dữ liệu tránh leakage; so sánh model gốc/tinh chỉnh trên cùng
+tập kiểm tra. Công cụ offline không đổi contract hoặc model đang phục vụ; chưa cam kết
+cải thiện chất lượng hay latency. [Protocol, artifacts và gate](./whisper-finetuning.md).
+
+QS-AI01 cập nhật tiếp cùng ngày: nhãn đã chốt, pilotCUDA trên VIVOS tách người nói chạy
+xong nhưng chưa cải thiện validation/test; không đổi baseline phục vụ hoặc acceptance
+FR-23. [Kết quả thực nghiệm](./validation/2026-11-02-whisper-vivos-pilot.md).
+
+QS-AI01,2026-11-03: [vòng development4config](./validation/2026-11-03-whisper-development.md)
+hoàn thành, chưa vượt base theo WER validation. Không thay model phục vụ hoặc acceptance
+FR-23/AC-21; test cuối, serving GGML/Q5 và chất lượng cuộc gọi vẫn là gate riêng.
+
+QS-AI01 bổ sung [Accent Robustness Benchmark](./vietnamese-accent-benchmark.md): nghiên cứu
+nguồn, lưu nhãn vùng/speaker/provenance, đo development theo nhóm; nhóm thiếu hiện
+chưa đo, các WER minh họa chưa thành AC. VietMed y khoa và ViMD tin tức là diagnostic,
+không thay nghiệm thu hội thoại hoặc chứng minh chất lượng dịch. [Evidence](./validation/2026-11-03-accent-benchmark.md).
+
+Theo yêu cầu train tiếp2026-11-03, [vòng ViMD train + VIVOS replay](./validation/2026-11-03-whisper-accent-training.md)
+được thực hiện riêng tư trên base gốc, giữ development validation độc lập với train;
+kết quả nghiên cứu không tự thay model/AC-21, không suy chất lượng dịch từ WER ASR.
+Lượt600steps hoàn thành: WER ViMD53,56→46,86%, VIVOS27,92→28,68%; ghi nhận cải thiện
+trên mẫu ViMD và suy giảm nhẹ VIVOS, chưa nghiệm thu nhiều miền/ngôn ngữ/cuộc gọi.
+
+Audio đối phương được gửi tới các service cấu hình; cần thông báo rõ việc xử lý âm thanh và chốt consent/retention/logging trước release. Notes client giữ tối đa50 entries trong RAM, xóa khi đổi chiều/đổi hoặc kết thúc cuộc gọi/đăng xuất; audio/note không lưu DB. UI vi/zh mặc định Anh→Việt, UI en mặc định Việt→Anh; chiều này mô tả ngôn ngữ đối phương→ngôn ngữ viewer. Transcript tạm có thể sửa tới câu cuối; dịch cập nhật đúng câu/revision, lỗi dịch giữ original. Cảnh báo status không kết thúc note. Quá tải có thể bỏ partial cũ hoặc trả lỗi câu cuối/dịch; stream chậm/mất kết nối khởi động mới, không giữ audio để phát lại. Health PCM yêu cầu cả PhoWhisper/Whisper và Silero; làm nóng CT2 khi model có sẵn. VAD chạy CPU; Whisper dùng cấu hình CPU mặc định hoặc NVIDIA opt-in, chưa tự chọn/fallback GPU lúc chạy. Độ dài gói128ms không bảo đảm latency1–2s; cần đo riêng ASR/dịch trên từng phần cứng. [Số đo clip6s](./validation/2026-10-17-translation-speed.md) và [progressive HTTP](./validation/2026-10-17-translation-progressive.md) là evidence lịch sử, không thay nghiệm thu PCM/WebRTC.
+
+FR-23,2026-11-03: user báo nói dài không nghỉ làm dịch sai. [Sửa segmentation](./validation/2026-11-03-continuous-speech.md) bổ sung chốt cụm ở pause ngắn/valley; không thay AC chất lượng hoặc cam kết dịch đúng cả câu. Còn kiểm audio/ASR/MT/WebRTC thật.
+
+FR-23 / AC-21 / QS-AI01,2026-11-03: người dùng chốt PhoWhisper-base cho nguồn `vi`, Whisper-base cho nguồn `en`; MarianMT CT2 giữ hai chiều dịch văn bản. UI, HTTP, Socket.IO và AI PCM chỉ nhận en↔vi; HTTP cũng bỏ Auto và cặp cùng ngôn ngữ. Self PCM B/B với `translate:false` vẫn được phép. [Kết quả thử và giới hạn](./validation/2026-11-03-phowhisper.md). Source/config đã đổi; chưa áp dụng Docker/WebRTC. Delta này thay phạm vi ba ngôn ngữ và HTTP Auto trong các snapshot trước.
+
+FR-23 / AC-21,2026-11-03 runtime: user báo PhoWhisper chậm/nhận sai. Đã xác minh container CPU và profile decoder rút ngắn không phù hợp; sửa full-context text cho vi, giữ en và lỗi recoverable. UI phân biệt chờ partial với lỗi mất đoạn. [Runtime diagnostic và gates](./validation/2026-11-03-phowhisper-runtime-fix.md).
+
+FR-23 runtime follow-up cùng ngày: đã áp dụng local và kiểm ASR/AI PCM hai chiều, cả hai recognizer CUDA0. [Kết quả và giới hạn](./validation/2026-11-03-phowhisper-runtime-fix.md); chưa nghiệm thu mic/WebRTC thực tế.
+
+FR-23 / AC-21, thử LocalAgreement2026-11-03: đã replay sáu đoạn Việt dài bằng model thật; WER24,37% so segmented23,78%, CER cũng cao hơn. [Evidence](./validation/2026-11-03-localagreement-trial.md). Giữ segmented mặc định và scope en↔vi; thử nghiệm không thay AC hoặc nâng trạng thái acceptance.
+
+FR-23 chốt cùng ngày: người dùng xác nhận ổn và giữ model hiện tại. [Dọn source/test dư và cập nhật tài liệu](./validation/2026-11-03-translation-finalization.md) bỏ nhánh thử chưa được chọn, giữ PhoWhisper vi + Whisper-base en, phạm vi en↔vi và contract hiện hành. Không mở thêm model hoặc thay AC.

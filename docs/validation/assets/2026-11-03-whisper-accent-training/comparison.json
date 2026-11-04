@@ -1,0 +1,54 @@
+{
+  "baseline_test": null,
+  "tuned_test": null,
+  "baseline_validation": {
+    "wer_percent": 50.56910569105691,
+    "cer_percent": 35.81768475776453,
+    "word_errors": 3421,
+    "reference_words": 6765,
+    "char_errors": 7992,
+    "reference_chars": 22313,
+    "samples": 150,
+    "inference_seconds": 130.5038664000458,
+    "latency_note": "Sequential model.generate, includes GPU work; excludes feature extraction/network/WebRTC; no warmup exclusion",
+    "by_language": {
+      "vi": {
+        "wer_percent": 50.56910569105691,
+        "cer_percent": 35.81768475776453,
+        "word_errors": 3421,
+        "reference_words": 6765,
+        "char_errors": 7992,
+        "reference_chars": 22313
+      }
+    }
+  },
+  "tuned_validation": {
+    "wer_percent": 44.7450110864745,
+    "cer_percent": 29.762918478017298,
+    "word_errors": 3027,
+    "reference_words": 6765,
+    "char_errors": 6641,
+    "reference_chars": 22313,
+    "samples": 150,
+    "inference_seconds": 105.41725199999928,
+    "latency_note": "Sequential model.generate, includes GPU work; excludes feature extraction/network/WebRTC; no warmup exclusion",
+    "by_language": {
+      "vi": {
+        "wer_percent": 44.7450110864745,
+        "cer_percent": 29.762918478017298,
+        "word_errors": 3027,
+        "reference_words": 6765,
+        "char_errors": 6641,
+        "reference_chars": 22313
+      }
+    }
+  },
+  "evaluation_scope": "development",
+  "test_wer_change_percentage_points": null,
+  "validation_wer_change_percentage_points": -5.824094604582413,
+  "selected_checkpoint": "ai-service\\training\\runs\\accent-round-20261103-v1\\trial\\20261103T064418Z-4fde4f1f\\checkpoints\\checkpoint-600",
+  "checkpoint_selection_metric": "validation_loss",
+  "peak_allocated_vram_bytes": 461909504,
+  "acceptance": "Experiment completed; no automatic quality/deployment acceptance",
+  "quantization": "HF fp32 comparison only; repeat comparison after GGML q5_1 export"
+}

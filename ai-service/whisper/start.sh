@@ -3,17 +3,31 @@ set -eu
 
 model_name=${WHISPER_MODEL:-base-q5_1}
 case "$model_name" in
+    phowhisper-base)
+        model=/opt/phowhisper/ggml-model.bin
+        checksum=/opt/phowhisper/ggml-model.bin.sha256
+        if [ ! -s "$model" ] || [ ! -s "$checksum" ]; then
+            echo "Prepare PhoWhisper with ai-service/training/prepare_phowhisper.py first" >&2
+            exit 1
+        fi
+        expected_sha256=$(cut -d ' ' -f 1 "$checksum") ;;
     base-q5_1)
         expected_sha256=422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898 ;;
     medium-q5_0)
         expected_sha256=19fea4b380c3a618ec4723c3eef2eb785ffba0d0538cf43f8f235e7b3b34220f ;;
     *)
-        echo "Unsupported WHISPER_MODEL; use base-q5_1 or medium-q5_0" >&2
+        echo "Unsupported WHISPER_MODEL; use phowhisper-base, base-q5_1 or medium-q5_0" >&2
         exit 1 ;;
 esac
-model="/models/ggml-${model_name}.bin"
+if [ "$model_name" != "phowhisper-base" ]; then
+    model="/models/ggml-${model_name}.bin"
+fi
 
 if [ ! -s "$model" ] || ! echo "$expected_sha256  $model" | sha256sum -c - >/dev/null 2>&1; then
+    if [ "$model_name" = "phowhisper-base" ]; then
+        echo "PhoWhisper checksum mismatch; refusing to start" >&2
+        exit 1
+    fi
     tmp="${model}.download"
     trap 'rm -f "$tmp"' EXIT
     echo "Downloading Whisper model: $model_name"

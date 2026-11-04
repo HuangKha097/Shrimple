@@ -1,0 +1,194 @@
+{
+  "trial_run": "20261103T064418Z-4fde4f1f",
+  "trial_status": "experiment_completed",
+  "rows": [
+    {
+      "group": "combined_validation",
+      "base_wer_percent": 50.56910569105691,
+      "tuned_wer_percent": 44.7450110864745,
+      "wer_change_percentage_points": -5.824094604582413,
+      "base_cer_percent": 35.81768475776453,
+      "tuned_cer_percent": 29.762918478017298,
+      "reference_words": 6765,
+      "base_word_errors": 3421,
+      "tuned_word_errors": 3027
+    },
+    {
+      "group": "vivos_validation",
+      "base_wer_percent": 27.918781725888326,
+      "tuned_wer_percent": 28.68020304568528,
+      "wer_change_percentage_points": 0.7614213197969519,
+      "base_cer_percent": 16.10558530986993,
+      "tuned_cer_percent": 15.914307574598316,
+      "reference_words": 788,
+      "base_word_errors": 220,
+      "tuned_word_errors": 226
+    },
+    {
+      "group": "vimd_validation",
+      "base_wer_percent": 53.55529529864481,
+      "tuned_wer_percent": 46.862974736489875,
+      "wer_change_percentage_points": -6.692320562154933,
+      "base_cer_percent": 38.43342301639677,
+      "tuned_cer_percent": 31.6005888623788,
+      "reference_words": 5977,
+      "base_word_errors": 3201,
+      "tuned_word_errors": 2801
+    },
+    {
+      "group": "north",
+      "base_wer_percent": 45.874934314240676,
+      "tuned_wer_percent": 39.4640042038886,
+      "wer_change_percentage_points": -6.410930110352076,
+      "base_cer_percent": 32.83108643933386,
+      "tuned_cer_percent": 28.342585249801743,
+      "reference_words": 1903,
+      "base_word_errors": 873,
+      "tuned_word_errors": 751
+    },
+    {
+      "group": "central",
+      "base_wer_percent": 64.97844827586206,
+      "tuned_wer_percent": 52.855603448275865,
+      "wer_change_percentage_points": -12.1228448275862,
+      "base_cer_percent": 46.16634178037687,
+      "tuned_cer_percent": 34.12930474333983,
+      "reference_words": 1856,
+      "base_word_errors": 1206,
+      "tuned_word_errors": 981
+    },
+    {
+      "group": "south",
+      "base_wer_percent": 50.586113615870154,
+      "tuned_wer_percent": 48.196573489630296,
+      "wer_change_percentage_points": -2.389540126239858,
+      "base_cer_percent": 36.73666758773142,
+      "tuned_cer_percent": 32.28792484111633,
+      "reference_words": 2218,
+      "base_word_errors": 1122,
+      "tuned_word_errors": 1069
+    }
+  ],
+  "baseline_matches_previous_diagnostic_wer": true,
+  "selected_checkpoint": "ai-service\\training\\runs\\accent-round-20261103-v1\\trial\\20261103T064418Z-4fde4f1f\\checkpoints\\checkpoint-600",
+  "checkpoint_selection_metric": "validation_loss",
+  "config": {
+    "evaluation_scope": "development",
+    "label_case": "lower",
+    "warmup_steps": 60,
+    "load_best_model_at_end": true,
+    "model_id": "openai/whisper-base",
+    "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+    "seed": 42,
+    "max_steps": 600,
+    "learning_rate": 1e-05,
+    "gradient_accumulation_steps": 4,
+    "eval_steps": 100,
+    "lora_r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "precision": "fp32",
+    "max_new_tokens": 225
+  },
+  "dataset": {
+    "manifest_sha256": "5a7a4af8e11a61c10ccfc3148d8c063cf2acea0a592ca5d10eae707cfa259d56",
+    "counts": {
+      "train": 576,
+      "validation": 150
+    },
+    "evaluation_scope": "development",
+    "languages": {
+      "vi": 726
+    },
+    "seconds_by_split": {
+      "train": 6388.1965,
+      "validation": 1957.1149375
+    },
+    "speakers_by_split": {
+      "train": 284,
+      "validation": 93
+    },
+    "normalization": "NFC, casefold, punctuation-to-space, collapse whitespace; CER excludes spaces",
+    "permission_note": "Declared by dataset owner; audit does not verify legal rights",
+    "leakage_note": "Rejects repeated speaker IDs and exact audio/PCM duplicates; cannot detect renamed speakers or near-duplicate audio"
+  },
+  "model_source": {
+    "model_id": "openai/whisper-base",
+    "resolved_revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+    "torch_cuda": "12.4",
+    "device": "NVIDIA GeForce GTX 1650 SUPER"
+  },
+  "training": {
+    "train_runtime": 744.7967,
+    "train_samples_per_second": 3.222,
+    "train_steps_per_second": 0.806,
+    "total_flos": 1.56683206656e+17,
+    "train_loss": 1.2210956206917762,
+    "epoch": 4.166666666666667
+  },
+  "paired_wer_change_ci95": {
+    "combined_validation": {
+      "delta_pp_low": -11.547452080411407,
+      "delta_pp_high": -1.2941176470588236,
+      "speakers": 93,
+      "method": "paired speaker-cluster percentile bootstrap, 95%, conditional on selected validation sample",
+      "seed": 42,
+      "iterations": 1000
+    },
+    "vivos_validation": null,
+    "vimd_validation": {
+      "delta_pp_low": -11.984954693109934,
+      "delta_pp_high": -1.3576158940397351,
+      "speakers": 90,
+      "method": "paired speaker-cluster percentile bootstrap, 95%, conditional on selected validation sample",
+      "seed": 42,
+      "iterations": 1000
+    },
+    "north": {
+      "delta_pp_low": -15.348564733450498,
+      "delta_pp_high": -1.2979351032448379,
+      "speakers": 30,
+      "method": "paired speaker-cluster percentile bootstrap, 95%, conditional on selected validation sample",
+      "seed": 42,
+      "iterations": 1000
+    },
+    "central": {
+      "delta_pp_low": -27.19298245614035,
+      "delta_pp_high": -2.8493150684931505,
+      "speakers": 30,
+      "method": "paired speaker-cluster percentile bootstrap, 95%, conditional on selected validation sample",
+      "seed": 42,
+      "iterations": 1000
+    },
+    "south": {
+      "delta_pp_low": -10.5,
+      "delta_pp_high": 6.595636732623034,
+      "speakers": 30,
+      "method": "paired speaker-cluster percentile bootstrap, 95%, conditional on selected validation sample",
+      "seed": 42,
+      "iterations": 1000
+    }
+  },
+  "peak_allocated_vram_bytes": 461909504,
+  "generation_cap_hits": {
+    "baseline": 7,
+    "tuned": 3
+  },
+  "improves_both_corpora_observed_wer": false,
+  "test_evaluated": false,
+  "deployed": false,
+  "scope": "HF fp32 development comparison only; no statistical significance or full accent/call quality claim",
+  "limitations": [
+    "600-step exploratory run changes data and learning rate, not a causal data-size ablation",
+    "Publisher labels + automated QA, not independently heard/reviewed",
+    "Limited provinces; no episode-level IDs",
+    "No English/Chinese/call/terminology acceptance; no GGML quantized comparison",
+    "Validation has guided development; final test unopened"
+  ],
+  "source_script_sha256": "ea2f70a5f7f41e16e719c79a86dedb69dacaad76862f564780c26a68443e2e1c",
+  "manifest_sha256": "5a7a4af8e11a61c10ccfc3148d8c063cf2acea0a592ca5d10eae707cfa259d56",
+  "prediction_sha256": {
+    "baseline": "992ff68b798f67aec0ad83bd0606b0779fb933dc5e1ac283726aadca4bb006a6",
+    "tuned": "4113a238213a0ecfcbc87c24fbeebb458e717df45872c1de2e11f6e0ae5c3645"
+  }
+}

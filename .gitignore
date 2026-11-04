@@ -41,6 +41,11 @@ server/public/uploads/
 **/.ruff_cache/
 **/.venv/
 **/venv/
+ai-service/training/.venv-check/
+
+# Private training data, transcripts, models and experiment evidence
+ai-service/training/data/
+ai-service/training/runs/
 
 # Private keys and certificates
 *.key
@@ -72,3 +77,4 @@ Desktop.ini
 *.temp
 *.bak
 *~
+/docs/~$*.docx

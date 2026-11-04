@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "trial": "20261103T064418Z-4fde4f1f",
+  "trial_artifacts_checked": 72,
+  "audio_files_checked": 726,
+  "source_parquets_checked": 3,
+  "counts": {
+    "train": 576,
+    "validation": 150
+  },
+  "metrics_reproduced": true,
+  "steps": 600,
+  "frozen_source_snapshots_match": true,
+  "test_evaluated": false,
+  "deployed": false,
+  "merged_model_sha256": "60b881c96a77936937b71a56fb2f9e93ec0605d12e67b582ed79a99376ac8e4c",
+  "verifier_source_sha256": "06b908d620c3b1acb986f1417e9633128d3b53447a878b0961adc22b190651c9"
+}

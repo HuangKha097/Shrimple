@@ -65,6 +65,130 @@
   }
 }
 
+// =========================================================================
+// Clean Shadcn VoiceInput Pill (Restrained Zinc Monochromatic Style)
+// =========================================================================
+.voice-input-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+
+  &:hover:not(.listening) {
+    background-color: rgba(249, 115, 22, 0.12);
+  }
+
+  &.listening {
+    padding: 0 10px 0 6px;
+    background-color: #141417;
+    border-color: rgba(255, 255, 255, 0.12);
+    cursor: default;
+  }
+
+  .voice-pill-icon-box {
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: #f97316;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .listening-stop-square {
+    width: 12px;
+    height: 12px;
+    background-color: #fafafa;
+    border-radius: 3px;
+  }
+
+  .voice-pill-expanded {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .frequency-bars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    height: 16px;
+
+    .freq-bar {
+      width: 2px;
+      background-color: #fafafa;
+      border-radius: 9999px;
+    }
+  }
+
+  .voice-pill-timer {
+    font-size: 1.15rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: #71717a;
+    width: 34px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .voice-pill-sep {
+    width: 1px;
+    height: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+  }
+
+  .voice-picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 4px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #d4d4d8;
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 0.18s ease;
+
+    &:hover,
+    &.open {
+      color: #fafafa;
+    }
+
+    .trigger-label {
+      line-height: 1;
+    }
+
+    .trigger-chevron {
+      color: #71717a;
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+
+      &.rotated {
+        transform: rotate(180deg);
+      }
+    }
+  }
+}
+
 .input-field {
   flex: 1;
   min-width: 0;
@@ -80,6 +204,11 @@
   &::placeholder {
     color: #71767b;
     font-size: 1.4rem;
+  }
+
+  &:disabled {
+    color: #71717a;
+    cursor: default;
   }
 }
 
@@ -201,75 +330,306 @@
   overflow: hidden;
 }
 
-// Recording HUD
-.recording-hud {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  border-radius: 24px;
-  padding: 6px 14px;
-  height: 38px;
-}
+// =========================================================================
+// Clean Shadcn ModelPicker Popover (Exact Zinc Palette, No Badge Clutter)
+// =========================================================================
+.model-picker-popover {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 16px;
+  width: min(360px, calc(100vw - 24px));
+  border-radius: 12px;
+  overflow: hidden;
+  background: #18181b;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  z-index: 98;
+  user-select: none;
 
-.recording-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+  .mp-body {
+    display: flex;
+    background: #18181b;
+  }
 
-.pulse-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #ef4444;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #ef4444;
-  animation: pulseRec 1s infinite alternate;
-}
+  // Left Icon-Only Vertical Rail
+  .mp-rail {
+    width: 48px;
+    flex-shrink: 0;
+    background: #18181b;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
 
-@keyframes pulseRec {
-  from { opacity: 0.4; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1.15); }
-}
+    .mp-rail-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #71717a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 
-.recording-text {
-  color: #ef4444;
-  font-size: 1.35rem;
-  font-weight: 600;
-}
+      &:hover {
+        background: rgba(9, 9, 11, 0.55);
+        color: #fafafa;
+      }
 
-.recording-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+      &.active {
+        background: #09090b;
+        color: #fafafa;
+        border-color: rgba(255, 255, 255, 0.08);
+      }
+    }
+  }
 
-  .rec-btn {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: none;
+  // Right Main Column
+  .mp-main {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+
+  // Top Muted Search Strip
+  .mp-search-bar {
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    gap: 8px;
+    background: #18181b;
+    padding: 8px 12px;
+    flex-shrink: 0;
 
-    &.cancel-btn {
+    .mp-search-icon {
+      color: #71717a;
+      flex-shrink: 0;
+    }
+
+    .mp-search-input {
+      width: 100%;
+      min-width: 0;
+      height: 22px;
       background: transparent;
-      color: #71767b;
-      &:hover {
-        background: rgba(255, 255, 255, 0.1);
-        color: #e7e9ea;
+      border: none;
+      outline: none;
+      color: #fafafa;
+      font-size: 1.25rem;
+      letter-spacing: -0.01em;
+
+      &::placeholder {
+        color: #71717a;
       }
     }
 
-    &.confirm-btn {
-      background: #ef4444;
-      color: #ffffff;
+    .mp-search-clear {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      color: #71717a;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+
       &:hover {
-        filter: brightness(1.1);
+        background: #09090b;
+        color: #fafafa;
+      }
+    }
+  }
+
+  // Inner Popover Surface (rounded-tl-lg bg-popover)
+  .mp-list-surface {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    border-top-left-radius: 8px;
+    background: #09090b;
+    padding: 8px;
+  }
+
+  .mp-section-heading {
+    margin: 0;
+    padding: 4px 10px 6px 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 1.08rem;
+    color: #71717a;
+  }
+
+  .mp-listbox {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .mp-empty {
+      margin: 0;
+      padding: 20px 10px;
+      text-align: center;
+      font-size: 1.12rem;
+      color: #71717a;
+    }
+  }
+
+  .mp-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    min-height: 42px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: #18181b;
+      outline: none;
+    }
+
+    &.selected {
+      background: #18181b;
+    }
+
+    .mp-row-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+
+      .mp-row-title-line {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+
+        .mp-row-name {
+          font-size: 1.32rem;
+          font-weight: 500;
+          color: #fafafa;
+          letter-spacing: -0.01em;
+        }
+
+        .mp-row-check {
+          color: #fafafa;
+          flex-shrink: 0;
+        }
+      }
+
+      .mp-row-desc {
+        font-size: 1.1rem;
+        line-height: 1.35;
+        color: #71717a;
+      }
+    }
+
+    .mp-code-chip {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 1.02rem;
+      font-weight: 500;
+      color: #71717a;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+  }
+
+  // Bottom Segmented Track Footer
+  .mp-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #09090b;
+    padding: 8px 10px;
+
+    .mp-footer-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding-left: 2px;
+      flex-shrink: 0;
+
+      .mp-effort-meter {
+        display: inline-flex;
+        align-items: flex-end;
+        gap: 2px;
+
+        .meter-bar {
+          width: 2.5px;
+          border-radius: 999px;
+          background: #27272a;
+          transition: background-color 0.25s ease;
+
+          &.filled {
+            background: #fafafa;
+          }
+        }
+      }
+
+      .mp-footer-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 1.08rem;
+        color: #71717a;
+      }
+    }
+
+    .mp-segmented-track {
+      position: relative;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+      padding: 3px;
+      border-radius: 9999px;
+      background: rgba(24, 24, 27, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+
+      .mp-track-thumb {
+        pointer-events: none;
+        position: absolute;
+        top: 3px;
+        bottom: 3px;
+        left: 3px;
+        border-radius: 9999px;
+        background: #09090b;
+        border: 1px solid rgba(255, 255, 255, 0.09);
+        transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .mp-track-btn {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        min-width: 0;
+        padding: 5px 8px;
+        border-radius: 9999px;
+        border: none;
+        background: transparent;
+        color: #71717a;
+        font-size: 1.08rem;
+        font-weight: 500;
+        text-align: center;
+        cursor: pointer;
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #d4d4d8;
+        }
+
+        &.active {
+          color: #fafafa;
+        }
       }
     }
   }

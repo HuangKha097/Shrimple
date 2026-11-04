@@ -30,6 +30,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     const [languagePair, setLanguagePair] = useState(() => defaultTranslationPair(i18n.resolvedLanguage || i18n.language));
     const { sourceLanguage, targetLanguage } = languagePair;
     const [skippedClips, setSkippedClips] = useState(false);
+    const [waitingForRecognition, setWaitingForRecognition] = useState(false);
     const [healthAttempt, setHealthAttempt] = useState(0);
     const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden');
     const [connected, setConnected] = useState(Boolean(socket?.connected));
@@ -56,6 +57,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
         generation.current += 1;
         streams.current.forEach(source => source.stop());
         streams.current.clear();
+        setWaitingForRecognition(false);
         const audio = audioRef.current;
         audioRef.current = null;
         if (audio && audio.context.state !== 'closed') void audio.context.close().catch(() => {});
@@ -187,7 +189,12 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
             if (streams.current.has(id)) return;
             const source = { track, isSelf: Boolean(isSelf), stopped: false, capture: null, transport: null, timer: null, streamId: null };
             const stopped = () => source.stopped || epoch !== generation.current;
+            const updateWaiting = waiting => {
+                source.waiting = waiting;
+                setWaitingForRecognition([...streams.current.values()].some(item => !item.stopped && item.waiting));
+            };
             const finishAttempt = () => {
+                updateWaiting(false);
                 source.capture?.stop();
                 source.transport?.stop();
                 source.capture = null;
@@ -221,8 +228,11 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                     },
                     onEvent: event => {
                         if (stopped()) return;
-                        if (event.type === 'status' && [429, 503].includes(event.status)) setSkippedClips(true);
-                        if (event.type === 'error' && event.status === 422) setSkippedClips(true);
+                        if (event.type === 'status' && [429, 503].includes(event.status)) updateWaiting(true);
+                        if (event.type === 'transcript' || event.type === 'error') updateWaiting(false);
+                        // Partial contention is recoverable from the growing audio
+                        // window. Only a failed utterance means a segment was lost.
+                        if (event.type === 'error') setSkippedClips(true);
                         setNotes(previous => reduceTranslationNotes(previous, event, formatElapsed(sessionStartRef.current)));
                     },
                     onFailure: detail => {
@@ -263,7 +273,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                                 <div className="translation-live-inline" role="status">
                                     <span className={`translation-pulse-dot ${status === 'loading' ? 'loading' : processingCount > 0 ? 'processing' : 'live'}`} />
                                     <span className="translation-live-inline-text">
-                                        {t(!connected ? 'translationNotes.reconnecting' : status === 'loading' ? 'translationNotes.starting' : 'translationNotes.liveTitle')}
+                                        {t(!connected ? 'translationNotes.reconnecting' : status === 'loading' ? 'translationNotes.starting' : waitingForRecognition ? 'translationNotes.waiting' : 'translationNotes.liveTitle')}
                                     </span>
                                 </div>
                             </div>
@@ -324,7 +334,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                             <div className="translation-empty-desc">{t('translationNotes.emptyDescription')}</div>
                         </div> : notes.map(note => {
                             const isSelfNote = note.translationState === 'self' || note.translate === false || String(note.speakerId || '') === String(user?._id || '');
-                            const spokenLangKey = ['vi', 'en', 'zh'].includes(note.sourceLanguage) ? note.sourceLanguage : 'auto';
+                            const spokenLangKey = ['vi', 'en'].includes(note.sourceLanguage) ? note.sourceLanguage : 'auto';
                             return (
                                 <div className={`translation-msg-wrapper ${isSelfNote ? 'self' : 'other'}`} key={note.id}>
                                     <div className="translation-msg-content">

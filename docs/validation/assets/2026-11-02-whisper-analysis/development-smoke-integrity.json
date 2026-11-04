@@ -1,0 +1,13 @@
+{
+  "run_id": "20261102T132546Z-498db717",
+  "purpose": "smoke",
+  "input": "artificial tones only",
+  "status": "experiment_completed",
+  "development_scope": "development",
+  "test_results_absent": true,
+  "checkpoint_selection_metric": "validation_loss",
+  "best_checkpoint": "checkpoint-2",
+  "labels_lowercased_for_training": true,
+  "references_preserved": true,
+  "artifact_hashes_verified": true
+}

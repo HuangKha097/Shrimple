@@ -1,0 +1,50 @@
+{
+  "dataset_summary": {
+    "manifest_sha256": "08f5be4a96d769d94aa8351334df60480987ceba853c5462c1f54e780de75e54",
+    "counts": {
+      "train": 2150,
+      "validation": 60
+    },
+    "evaluation_scope": "development",
+    "languages": {
+      "vi": 2210
+    },
+    "seconds_by_split": {
+      "train": 10466.853375,
+      "validation": 272.0625
+    },
+    "speakers_by_split": {
+      "train": 43,
+      "validation": 3
+    },
+    "normalization": "NFC, casefold, punctuation-to-space, collapse whitespace; CER excludes spaces",
+    "permission_note": "Declared by dataset owner; audit does not verify legal rights",
+    "leakage_note": "Rejects repeated speaker IDs and exact audio/PCM duplicates; cannot detect renamed speakers or near-duplicate audio"
+  },
+  "validation_ids_text_and_audio_identical_to_pilot": true,
+  "quality": {
+    "train": {
+      "max_original_label_tokens": 125,
+      "max_lowercase_label_tokens": 62,
+      "token_limit": 448,
+      "all_labels_fit_both_cases": true,
+      "rms_below_0_001": 0,
+      "files_with_any_clipped_sample": 67,
+      "max_clipped_fraction": 0.009358695652173912
+    },
+    "validation": {
+      "max_original_label_tokens": 104,
+      "max_lowercase_label_tokens": 52,
+      "token_limit": 448,
+      "all_labels_fit_both_cases": true,
+      "rms_below_0_001": 0,
+      "files_with_any_clipped_sample": 0,
+      "max_clipped_fraction": 0
+    }
+  },
+  "reserve_speakers_not_evaluated": 16,
+  "rejected": [],
+  "test_rows_in_manifest": 0,
+  "user_recording_in_training": false,
+  "source_archive_sha256": "147477f7a7702cbafc2ee3808d1c142989d0dbc8d9fce8e07d5f329d5119e4ca"
+}

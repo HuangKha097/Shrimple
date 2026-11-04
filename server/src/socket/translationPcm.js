@@ -155,7 +155,7 @@ export function createTranslationPcmBridge({
         if (!socket.connected || !viewerId) return ack(failure(403));
         if (!object(payload) || !allowedKeys(payload, ["kind", "sessionId", "speakerId", "sourceLanguage", "targetLanguage", "translate"]) ||
             !["direct", "group"].includes(payload.kind) || !identifier(payload.sessionId) || !identifier(payload.speakerId) ||
-            !["en", "vi", "zh"].includes(payload.sourceLanguage) || !["en", "vi", "zh"].includes(payload.targetLanguage) ||
+            !["en", "vi"].includes(payload.sourceLanguage) || !["en", "vi"].includes(payload.targetLanguage) ||
             (payload.translate !== undefined && typeof payload.translate !== "boolean")) return ack(failure(400));
         const isSelf = payload.translate === false;
         if (isSelf) {

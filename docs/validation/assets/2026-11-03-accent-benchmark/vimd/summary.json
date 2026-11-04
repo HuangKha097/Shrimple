@@ -1,0 +1,155 @@
+{
+  "benchmark_id": "shrimple-vietnamese-accent-v1-development",
+  "stage": "development",
+  "overall": {
+    "status": "measured_development_only",
+    "samples": 90,
+    "speakers": 90,
+    "seconds": 1685.0524375,
+    "metrics": {
+      "wer_percent": 53.55529529864481,
+      "cer_percent": 38.43342301639677,
+      "word_errors": 3201,
+      "reference_words": 5977,
+      "char_errors": 7571,
+      "reference_chars": 19699
+    },
+    "wer_ci_95": {
+      "wer_percent_low": 47.63363976847123,
+      "wer_percent_high": 59.894459102902374,
+      "method": "speaker_cluster_bootstrap_conditional_on_this_sample",
+      "confidence_level": 0.95,
+      "note": "Exploratory cluster resampling within this selected sample, not proof of population coverage"
+    }
+  },
+  "groups": {
+    "north": {
+      "status": "measured_development_only",
+      "samples": 30,
+      "speakers": 30,
+      "seconds": 532.6940625,
+      "metrics": {
+        "wer_percent": 45.874934314240676,
+        "cer_percent": 32.83108643933386,
+        "word_errors": 873,
+        "reference_words": 1903,
+        "char_errors": 2070,
+        "reference_chars": 6305
+      },
+      "wer_ci_95": {
+        "wer_percent_low": 36.93467336683417,
+        "wer_percent_high": 57.323232323232325,
+        "method": "speaker_cluster_bootstrap_conditional_on_this_sample",
+        "confidence_level": 0.95,
+        "note": "Exploratory cluster resampling within this selected sample, not proof of population coverage"
+      }
+    },
+    "central": {
+      "status": "measured_development_only",
+      "samples": 30,
+      "speakers": 30,
+      "seconds": 539.8403125,
+      "metrics": {
+        "wer_percent": 64.97844827586206,
+        "cer_percent": 46.16634178037687,
+        "word_errors": 1206,
+        "reference_words": 1856,
+        "char_errors": 2842,
+        "reference_chars": 6156
+      },
+      "wer_ci_95": {
+        "wer_percent_low": 53.37227827934148,
+        "wer_percent_high": 80.09682625067241,
+        "method": "speaker_cluster_bootstrap_conditional_on_this_sample",
+        "confidence_level": 0.95,
+        "note": "Exploratory cluster resampling within this selected sample, not proof of population coverage"
+      }
+    },
+    "south": {
+      "status": "measured_development_only",
+      "samples": 30,
+      "speakers": 30,
+      "seconds": 612.5180625,
+      "metrics": {
+        "wer_percent": 50.586113615870154,
+        "cer_percent": 36.73666758773142,
+        "word_errors": 1122,
+        "reference_words": 2218,
+        "char_errors": 2659,
+        "reference_chars": 7238
+      },
+      "wer_ci_95": {
+        "wer_percent_low": 42.33907524932004,
+        "wer_percent_high": 59.5903165735568,
+        "method": "speaker_cluster_bootstrap_conditional_on_this_sample",
+        "confidence_level": 0.95,
+        "note": "Exploratory cluster resampling within this selected sample, not proof of population coverage"
+      }
+    },
+    "central_highlands": {
+      "status": "not_measured_missing_labels_or_samples",
+      "samples": 0,
+      "speakers": 0,
+      "metrics": null,
+      "wer_ci_95": null
+    },
+    "unknown": {
+      "status": "not_measured_missing_labels_or_samples",
+      "samples": 0,
+      "speakers": 0,
+      "metrics": null,
+      "wer_ci_95": null
+    },
+    "fast": {
+      "status": "not_measured_missing_labels_or_samples",
+      "samples": 0,
+      "speakers": 0,
+      "metrics": null,
+      "wer_ci_95": null
+    },
+    "heavy": {
+      "status": "not_measured_missing_labels_or_samples",
+      "samples": 0,
+      "speakers": 0,
+      "metrics": null,
+      "wer_ci_95": null
+    }
+  },
+  "macro_north_central_south_wer": 53.813165401990965,
+  "worst_north_central_south_wer": 64.97844827586206,
+  "insufficient_primary_group_coverage": [
+    "north",
+    "central",
+    "south"
+  ],
+  "ready_for_final_acceptance": false,
+  "targets_status": "illustrative_not_acceptance_or_measured_results",
+  "overlap_note": "Accent groups partition samples; fast/heavy are overlapping cohorts. Missing group is not zero WER.",
+  "reference_policy": "Verbatim source transcript; normalization inherited from evidence.py; no guessed accent/speed/age",
+  "model_id": "openai/whisper-base",
+  "model_revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+  "generation": {
+    "task": "transcribe",
+    "language": "vi",
+    "do_sample": false,
+    "num_beams": 1,
+    "max_new_tokens": 225
+  },
+  "inference_seconds": 110.13095949999115,
+  "audit": {
+    "samples": 90,
+    "speakers": 90,
+    "recordings": 90,
+    "identity_note": "Supplied dataset-scoped speaker/recording IDs checked; cross-corpus identity and near-duplicate speech are not established",
+    "training_identity_rows_checked": 0
+  },
+  "manifest_sha256": "54fa6a3e75da1058a7d7a348cc7c934011e11e2d4444626c4a81b273735928b5",
+  "training_identities_sha256": "a5338d955b09046ec0b16f3a9625b7955c763aae07dc722e474e6078745f932f",
+  "protocol_sha256": "5477c968a297a4de3c24b8aee5bbc4af95980eaf955c69198c79def45b9663d6",
+  "source_script_sha256": "3c4a9ecfd06c5e428a51dc6456752380f96126c83200377ab2c438e541703c24",
+  "domain": [
+    "broadcast_news"
+  ],
+  "scope": "Source-labelled development sample; HF fp32, not GGML serving, not full accent benchmark",
+  "generation_cap_flags": 0
+}

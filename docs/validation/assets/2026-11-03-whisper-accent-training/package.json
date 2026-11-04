@@ -1,0 +1,8 @@
+{
+  "archive": "ai-service/training/runs/accent-round-20261103-v1/report-evidence.zip",
+  "files": 58,
+  "bytes": 252243,
+  "sha256": "f9f0b4c9ed2f6bfcfd96381a5439c5e0affad818fe388720f395f5f92f9deeaa",
+  "testzip": "passed",
+  "scope": "Aggregate report, CSV, figures, source code/configs; no audio, raw transcripts, checkpoints or model weights"
+}

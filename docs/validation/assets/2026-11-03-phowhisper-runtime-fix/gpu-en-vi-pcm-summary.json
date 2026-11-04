@@ -1,0 +1,27 @@
+{
+  "label": "gpu-en-vi",
+  "source": "en",
+  "target": "vi",
+  "input_clips": 2,
+  "audio_seconds": 8.32,
+  "wall_seconds": 8.942831638999905,
+  "partials": 5,
+  "finals": 3,
+  "translations": 3,
+  "revisions_match": true,
+  "median_translation_after_final_seconds": 0.25480090300015945,
+  "errors": [
+    {
+      "status": 503,
+      "type": "status"
+    }
+  ],
+  "asr_metrics": {
+    "wer_percent": 0.0,
+    "cer_percent": 0.0,
+    "word_errors": 0,
+    "reference_words": 13,
+    "char_errors": 0,
+    "reference_chars": 56
+  }
+}

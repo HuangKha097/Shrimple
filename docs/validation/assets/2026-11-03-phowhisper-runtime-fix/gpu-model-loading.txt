@@ -1,0 +1,8 @@
+whisper-1     | Starting Whisper model: base-q5_1
+whisper-1     | whisper_init_with_params_no_state: use gpu    = 1
+phowhisper-1  | Starting Whisper model: phowhisper-base
+phowhisper-1  | whisper_init_with_params_no_state: use gpu    = 1
+whisper-1     | whisper_model_load:        CUDA0 total size =    59.12 MB
+whisper-1     | whisper_backend_init_gpu: using CUDA0 backend
+phowhisper-1  | whisper_model_load:        CUDA0 total size =   147.37 MB
+phowhisper-1  | whisper_backend_init_gpu: using CUDA0 backend

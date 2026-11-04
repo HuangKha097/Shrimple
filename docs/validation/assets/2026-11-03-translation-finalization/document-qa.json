@@ -1,0 +1,33 @@
+{
+  "document": "docs/Tai-Lieu-Kien-Truc-Ky-Thuat-He-Thong-Shrimple-GPU-CPU.docx",
+  "date": "2026-11-03",
+  "timezone": "Asia/Saigon",
+  "pages": 10,
+  "tables": 9,
+  "figures": 3,
+  "comments": 2,
+  "sha256": "5f9bcf70456c13fc8a31b1a8a776d2cfa057f9c89d6b5f50671c11f1ee20cba1",
+  "previous_sha256": "5f3563c6aa169eebfc92f2091ae2ddd05737bc0f8cdf2ff0bd8bd4fbda9013a0",
+  "renderer": "Microsoft Word hidden ExportAsFixedFormat + packaged render_docx.py adapter, 144DPI",
+  "visual_review": {
+    "pages_reviewed": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "landscape_pages": [
+      5,
+      6
+    ],
+    "result": "all pages readable; no clipping, overflow, blank extra page or overlapping elements"
+  },
+  "decision": "Keep PhoWhisper vi, Whisper-base en, segmented; remove unused LocalAgreement branch",
+  "historical_original_docx_sha256": "a6071dd87d60ffd1ad084994accc809bad2b6e7a5b4ff8f969c12427ec23bab5"
+}

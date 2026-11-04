@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "runs": [
+    {
+      "run": "accent-vietmed-20261103-baseline-v2",
+      "samples": 210,
+      "audio_hashes_checked": 210,
+      "parquet_files_checked": 2,
+      "metrics_recomputed": true,
+      "input_and_source_snapshot_hashes_match": true,
+      "test_read": false
+    },
+    {
+      "run": "accent-vimd-20261103-baseline-v1",
+      "samples": 90,
+      "audio_hashes_checked": 90,
+      "parquet_files_checked": 3,
+      "metrics_recomputed": true,
+      "input_and_source_snapshot_hashes_match": true,
+      "test_read": false
+    }
+  ],
+  "unit_tests_passed": 31,
+  "python_compile": "passed",
+  "git_diff_check": "passed",
+  "raw_transcripts_exported": false
+}

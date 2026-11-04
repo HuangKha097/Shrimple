@@ -1,0 +1,46 @@
+{
+  "label": "gpu",
+  "samples": 6,
+  "manifest_sha256": "8d6c37cd0924ad8921796190f8448aac9e237c9068ac4050e62ce3fb02020142",
+  "profiles": {
+    "short": {
+      "metrics": {
+        "wer_percent": 8.270676691729323,
+        "cer_percent": 4.535147392290249,
+        "word_errors": 11,
+        "reference_words": 133,
+        "char_errors": 20,
+        "reference_chars": 441
+      },
+      "median_seconds": 0.19813057800001843,
+      "max_seconds": 0.6631217710000783,
+      "abnormal": 0
+    },
+    "full": {
+      "metrics": {
+        "wer_percent": 9.774436090225564,
+        "cer_percent": 8.16326530612245,
+        "word_errors": 13,
+        "reference_words": 133,
+        "char_errors": 36,
+        "reference_chars": 441
+      },
+      "median_seconds": 0.3872089710000637,
+      "max_seconds": 0.41609921999997823,
+      "abnormal": 0
+    },
+    "full_text": {
+      "metrics": {
+        "wer_percent": 3.007518796992481,
+        "cer_percent": 1.5873015873015872,
+        "word_errors": 4,
+        "reference_words": 133,
+        "char_errors": 7,
+        "reference_chars": 441
+      },
+      "median_seconds": 0.33590546800007814,
+      "max_seconds": 0.4579717660001279,
+      "abnormal": 0
+    }
+  }
+}

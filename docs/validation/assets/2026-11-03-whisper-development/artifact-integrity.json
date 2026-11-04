@@ -1,0 +1,31 @@
+{
+  "trials": {
+    "control": {
+      "artifact_count": 61,
+      "all_verified": true,
+      "run_integrity_manifest_sha256": "43b48a5e7ad2cf5375621498d5da46a0b75b55c5929397abbb3747f9c532fb12"
+    },
+    "warmup": {
+      "artifact_count": 62,
+      "all_verified": true,
+      "run_integrity_manifest_sha256": "1e63e3fcdebb2c5ed5d444fa40ab2e872a7222e2c88723a667de3ddfce480881"
+    },
+    "low-lr": {
+      "artifact_count": 63,
+      "all_verified": true,
+      "run_integrity_manifest_sha256": "41c67580ec9f245f0af17e82015e8ea146a3c2ae50657b86d5e7bf861b6c7f38"
+    },
+    "lowercase": {
+      "artifact_count": 63,
+      "all_verified": true,
+      "run_integrity_manifest_sha256": "6bda86a9cef9676adf654957e3321970186e3c0aac2ca77307c4f547e4f8a6fe"
+    }
+  },
+  "derived_sha256": {
+    "results.json": "f0bcb55f5f8659f53a9b80ba797c15f08cf2c620f89ef9221bdf850e3424ecd2",
+    "results.csv": "9736c9e2674d46c8c2b757c635b4b0bbb3b3fb167d331c727217c494145f2532",
+    "loss-curves.csv": "444b80242603e2d29df8d0c31269c7117010687a36e4be2e1663ebf3527d4d15",
+    "development-results.png": "658647e601ef6d61975432dfcd1136c5066b4a3c6199c7f8380031824465ed73"
+  },
+  "source_script_sha256": "09d3d0744279ea61e69dfae0589747c62dbe2fbcd9f323a6b6b8e94deadff5ca"
+}

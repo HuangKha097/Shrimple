@@ -1,0 +1,97 @@
+{
+  "manifest_sha256": "54fa6a3e75da1058a7d7a348cc7c934011e11e2d4444626c4a81b273735928b5",
+  "samples": 90,
+  "language": "vi",
+  "python": "3.12.14",
+  "torch": "2.6.0+cu124",
+  "transformers": "4.57.1",
+  "device": "cuda",
+  "generation": {
+    "task": "transcribe",
+    "language": "vi",
+    "do_sample": false,
+    "num_beams": 1,
+    "max_new_tokens": 225
+  },
+  "scope": "HF fp32 validation diagnostic; unknown overlap with upstream pretraining; not live call acceptance",
+  "models": {
+    "whisper-base": {
+      "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+      "metrics": {
+        "wer_percent": 53.55529529864481,
+        "cer_percent": 38.43342301639677,
+        "word_errors": 3201,
+        "reference_words": 5977,
+        "char_errors": 7571,
+        "reference_chars": 19699
+      },
+      "inference_seconds": 112.48311869999998,
+      "cap_flags": 7,
+      "groups": {
+        "central": {
+          "wer_percent": 64.97844827586206,
+          "cer_percent": 46.16634178037687,
+          "word_errors": 1206,
+          "reference_words": 1856,
+          "char_errors": 2842,
+          "reference_chars": 6156
+        },
+        "north": {
+          "wer_percent": 45.874934314240676,
+          "cer_percent": 32.83108643933386,
+          "word_errors": 873,
+          "reference_words": 1903,
+          "char_errors": 2070,
+          "reference_chars": 6305
+        },
+        "south": {
+          "wer_percent": 50.586113615870154,
+          "cer_percent": 36.73666758773142,
+          "word_errors": 1122,
+          "reference_words": 2218,
+          "char_errors": 2659,
+          "reference_chars": 7238
+        }
+      }
+    },
+    "phowhisper-base": {
+      "revision": "7ebdb9e88f5cc5271fb88f4d642c82ff9388650e",
+      "metrics": {
+        "wer_percent": 20.4450393173833,
+        "cer_percent": 14.58957307477537,
+        "word_errors": 1222,
+        "reference_words": 5977,
+        "char_errors": 2874,
+        "reference_chars": 19699
+      },
+      "inference_seconds": 110.99681800000053,
+      "cap_flags": 3,
+      "groups": {
+        "central": {
+          "wer_percent": 22.898706896551722,
+          "cer_percent": 15.139701104613385,
+          "word_errors": 425,
+          "reference_words": 1856,
+          "char_errors": 932,
+          "reference_chars": 6156
+        },
+        "north": {
+          "wer_percent": 15.449290593799264,
+          "cer_percent": 11.435368754956384,
+          "word_errors": 294,
+          "reference_words": 1903,
+          "char_errors": 721,
+          "reference_chars": 6305
+        },
+        "south": {
+          "wer_percent": 22.678088367899008,
+          "cer_percent": 16.869300911854104,
+          "word_errors": 503,
+          "reference_words": 2218,
+          "char_errors": 1221,
+          "reference_chars": 7238
+        }
+      }
+    }
+  }
+}

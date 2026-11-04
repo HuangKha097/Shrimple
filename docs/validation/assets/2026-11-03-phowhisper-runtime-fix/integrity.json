@@ -1,0 +1,27 @@
+{
+  "sources": {
+    "ai-service\\app.py": "057e0ece5760dcc2ba4f2af9f906fb097cce2f0cf62a3eb9a5505d4d0c46fa69",
+    "client\\src\\components\\chat\\TranslationNotes.jsx": "c31f3f865e5d9d733fa26243fd6dabcbe411013bd86a2001d8850e27f8912f97",
+    "client\\src\\i18n.js": "1013b8c4bacd34e473e0509db60830816ad294e468d59ddd60b4fa5cfd9138cc",
+    "ai-service\\training\\probe_asr_runtime.py": "53d1ff2fba134c0b19fb4483de077e54cce95d2b49abc398e2786969d0ef9e91",
+    "ai-service\\training\\replay_pcm_runtime.py": "5473a6da700b94321ca5b5305ee5922b0c1d5b53648edc556e60c8077b5f02b8",
+    "ai-service\\tests\\test_pcm_agreement.py": "92a5224d9791ff79dee0dc2f9bd901b3386be7b121ccbaa2bb9f65ac49990ff9",
+    "ai-service\\tests\\test_translation_languages.py": "8484662cb024dce5e0b4f8a36ded94d00fc0a98437050b4768ceb0aa8a9d8a5d"
+  },
+  "private_prediction_hashes": {
+    "cpu-full.private.json": "f9c31e5c3f7062688a2d355daae09efa1016ea896210c51bc6406f2bae3c2a46",
+    "cpu-full_text.private.json": "5972d294e3e0452a6c2454ffa1b5526765a125771feda5fa93756f2dfff0f46e",
+    "cpu-short.private.json": "878ea0ec76b677a3a6597c0c215c7c52ee8fce7dc603d74c01880bad2890a6b7",
+    "gpu-dual-vi-en-pcm-events.private.json": "2517d99e1ef93cc90b6c2682288738a83d4317a3a1a111d6b0a9d2d021fe17c5",
+    "gpu-full.private.json": "92fdd2ad02ba9f38ebff505c5204e6a7415d5bf260ad0b466a259f80dd997d96",
+    "gpu-full_text.private.json": "0d35e47aa89d8b612e92854093629e4845ad4056794a59ca863f6a9366dc52bf",
+    "gpu-short.private.json": "13aa8b580b735c21467481f8fd616b7a0097abb96c6d7d54760b66c6d6a3dda8",
+    "gpu-vi-en-pcm-events.private.json": "1469bfe5a68609b01ab768f51b46dda00d7cf559ce6cfe87f9388e0298d0d40c",
+    "english\\gpu-dual-en-vi-pcm-events.private.json": "042a459859b821f61c76cdced0d9d8b76548ad5d10eaa4240dde558084e72621",
+    "english\\gpu-en-vi-pcm-events.private.json": "eff7d60ff266bb9ade4d13a667fd83db335fa4ecc73aba51e00f3e07cf1b7544"
+  },
+  "runtime_binary_base": "sha256:bf8809ca39c3ba2857c2898410f6f55e6d85b893b4572d3a9a0f1e092207bef4",
+  "runtime_image": "sha256:a29d0f87df3fea3b3633febf46f2d68d875746128925f508e0873e684270a9c1",
+  "image_method": "reuse existing verified whisper.cpp v1.9.4 CUDA binary, replace startup layer; full recompilation intentionally stopped",
+  "current_app_matches_container": true
+}

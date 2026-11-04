@@ -1,0 +1,23 @@
+{
+  "status": "human_reviewed_labels_accepted_splits_pending",
+  "created_utc": "2026-11-02T12:52:28.970700+00:00",
+  "protocol": "speaker_disjoint_multi_user",
+  "counts": {
+    "clips": 13,
+    "reviewed": 13,
+    "speakers": 1,
+    "ellipsis": 0
+  },
+  "baseline_model_revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+  "baseline_diagnostic": {
+    "wer_percent": 46.54895666131621,
+    "cer_percent": 36.41732283464567,
+    "word_errors": 290,
+    "reference_words": 623,
+    "char_errors": 740,
+    "reference_chars": 2032
+  },
+  "diagnostic_scope": "Cached Whisper HF fp32 vi transcribe greedy draft V2 versus user-reviewed references on one recording. Not an independent test set, not current GGML q5_1 serving. No fine-tuned results. Labels were edited with model draft visible.",
+  "split_state": "unassigned; need independent speakers for validation and test",
+  "training_started": false
+}

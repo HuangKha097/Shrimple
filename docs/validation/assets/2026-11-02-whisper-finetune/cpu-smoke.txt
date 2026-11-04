@@ -1,0 +1,2 @@
+failed: OfflineModeIsEnabled; see private evidence
+Private evidence directory: C:\Users\quach\Desktop\Project\Shrimple\ai-service\training\runs\20261102T111840Z-1e398257

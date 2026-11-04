@@ -1,0 +1,88 @@
+{
+  "audio": [
+    {
+      "pack": "long-vi",
+      "id": "vimd:utterance:7a310cc21fbbbe6ee653279e",
+      "speaker_id": "vimd:speaker:6ff09e901b34a1bf245b6b43",
+      "accent": "north",
+      "split": "validation",
+      "source_revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+      "duration_seconds": 26.1316875,
+      "wav_sha256": "d6c9914b506e732cc30677c25d1eded55bbdd0561c2e48bc392130e04783ac5f",
+      "wav_duration_seconds": 26.1316875
+    },
+    {
+      "pack": "long-vi",
+      "id": "vimd:utterance:c4bdc3f1b34ec6a60fe6855f",
+      "speaker_id": "vimd:speaker:e068d91e94565c64c271e271",
+      "accent": "central",
+      "split": "validation",
+      "source_revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+      "duration_seconds": 28.42775,
+      "wav_sha256": "9f91935e2147d49c0700dccea0e0cff899e0d92713e1fb729adc023512d6b2fe",
+      "wav_duration_seconds": 28.42775
+    },
+    {
+      "pack": "long-vi",
+      "id": "vimd:utterance:e5d4a6bac452177fdb088ebe",
+      "speaker_id": "vimd:speaker:e4cebabb6fd495b71593f94c",
+      "accent": "south",
+      "split": "validation",
+      "source_revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+      "duration_seconds": 29.997,
+      "wav_sha256": "ac2a94e5cfdb46b3f394560a5f4586535ef77f2d9a03da75d38de38d6f8c2f62",
+      "wav_duration_seconds": 29.997
+    },
+    {
+      "pack": "verify-vi",
+      "id": "vimd:utterance:d6b39f7cd5cd87ef69969410",
+      "speaker_id": "vimd:speaker:234202487dbb7a6a00bb9449",
+      "accent": "north",
+      "split": "validation",
+      "source_revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+      "duration_seconds": 20.7680625,
+      "wav_sha256": "58aad4b06c1b42fb21a64f75553968a60de778f8000ce68f41212cd8eb8acc9e",
+      "wav_duration_seconds": 20.7680625
+    },
+    {
+      "pack": "verify-vi",
+      "id": "vimd:utterance:8261c4cd3b7d8379923e65a3",
+      "speaker_id": "vimd:speaker:1f4bf39c700cf96d302ae271",
+      "accent": "central",
+      "split": "validation",
+      "source_revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+      "duration_seconds": 21.041,
+      "wav_sha256": "eb553e2ba3810375bc5dad85efc0db5c94d4906630ef2f797dbe68fea31ee612",
+      "wav_duration_seconds": 21.041
+    },
+    {
+      "pack": "verify-vi",
+      "id": "vimd:utterance:4b1cc61b2a9da7f8b496a1e9",
+      "speaker_id": "vimd:speaker:4cadd49bdedfc7857a8ad23f",
+      "accent": "south",
+      "split": "validation",
+      "source_revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+      "duration_seconds": 24.6865,
+      "wav_sha256": "a6761fa74f3adaaca1f71e0d07ea50b1c83fdd47ab9fac4983619071df59cac3",
+      "wav_duration_seconds": 24.6865
+    }
+  ],
+  "natural_audio_seconds": 151.052,
+  "no_speaker_overlap_between_packs": true,
+  "source_sha256": {
+    "ai-service/app.py": "9e55fc58a736a0b5db233a77bd79426d255214bc49fe3a2854471bff85192c92",
+    "ai-service/pcm_agreement.py": "bc7bb7c3418f1b3ad0670e91a7df4e194f5400c0acc298e3c75d0f1762ccd842",
+    "ai-service/pcm_incremental.py": "9694e66ff4f41aeb2c7686cba6c3b4aa5d45fe7cca8b1cf773f6d6d092937f0f",
+    "ai-service/pcm_stream.py": "dc9cbc184e4e1fb1c5ab2749138e1168149ab527e4cda33e3ec90cdc8e0fe56c",
+    "ai-service/pcm_vad.py": "47ee51c0e33169a53c34e09ec97c30314771472ca64c8c1361826ffdbd6b8c9a",
+    "ai-service/whisper/start.sh": "e4ed5666a5101b6da877739209258d6b81a5f370d9627cd778eff2f369fe59c7",
+    "ai-service/start-gpu.ps1": "74738c4c6d57d229cacb39bab95b60a081852bb12d1052bf3a656d27987d7b3e",
+    "compose.localagreement.yaml": "8ef59d0683b6820543d4d9a05683368a3e19c464b7192ac7407dbbef091d5988",
+    "ai-service/training/replay_pcm_runtime.py": "da653c1810bc9c9bd6fadb5dccf014b5303d07208a9d543e1b63820679054e24"
+  },
+  "model_sha256": "d2d55964ba390fdbd32642a36555961df7fe3a171c41c841e4257f46a157c367",
+  "asr_runtime": "whisper.cpp v1.9.4, same PhoWhisper-base GGML f16, GPU",
+  "candidate": "DTW base, flash attention off, full encoder context, 12s Vietnamese window, LA-2; English decoder alignment <=6s",
+  "recording_note": "Existing public ViMD validation, not user call recordings; not held-out test acceptance",
+  "actual_wav_audio_seconds": 151.052
+}

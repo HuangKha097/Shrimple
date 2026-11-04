@@ -1,0 +1,5 @@
+﻿trial,run_id,validation_samples,wer_percent,cer_percent,word_errors,reference_words,wer_change_vs_base_pp,selected_checkpoint,selection_metric,trainer_seconds,total_run_seconds,peak_torch_allocated_mib,generation_cap_hits,all_uppercase_hypotheses,learning_rate,warmup_steps,label_case
+control,20261103T045550Z-edeeedf9,60,88.07106598984771,47.169089517980105,694,788,60.15228426395939,checkpoint-600,validation_loss,656.9777,747.041239,401.74072265625,0,56,0.0001,0,preserve
+warmup,20261103T050840Z-727558ee,60,86.29441624365482,46.59525631216526,680,788,58.3756345177665,checkpoint-600,validation_loss,725.0415,807.481222,401.74072265625,0,57,0.0001,60,preserve
+low-lr,20261103T052229Z-b12070d7,60,71.57360406091371,48.240244835501144,564,788,43.654822335025386,checkpoint-600,validation_loss,639.3233,714.719418,401.74072265625,3,9,2e-05,60,preserve
+lowercase,20261103T053436Z-6fd69da9,60,29.82233502538071,16.067329762815607,235,788,1.9035532994923834,checkpoint-600,validation_loss,688.8269,747.025518,381.44921875,0,0,2e-05,60,lower

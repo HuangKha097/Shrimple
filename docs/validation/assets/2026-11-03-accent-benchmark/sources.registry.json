@@ -1,0 +1,123 @@
+{
+  "observed_date": "2026-11-03",
+  "sources": [
+    {
+      "repo_id": "google/fleurs",
+      "url": "https://huggingface.co/datasets/google/fleurs",
+      "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+      "gated": false,
+      "declared_license": [
+        "cc-by-4.0"
+      ],
+      "known_entire_repo_bytes_not_subset_or_download_requirement": 878377671348,
+      "metadata_snapshot_sha256": "6b68849b502faa81bc3e2685f8e0da509030d9379cd53b98db69f0633aadb3b5",
+      "readme_snapshot_sha256": "688f79f2a5c731af3796e9f683eb02f9b3f09d040decd8c5625d0f37098e71c6",
+      "role": "candidate_external_general_ASR_diagnostic_vi_vn",
+      "speaker_metadata": false,
+      "accent_metadata": false,
+      "decision": "metadata_only; not_region_benchmark_ready",
+      "license_note": "CC-BY-4.0 declared. Global repo bytes are not Vietnamese-subset bytes.",
+      "source_url": "https://huggingface.co/datasets/google/fleurs"
+    },
+    {
+      "repo_id": "leduckhai/VietMed",
+      "url": "https://huggingface.co/datasets/leduckhai/VietMed",
+      "revision": "f302146de79c5cbd6a7d14400fefa2c8cfda7738",
+      "gated": false,
+      "declared_license": "mit",
+      "known_entire_repo_bytes_not_subset_or_download_requirement": 369006732,
+      "metadata_snapshot_sha256": "76d5cf24a5904e8d68879cc8d325ca7f89ade1a3aa49def8ef4a68715ce11b2b",
+      "readme_snapshot_sha256": "1933a9fd617962eff528c4fb7ee530ab9c3fa970da633bb435d3d5149d23e9a5",
+      "role": "open_small_medical_domain_diagnostic",
+      "documented_labelled_hours_approx": 16,
+      "speaker_metadata": true,
+      "accent_metadata": true,
+      "decision": "bounded_train_dev_acquired; no_test; not_ready_for_balanced_NCS_training",
+      "license_note": "MIT declared by publisher; retain attribution; no independent rights verification",
+      "limitations": "Medical domain; observed dev labels North, South East, South West, Central Highland. No coastal Central label. October 2026 references corrected; pin revision.",
+      "source_url": "https://huggingface.co/datasets/leduckhai/VietMed"
+    },
+    {
+      "repo_id": "linhtran92/viet_bud500",
+      "url": "https://huggingface.co/datasets/linhtran92/viet_bud500",
+      "revision": "4b30571f395781fddc3a4946fb378648f8572714",
+      "gated": "auto",
+      "declared_license": [
+        "cc-by-nc-sa-4.0"
+      ],
+      "known_entire_repo_bytes_not_subset_or_download_requirement": 52676404660,
+      "metadata_snapshot_sha256": "e7ed24c0df4c392d87fb40558b8a2b2e40f97a49dafed15a2ab130e618d3cadf",
+      "readme_snapshot_sha256": "dc90ac84297ad6f140c77d9b8e11a8ddbc94e313f1400a01f87c850ac9a3b6cc",
+      "role": "candidate_training_pool",
+      "documented_hours_approx": 500,
+      "speaker_metadata": false,
+      "accent_metadata": false,
+      "decision": "blocked_no_user_access; cannot construct speaker-disjoint regional benchmark from documented audio/transcription schema",
+      "license_note": "HF metadata CC-BY-NC-SA-4.0 conflicts with README Apache paragraph; clarify dataset terms; code licence is not audio rights",
+      "source_url": "https://github.com/apluka34/Bud500"
+    },
+    {
+      "repo_id": "nguyendv02/ViMD_Dataset",
+      "url": "https://huggingface.co/datasets/nguyendv02/ViMD_Dataset",
+      "revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+      "gated": false,
+      "declared_license": "cc-by-nc-nd-4.0",
+      "known_entire_repo_bytes_not_subset_or_download_requirement": 59828312520,
+      "metadata_snapshot_sha256": "480554cdcf934ee28256854361b901fb0dee63f41e4aa1c32cdb38623897e6ec",
+      "readme_snapshot_sha256": "86f02aa89481a1d0c2615956567c28e76c3438f7661005628c028825e7d053bc",
+      "role": "best_metadata_fit_for_regional_benchmark_candidate",
+      "documented_hours_approx": 102.56,
+      "speaker_metadata": true,
+      "accent_metadata": true,
+      "decision": "bounded_valid_only_evaluation; no_training_or_audio_transcript_redistribution",
+      "license_note": "Dataset CC-BY-NC-ND-4.0 allows non-commercial reproduction and private adapted material under Section 2; no model redistribution/commercial-use decision made; paper licence separate",
+      "source_url": "https://aclanthology.org/2024.emnlp-main.426/"
+    },
+    {
+      "repo_id": "NhutP/VietSpeech",
+      "url": "https://huggingface.co/datasets/NhutP/VietSpeech",
+      "revision": "0f18688afa9b64ea515d3fdaad850999b86a0f52",
+      "gated": "auto",
+      "declared_license": "apache-2.0",
+      "known_entire_repo_bytes_not_subset_or_download_requirement": 130501012563,
+      "metadata_snapshot_sha256": "425b29af9498934e5a4f0b5986e666076ba1f242694436f549f44d2043661c5a",
+      "readme_snapshot_sha256": "e27940cfc43c088974eedd1c464508b67c8d904c84e52750361fff1cf1662947",
+      "role": "candidate_large_training_pool",
+      "documented_hours_approx": 1100,
+      "speaker_metadata": false,
+      "accent_metadata": false,
+      "decision": "blocked_no_user_access; documented schema insufficient for regional speaker splits",
+      "license_note": "Apache-2.0 declared; source/audio rights still require review",
+      "source_url": "https://huggingface.co/datasets/NhutP/VietSpeech"
+    },
+    {
+      "repo_id": "speechcolab/gigaspeech2",
+      "url": "https://huggingface.co/datasets/speechcolab/gigaspeech2",
+      "revision": "8dc0d0e502b7e6d5649a13cd4b677cf10c0b21e3",
+      "gated": "auto",
+      "declared_license": [
+        "apache-2.0"
+      ],
+      "known_entire_repo_bytes_not_subset_or_download_requirement": 3089815778282,
+      "metadata_snapshot_sha256": "82d317aace3fc939f8eaf0433ab484f545a1de7603a936357a72ad3eb1fb45ff",
+      "readme_snapshot_sha256": "682cef2364a38051e854d84f3f070abcdb54cbec840efbfacaff672856087a6b",
+      "role": "future_weak_supervision_training_pool",
+      "documented_Vietnamese_refined_hours_approx": 6000,
+      "decision": "gated_custom_terms; not_acquired",
+      "speaker_metadata": "not_verified_for_Vietnamese",
+      "accent_metadata": false,
+      "license_note": "Apache metadata is not the complete gated underlying-audio agreement; training labels are automatic, human dev/test separate",
+      "source_url": "https://huggingface.co/datasets/speechcolab/gigaspeech2"
+    },
+    {
+      "repo_id": "VLSP_resources",
+      "url": "https://vlsp.org.vn/index.php/resources",
+      "decision": "blocked_no_user_access; signed general form and email required; no message sent",
+      "declared_license": "per_dataset_agreement_not_yet_obtained",
+      "speaker_metadata": "unknown",
+      "accent_metadata": "unknown"
+    }
+  ],
+  "auto_training_permitted": false,
+  "note": "Metadata/card declarations, not independent rights or label-quality verification. No gated terms accepted for user."
+}

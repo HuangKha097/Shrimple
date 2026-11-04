@@ -1,0 +1,347 @@
+{
+  "date": "2026-11-03",
+  "scope": "internal AI websocket, real-time replay, VAD/ASR/MT; no physical WebRTC",
+  "normalization": "NFC, casefold, punctuation-to-space, collapse whitespace; CER excludes spaces",
+  "runs": {
+    "baseline-long-uncompressed": {
+      "label": "baseline-long-uncompressed",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 3,
+      "audio_seconds": 87.808,
+      "wall_seconds": 88.54328760999988,
+      "partials": 136,
+      "finals": 22,
+      "translations": 22,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.06389656100009233,
+      "errors": [],
+      "asr_metrics": {
+        "wer_percent": 20.74074074074074,
+        "cer_percent": 15.332581736189402,
+        "word_errors": 56,
+        "reference_words": 270,
+        "char_errors": 136,
+        "reference_chars": 887
+      }
+    },
+    "la-dtw-v2-long": {
+      "label": "la-dtw-v2-long",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 3,
+      "audio_seconds": 87.808,
+      "wall_seconds": 89.10546430400018,
+      "partials": 100,
+      "finals": 14,
+      "translations": 14,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.119354874499777,
+      "errors": [
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        }
+      ],
+      "asr_metrics": {
+        "wer_percent": 61.111111111111114,
+        "cer_percent": 35.85118376550169,
+        "word_errors": 165,
+        "reference_words": 270,
+        "char_errors": 318,
+        "reference_chars": 887
+      }
+    },
+    "la-dtw-v3-long": {
+      "label": "la-dtw-v3-long",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 3,
+      "audio_seconds": 87.808,
+      "wall_seconds": 89.6166850769996,
+      "partials": 118,
+      "finals": 13,
+      "translations": 13,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.10659664700051508,
+      "errors": [
+        {
+          "status": 429,
+          "type": "error"
+        }
+      ],
+      "asr_metrics": {
+        "wer_percent": 30.0,
+        "cer_percent": 24.91544532130778,
+        "word_errors": 81,
+        "reference_words": 270,
+        "char_errors": 221,
+        "reference_chars": 887
+      }
+    },
+    "la-original-long": {
+      "label": "la-original-long",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 3,
+      "audio_seconds": 87.808,
+      "wall_seconds": 87.9058308550002,
+      "partials": 44,
+      "finals": 9,
+      "translations": 9,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.02554915799964874,
+      "errors": [
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "error"
+        }
+      ],
+      "asr_metrics": {
+        "wer_percent": 97.03703703703704,
+        "cer_percent": 94.70124013528749,
+        "word_errors": 262,
+        "reference_words": 270,
+        "char_errors": 840,
+        "reference_chars": 887
+      }
+    },
+    "la-dtw-v4-long": {
+      "label": "la-dtw-v4-long",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 3,
+      "audio_seconds": 87.808,
+      "wall_seconds": 89.40671708500031,
+      "partials": 121,
+      "finals": 14,
+      "translations": 14,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.08742305150008178,
+      "errors": [],
+      "asr_metrics": {
+        "wer_percent": 20.37037037037037,
+        "cer_percent": 17.474633596392334,
+        "word_errors": 55,
+        "reference_words": 270,
+        "char_errors": 155,
+        "reference_chars": 887
+      }
+    },
+    "baseline-verify": {
+      "label": "baseline-verify",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 3,
+      "audio_seconds": 69.76,
+      "wall_seconds": 70.38551388399992,
+      "partials": 112,
+      "finals": 16,
+      "translations": 16,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.06813964849970944,
+      "errors": [],
+      "asr_metrics": {
+        "wer_percent": 27.160493827160494,
+        "cer_percent": 20.71516646115906,
+        "word_errors": 66,
+        "reference_words": 243,
+        "char_errors": 168,
+        "reference_chars": 811
+      }
+    },
+    "la-dtw-v4-verify": {
+      "label": "la-dtw-v4-verify",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 3,
+      "audio_seconds": 69.76,
+      "wall_seconds": 70.98884215499947,
+      "partials": 92,
+      "finals": 12,
+      "translations": 12,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.09031263049973859,
+      "errors": [
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        },
+        {
+          "status": 503,
+          "type": "status"
+        }
+      ],
+      "asr_metrics": {
+        "wer_percent": 28.80658436213992,
+        "cer_percent": 22.934648581997536,
+        "word_errors": 70,
+        "reference_words": 243,
+        "char_errors": 186,
+        "reference_chars": 811
+      }
+    }
+  },
+  "combined_six_clips": {
+    "segmented": {
+      "reference_words": 513,
+      "word_errors": 122,
+      "reference_chars": 1698,
+      "char_errors": 304,
+      "finals": 38,
+      "translations": 38,
+      "error_events": 0,
+      "status_events": 0,
+      "wer_percent": 23.78167641325536,
+      "cer_percent": 17.90341578327444
+    },
+    "localagreement_v4": {
+      "reference_words": 513,
+      "word_errors": 125,
+      "reference_chars": 1698,
+      "char_errors": 341,
+      "finals": 26,
+      "translations": 26,
+      "error_events": 0,
+      "status_events": 3,
+      "wer_percent": 24.366471734892787,
+      "cer_percent": 20.082449941107186
+    }
+  },
+  "decision": "Keep segmented as default; LocalAgreement remains opt-in experimental",
+  "capture_note": "Four initial aggregate files exported; final three results transcribed exactly from tool stdout after temporary container was stopped. No transcript/event files exported.",
+  "english_smoke": {
+    "label": "la-v4-en-vi",
+    "source": "en",
+    "target": "vi",
+    "input_clips": 2,
+    "audio_seconds": 8.32,
+    "wall_seconds": 9.721701215999929,
+    "partials": 2,
+    "finals": 2,
+    "translations": 2,
+    "revisions_match": true,
+    "median_translation_after_final_seconds": 0.3342507089996616,
+    "errors": [],
+    "asr_metrics": {
+      "wer_percent": 0.0,
+      "cer_percent": 0.0,
+      "word_errors": 0,
+      "reference_words": 13,
+      "char_errors": 0,
+      "reference_chars": 56
+    }
+  }
+}

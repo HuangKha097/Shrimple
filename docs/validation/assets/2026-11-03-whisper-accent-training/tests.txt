@@ -1,0 +1,40 @@
+test_balancing_blocks_missing_region_and_respects_unique_budget (test_accent_benchmark.AccentBenchmarkTests.test_balancing_blocks_missing_region_and_respects_unique_budget) ... ok
+test_bootstrap_deterministic_and_unavailable_for_one_speaker (test_accent_benchmark.AccentBenchmarkTests.test_bootstrap_deterministic_and_unavailable_for_one_speaker) ... ok
+test_duplicate_audio_and_unproven_cohort_fail (test_accent_benchmark.AccentBenchmarkTests.test_duplicate_audio_and_unproven_cohort_fail) ... ok
+test_generation_cap_with_three_token_prompt_and_eos_at_boundary (test_accent_benchmark.AccentBenchmarkTests.test_generation_cap_with_three_token_prompt_and_eos_at_boundary) ... ok
+test_highland_is_not_central_and_unknown_stays_unknown (test_accent_benchmark.AccentBenchmarkTests.test_highland_is_not_central_and_unknown_stays_unknown) ... ok
+test_missing_group_is_not_zero_and_macro_is_unavailable (test_accent_benchmark.AccentBenchmarkTests.test_missing_group_is_not_zero_and_macro_is_unavailable) ... ok
+test_missing_prediction_fails_empty_prediction_is_counted (test_accent_benchmark.AccentBenchmarkTests.test_missing_prediction_fails_empty_prediction_is_counted) ... ok
+test_reference_mutation_and_duplicate_prediction_fail (test_accent_benchmark.AccentBenchmarkTests.test_reference_mutation_and_duplicate_prediction_fail) ... ok
+test_speaker_recording_and_encoded_audio_overlap_fail (test_accent_benchmark.AccentBenchmarkTests.test_speaker_recording_and_encoded_audio_overlap_fail) ... ok
+test_test_split_not_scored_by_development_command (test_accent_benchmark.AccentBenchmarkTests.test_test_split_not_scored_by_development_command) ... ok
+test_vimd_duration_comes_from_audio_header_without_length_column (test_accent_benchmark.AccentBenchmarkTests.test_vimd_duration_comes_from_audio_header_without_length_column) ... ok
+test_caps_without_replacement_are_reproducible (test_accent_training.AccentTrainingTests.test_caps_without_replacement_are_reproducible) ... ok
+test_invalid_or_duplicate_candidates_rejected (test_accent_training.AccentTrainingTests.test_invalid_or_duplicate_candidates_rejected) ... ok
+test_paired_interval_zero_for_identical_outputs_and_keeps_pairing (test_accent_training.AccentTrainingTests.test_paired_interval_zero_for_identical_outputs_and_keeps_pairing) ... ok
+test_alignment_counts_insertions_deletions_and_marks (test_evidence.EvidenceTests.test_alignment_counts_insertions_deletions_and_marks) ... ok
+test_config_rejects_wrong_model_or_nan (test_evidence.EvidenceTests.test_config_rejects_wrong_model_or_nan) ... ok
+test_corpus_weighting_and_insertions (test_evidence.EvidenceTests.test_corpus_weighting_and_insertions) ... ok
+test_development_accepts_train_validation_only (test_evidence.EvidenceTests.test_development_accepts_train_validation_only) ... ok
+test_development_config_validates_schedule_and_rejects_unknown_keys (test_evidence.EvidenceTests.test_development_config_validates_schedule_and_rejects_unknown_keys) ... ok
+test_development_rejects_test_before_model_access (test_evidence.EvidenceTests.test_development_rejects_test_before_model_access) ... ok
+test_empty_reference_rejected (test_evidence.EvidenceTests.test_empty_reference_rejected) ... ok
+test_failed_run_keeps_status_without_leaking_reference_to_console (test_evidence.EvidenceTests.test_failed_run_keeps_status_without_leaking_reference_to_console) ... ok
+test_label_transform_preserves_reference_and_accents (test_evidence.EvidenceTests.test_label_transform_preserves_reference_and_accents) ... ok
+test_manifest_conversion_refuses_overwrite (test_evidence.EvidenceTests.test_manifest_conversion_refuses_overwrite) ... ok
+test_missing_held_out_split (test_evidence.EvidenceTests.test_missing_held_out_split) ... ok
+test_missing_permission (test_evidence.EvidenceTests.test_missing_permission) ... ok
+test_pcm_duplicate_with_different_container (test_evidence.EvidenceTests.test_pcm_duplicate_with_different_container) ... ok
+test_renamed_duplicate_audio (test_evidence.EvidenceTests.test_renamed_duplicate_audio) ... ok
+test_speaker_leakage (test_evidence.EvidenceTests.test_speaker_leakage) ... ok
+test_unicode_and_punctuation (test_evidence.EvidenceTests.test_unicode_and_punctuation) ... ok
+test_unreviewed_draft_cannot_become_manifest (test_evidence.EvidenceTests.test_unreviewed_draft_cannot_become_manifest) ... ok
+test_valid_manifest (test_evidence.EvidenceTests.test_valid_manifest) ... ok
+test_vivos_rejects_corrupted_archive_before_output (test_evidence.EvidenceTests.test_vivos_rejects_corrupted_archive_before_output) ... ok
+test_vivos_split_and_path_traversal_protection (test_evidence.EvidenceTests.test_vivos_split_and_path_traversal_protection) ... ok
+test_wrong_sample_rate (test_evidence.EvidenceTests.test_wrong_sample_rate) ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 1.984s
+
+OK

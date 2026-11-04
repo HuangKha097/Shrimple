@@ -1,0 +1,16 @@
+{
+  "status": "frozen_before_training",
+  "created_utc": "2026-11-03T06:44:16.883365+00:00",
+  "manifest": "ai-service\\training\\data\\accent-train-v1\\manifest.jsonl",
+  "manifest_sha256": "5a7a4af8e11a61c10ccfc3148d8c063cf2acea0a592ca5d10eae707cfa259d56",
+  "config": "ai-service\\training\\config.accent-v1.json",
+  "config_sha256": "dad87b40d2bcffd72dded92aa7e58f91493f9ec8ece7036402e358c6f6f86c1b",
+  "training_source_sha256": "3116703fb995e566770370627be40bd4c0c8ff7f4b1f692650eb77fa8664eefc",
+  "model_initialization": "original pinned Whisper-base, not prior tuned checkpoint",
+  "steps": 600,
+  "learning_rate": 1e-05,
+  "selection": "lowest combined validation loss; report VIVOS and each ViMD region separately",
+  "scope": "development only; no test, serving, deployment, upload or publication",
+  "prior_vivos_validation_wer": 27.918781725888326,
+  "prior_vimd_validation_wer": 53.55529529864481
+}

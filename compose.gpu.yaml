@@ -1,4 +1,4 @@
-# GPU runs ASR; CPU runs VAD and text translation in a separate lane.
+# GPU runs English Whisper and Vietnamese PhoWhisper; CPU runs VAD/translation.
 # These are task assignments, not measured 50/50 device utilization.
 # docker compose -p shrimple -f compose.yaml -f compose.gpu.yaml up -d --build
 services:
@@ -14,6 +14,20 @@ services:
       WHISPER_GPU: "true"
       WHISPER_MODEL: ${WHISPER_MODEL:-base-q5_1}
       WHISPER_THREADS: ${WHISPER_THREADS:-2}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  phowhisper:
+    image: shrimple-whisper-cuda
+    build:
+      dockerfile: Dockerfile.cuda
+    environment:
+      WHISPER_GPU: "true"
     deploy:
       resources:
         reservations:

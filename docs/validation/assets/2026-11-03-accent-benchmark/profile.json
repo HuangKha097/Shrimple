@@ -1,0 +1,98 @@
+{
+  "source": {
+    "repo": "leduckhai/VietMed",
+    "revision": "f302146de79c5cbd6a7d14400fefa2c8cfda7738",
+    "files": [
+      {
+        "path": "data/train-00000-of-00001.parquet",
+        "bytes": 56020895,
+        "sha256": "c316eda2f98b65da68cda370ca674c3109291a0977d3a6d7105c9b31fdb52d5f"
+      },
+      {
+        "path": "data/dev-00000-of-00001.parquet",
+        "bytes": 57059580,
+        "sha256": "ddbce77039a150053a3a6dbe7c92c8f07a7924537a4681a1a1788aa2f917b18b"
+      }
+    ],
+    "test_downloaded": false,
+    "license_declared": "MIT",
+    "use": "local academic research; medical-domain data, not general conversation benchmark"
+  },
+  "source_acquisition_sha256": "80869c502f94db71e78066f757fa5ad6af00b7579379e39b1bd3cb927e5e1a8c",
+  "source_train": {
+    "Central Highland": {
+      "samples": 121,
+      "speakers": 1,
+      "seconds": 751.0
+    },
+    "North": {
+      "samples": 1246,
+      "speakers": 5,
+      "seconds": 7644.0
+    },
+    "South East": {
+      "samples": 1406,
+      "speakers": 7,
+      "seconds": 8881.0
+    }
+  },
+  "source_validation": {
+    "Central Highland": {
+      "samples": 116,
+      "speakers": 1,
+      "seconds": 736.0
+    },
+    "North": {
+      "samples": 1323,
+      "speakers": 7,
+      "seconds": 8263.0
+    },
+    "South East": {
+      "samples": 1133,
+      "speakers": 7,
+      "seconds": 6774.0
+    },
+    "South West": {
+      "samples": 340,
+      "speakers": 6,
+      "seconds": 2077.0
+    }
+  },
+  "selected_validation": {
+    "Central Highland": {
+      "samples": 10,
+      "speakers": 1,
+      "seconds": 67.0
+    },
+    "North": {
+      "samples": 70,
+      "speakers": 7,
+      "seconds": 433.0
+    },
+    "South East": {
+      "samples": 70,
+      "speakers": 7,
+      "seconds": 393.0
+    },
+    "South West": {
+      "samples": 60,
+      "speakers": 6,
+      "seconds": 358.0
+    }
+  },
+  "selection": {
+    "seed": 42,
+    "up_to_clips_per_speaker": 10,
+    "method": "sha256(seed:source_utterance_id), equal cap per documented dev speaker; no reference/error selection"
+  },
+  "audit": {
+    "samples": 210,
+    "speakers": 21,
+    "recordings": 10,
+    "identity_note": "Supplied dataset-scoped speaker/recording IDs checked; cross-corpus identity and near-duplicate speech are not established"
+  },
+  "test_read": false,
+  "scope": "medical-domain development diagnostic; incomplete N-C-S coverage",
+  "manifest_sha256": "56bd4c37c3fbcde77d0f81ccb91a260448683f16814f007863b398e14845fd9c",
+  "script_sha256": "8960adef1c1a0a33700a99e397261d1aa547b00d2bd515f494bcb3aa08422168"
+}

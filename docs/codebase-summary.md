@@ -111,6 +111,30 @@ Mã ticket đầy đủ và AC ở [Kanban](./kanban.md); [Plan](./plan.md) nêu
 
 ## Bổ sung module sau pull
 
+- `ai-service/training/` (2026-11-02): chuẩn bị MP3/WAV, draft Whisper local,
+  audit manifest/leakage, train LoRA base, metrics và evidence riêng theo run.
+  Dependency tách inference; raw data/runs/model/venv ignored. Xem
+  [fine-tuning](./whisper-finetuning.md), QS-AI01. Chưa thay model runtime.
+  `prepare_vivos.py` tạo pilot theo speaker, `evaluate_reviewed.py` đo diagnostic ngoài
+  train, `plot_pilot.py` xuất bằng chứng; [CUDA pilot](./validation/2026-11-02-whisper-vivos-pilot.md)
+  chạy được nhưng chưa cải thiện validation/test.
+  `analyze_asr.py`/`plot_analysis.py` phân tích train/validation; `prepare_development.py`
+  mở rộng train theo speaker và giữ test riêng. Bốn `config.dev-*.json` chuẩn bị cho
+  [vòng development mới](./validation/2026-11-02-whisper-train-validation-analysis.md), chưa chạy.
+  `run_development.py`/`report_development.py`/`package_evidence.py` chạy và lưu cả vòng;
+  [2026-11-03](./validation/2026-11-03-whisper-development.md)4/4lượt hoàn tất, chưa vượt base
+  theo WER validation. Dòng "chưa chạy" ở trên mô tả bước chuẩn bị2026-11-02.
+  `prepare_vietmed.py`/`prepare_vimd.py` lấy mẫu development có source/speaker/region;
+  `accent_benchmark.py` + protocol chấm nhóm/coverage, `evaluate_accent.py` đo base local,
+  `report_accent.py` xuất registry/CSV/PNG/error counts; dependency ingest tách riêng.
+  [Nguồn/benchmark](./vietnamese-accent-benchmark.md), [evidence](./validation/2026-11-03-accent-benchmark.md).
+  `acquire_vimd_train.py`/`prepare_accent_training.py` chuẩn bị official train ba vùng
+  với VIVOS replay; `config.accent-v1.json` + `finetune.py` chạy private development;
+  `report_accent_round.py` xuất so sánh corpus/vùng và paired speaker bootstrap.
+  [Vòng accent training](./validation/2026-11-03-whisper-accent-training.md).
+  600steps hoàn thành, ViMD WER53,56→46,86%, VIVOS27,92→28,68%; `verify_accent_round.py`
+  kiểm artifact/source/input và tính lại WER/CER. Serving/test cuối chưa đổi.
+
 - Conversation role leader/admin/member, legacy inviteCode select:false và formatter loại cả invite secrets. Group add/role/leave, creator-only authority và admin rights trong controllers/helper; [group-roles](./group-roles.md).
 - Poll embedded Message; group-call metadata callId/status/duration/start/end. Frontend CreatePollModal, Message vote/close và realtime messageUpdated.
 - `client/src/components/common/TreeQRCodeModal.jsx`, `components/magic-tree/` và html5-qrcode: TreeQR/scan camera/file, link64/legacy24 tới preview/onboarding, không join bằng ID.
@@ -124,12 +148,22 @@ Snapshot sau merge có ai/whisper/qwen, model-cache volumes và Whisper CUDA yê
 
 Cập nhật build local 2026-10-17: `compose.yaml` mặc định Whisper CPU (`ai-service/whisper/Dockerfile`), `compose.gpu.yaml` giữ lựa chọn NVIDIA (`ai-service/whisper/Dockerfile.cuda`). Đợt đầu giữ medium q5_0; [evidence CPU](./validation/2026-10-17-whisper-cpu-build.md) phân biệt build/binary với inference model thực.
 
-Cấu hình ưu tiên tốc độ local trước progressive: Whisper base-q5_1 + Qwen3-0.6B Q8_0, chọn lại model lớn qua WHISPER_MODEL/QWEN_MODEL; GPU override mặc định Whisper medium. Snapshot này dùng audio_ctx theo thời lượng WAV +1s đệm và một slot inference/tiến trình, bận429; local2 thread/model, Qwen polling0. TranslationNotes bỏ clip429/504/client timeout và tiếp tục đoạn mới. [Evidence local của snapshot](./validation/2026-10-17-translation-speed.md).
+Snapshot lịch sử trước progressive, không phải cấu hình đang chốt: Whisper base-q5_1 + Qwen3-0.6B Q8_0, chọn lại model lớn qua WHISPER_MODEL/QWEN_MODEL; GPU override mặc định Whisper medium. Snapshot này dùng audio_ctx theo thời lượng WAV +1s đệm và một slot inference/tiến trình, bận429; local2 thread/model, Qwen polling0. TranslationNotes bỏ clip429/504/client timeout và tiếp tục đoạn mới. [Evidence local của snapshot](./validation/2026-10-17-translation-speed.md).
 
 Delta PCM 2026-10-17: `TranslationNotes.jsx` dùng `translationPcmCapture.js` và `translationPcmWorklet.js` để gửi remote-only PCM16 mono16kHz/2048samples qua `translationPcmSocket.js`. Backend `translationPcm.js` kiểm tra session/attendance từng gói và kết quả, pin phiên cũ để không lọt output qua rejoin, auth AI bằng khóa nội bộ. `translationNotesState.js` upsert cùng stream+utterance/revision: partial→final original, Translating..., translation sau; status warning không kết thúc note. Stop/hidden/reconnect dọn node/listener/timer, không replay hoặc stop track WebRTC. Chiều đối phương→viewer và50notes RAM được giữ.
 
-`pcm_vad.py` nạp Silero VAD v6.2 ONNX pin checksum, CPU một thread, recurrent state/context riêng stream; pre-roll256ms, chốt silence320ms/max8s. `pcm_stream.py` nhận binary qua `/stream/pcm`, bọc WAV trong RAM thay FFmpeg; partial mới nhất và queue cuối/dịch giới hạn, ASR/dịch độc lập và ưu tiên câu cuối. `/health?mode=pcm` chỉ cần Whisper+Silero. Server thêm dependency trực tiếp ws; AI thêm websockets/NumPy/ONNX Runtime, Docker smoke VAD lúc build. Whisper CPU mặc định/NVIDIA opt-in giữ cấu hình hiện hữu; chưa tự chọn/failover GPU hoặc bảo đảm1–2s. Protocol authority ở [Design](./design.md); kiểm chứng/gaps ở [PCM validation](./validation/2026-10-17-translation-pcm.md).
+`pcm_vad.py` nạp Silero VAD v6.2 ONNX pin checksum, CPU một thread, recurrent state/context riêng stream; pre-roll256ms, chốt silence320ms/max8s. `pcm_stream.py` nhận binary qua `/stream/pcm`, bọc WAV trong RAM thay FFmpeg; partial mới nhất và queue cuối/dịch giới hạn, ASR/dịch độc lập và ưu tiên câu cuối. `/health?mode=pcm` kiểm cả PhoWhisper/Whisper và Silero, làm nóng CT2 có sẵn. Server thêm dependency trực tiếp ws; AI thêm websockets/NumPy/ONNX Runtime, Docker smoke VAD lúc build. Whisper CPU mặc định/NVIDIA opt-in giữ cấu hình hiện hữu; chưa tự chọn/failover GPU hoặc bảo đảm1–2s. Protocol authority ở [Design](./design.md); kiểm chứng/gaps ở [PCM validation](./validation/2026-10-17-translation-pcm.md).
 
 HTTP `/chunk` JSON và `/chunk-stream` NDJSON cùng decode FFmpeg/giới hạn clip vẫn được giữ cho consumer cũ; `translationQueue.js`/parser stream có regression riêng, bảng note không còn dùng upload clip. [Progressive HTTP](./validation/2026-10-17-translation-progressive.md) và [speed clip6s](./validation/2026-10-17-translation-speed.md) giữ kết quả từng snapshot, không là số đo PCM/model/WebRTC hiện tại.
 
 Cập nhật 2026-11-01: toàn bộ icon frontend chuyển sang client/src/components/icons/index.js (IonIcons 512×512 từ https://www.shadcn.io/icons/ion), gỡ dependency lucide-react và xóa client/src/components/magic-tree/ui/icons.tsx dư thừa; dọn lifecycle hook trong CallModal.jsx và TreeQRCodeModal.jsx, gộp import trùng ở SavedPostsContainer.jsx, và chuyển useAuthStore sang static import kèm helper cập nhật коллекции trong usePostStore.js (client lint 0 errors/0 warnings, client tests 42/42 pass, build pass 1865 modules).
+
+- `ai-service/pcm_vad.py`: soft pause và valley khi nói liên tục, carry tail không replay VAD; regression tại `ai-service/tests/test_pcm_segmentation.py`. [Evidence2026-11-03](./validation/2026-11-03-continuous-speech.md); chưa cập nhật service chạy.
+
+Delta2026-11-03: `training/trial_phowhisper.py` đo frozen ASR; `training/prepare_phowhisper.py` tải revision VinAI khóa và export GGML có checksum. `app.py` route nguồn vi→PhoWhisper, en→Whisper-base; Compose có service `phowhisper` cùng image whisper.cpp. UI/API/PCM chỉ en↔vi, self ASR giữ B/B. [Evidence và runtime gate](./validation/2026-11-03-phowhisper.md). Ngôn ngữ UI vi/en/zh giữ nguyên; các mô tả một ASR/ba ngôn ngữ trước đây là lịch sử.
+
+PhoWhisper runtime follow-up2026-11-03: `app.py` dùng full-context text cho vi, en giữ profile. `TranslationNotes.jsx` theo dõi trạng thái chờ từng nguồn, lỗi utterance/stream vẫn cảnh báo. Hai script `training/probe_asr_runtime.py` và `training/replay_pcm_runtime.py` kiểm decoder/PCM bằng model thật; không thuộc inference image. [Evidence](./validation/2026-11-03-phowhisper-runtime-fix.md).
+
+Runtime của follow-up đã áp dụng local, hai ASR CUDA0 và AI PCM/MT thật hai chiều/đồng thời được kiểm. [Evidence hiện hành](./validation/2026-11-03-phowhisper-runtime-fix.md); không coi replay AI nội bộ là kiểm JWT/session hoặc WebRTC.
+
+Chốt và dọn source2026-11-03: đã bỏ module/overlay/test LocalAgreement không được chọn; `pcm_stream.py` chỉ khởi tạo `PcmPipeline` segmented. Giữ `prepare_phowhisper.py` cùng dependency `trial_phowhisper.py`/`evidence.py`, model cache và tooling nghiên cứu có tài liệu riêng. `training/replay_pcm_runtime.py` giữ để tái kiểm runtime, mặc định chỉ lưu aggregate. [Danh mục dọn và kiểm chứng](./validation/2026-11-03-translation-finalization.md); [kết quả thử được lưu](./validation/2026-11-03-localagreement-trial.md).

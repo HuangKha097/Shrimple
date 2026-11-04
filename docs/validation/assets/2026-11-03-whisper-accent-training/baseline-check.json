@@ -1,0 +1,21 @@
+{
+  "matches_prior_baselines": true,
+  "scores": {
+    "AILAB-VNUHCM/vivos": {
+      "wer_percent": 27.918781725888326,
+      "cer_percent": 16.10558530986993,
+      "word_errors": 220,
+      "reference_words": 788,
+      "char_errors": 421,
+      "reference_chars": 2614
+    },
+    "nguyendv02/ViMD_Dataset": {
+      "wer_percent": 53.55529529864481,
+      "cer_percent": 38.43342301639677,
+      "word_errors": 3201,
+      "reference_words": 5977,
+      "char_errors": 7571,
+      "reference_chars": 19699
+    }
+  }
+}

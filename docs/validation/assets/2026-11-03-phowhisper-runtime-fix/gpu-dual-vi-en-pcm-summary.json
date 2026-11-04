@@ -1,0 +1,27 @@
+{
+  "label": "gpu-dual-vi-en",
+  "source": "vi",
+  "target": "en",
+  "input_clips": 2,
+  "audio_seconds": 15.488,
+  "wall_seconds": 16.116160975000184,
+  "partials": 20,
+  "finals": 3,
+  "translations": 3,
+  "revisions_match": true,
+  "median_translation_after_final_seconds": 0.3910710069999368,
+  "errors": [
+    {
+      "status": 429,
+      "type": "status"
+    }
+  ],
+  "asr_metrics": {
+    "wer_percent": 2.0408163265306123,
+    "cer_percent": 0.6211180124223602,
+    "word_errors": 1,
+    "reference_words": 49,
+    "char_errors": 1,
+    "reference_chars": 161
+  }
+}

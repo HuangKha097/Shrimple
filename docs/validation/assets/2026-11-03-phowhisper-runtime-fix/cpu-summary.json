@@ -1,0 +1,46 @@
+{
+  "label": "cpu",
+  "samples": 6,
+  "manifest_sha256": "8d6c37cd0924ad8921796190f8448aac9e237c9068ac4050e62ce3fb02020142",
+  "profiles": {
+    "short": {
+      "metrics": {
+        "wer_percent": 35.338345864661655,
+        "cer_percent": 28.798185941043084,
+        "word_errors": 47,
+        "reference_words": 133,
+        "char_errors": 127,
+        "reference_chars": 441
+      },
+      "median_seconds": 0.8702050764999854,
+      "max_seconds": 1.116230585999972,
+      "abnormal": 0
+    },
+    "full": {
+      "metrics": {
+        "wer_percent": 9.774436090225564,
+        "cer_percent": 8.16326530612245,
+        "word_errors": 13,
+        "reference_words": 133,
+        "char_errors": 36,
+        "reference_chars": 441
+      },
+      "median_seconds": 2.307629139499994,
+      "max_seconds": 2.897439674999987,
+      "abnormal": 0
+    },
+    "full_text": {
+      "metrics": {
+        "wer_percent": 3.007518796992481,
+        "cer_percent": 1.5873015873015872,
+        "word_errors": 4,
+        "reference_words": 133,
+        "char_errors": 7,
+        "reference_chars": 441
+      },
+      "median_seconds": 2.3303359214999944,
+      "max_seconds": 2.9976558559999944,
+      "abnormal": 0
+    }
+  }
+}

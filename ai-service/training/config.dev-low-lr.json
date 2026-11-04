@@ -1,0 +1,18 @@
+{
+  "model_id": "openai/whisper-base",
+  "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+  "seed": 42,
+  "max_steps": 600,
+  "learning_rate": 0.00002,
+  "gradient_accumulation_steps": 4,
+  "eval_steps": 100,
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "lora_dropout": 0.05,
+  "precision": "fp32",
+  "max_new_tokens": 225,
+  "evaluation_scope": "development",
+  "label_case": "preserve",
+  "warmup_steps": 60,
+  "load_best_model_at_end": true
+}

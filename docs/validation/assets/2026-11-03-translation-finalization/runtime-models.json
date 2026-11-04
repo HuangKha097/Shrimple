@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-03",
+  "timezone": "Asia/Saigon",
+  "models": [
+    {
+      "container": "shrimple-phowhisper-1",
+      "sha256": "d2d55964ba390fdbd32642a36555961df7fe3a171c41c841e4257f46a157c367",
+      "gpu_environment": "true",
+      "docker_health": "healthy",
+      "gpu_device_requests": [
+        {
+          "Driver": "nvidia",
+          "Count": 1,
+          "DeviceIDs": null,
+          "Capabilities": [
+            [
+              "gpu"
+            ]
+          ],
+          "Options": null
+        }
+      ]
+    },
+    {
+      "container": "shrimple-whisper-1",
+      "sha256": "422f1ae452ade6f30a004d7e5c6a43195e4433bc370bf23fac9cc591f01a8898",
+      "gpu_environment": "true",
+      "docker_health": "healthy",
+      "gpu_device_requests": [
+        {
+          "Driver": "nvidia",
+          "Count": 1,
+          "DeviceIDs": null,
+          "Capabilities": [
+            [
+              "gpu"
+            ]
+          ],
+          "Options": null
+        }
+      ]
+    }
+  ],
+  "health_pcm": {
+    "http": 200,
+    "body": {
+      "status": "ready"
+    },
+    "mode": "segmented"
+  },
+  "model_weights_changed": false,
+  "runtime_action": "start-gpu.ps1 -SkipBuild; reuse existing images, no model download or training",
+  "source_cleanup_deployed": false,
+  "note": "Workspace-only removal of unused branch; existing runtime already uses segmented. No fresh physical WebRTC/real microphone acceptance."
+}

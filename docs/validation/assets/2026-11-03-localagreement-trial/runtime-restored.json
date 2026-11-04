@@ -1,0 +1,120 @@
+{
+  "main": {
+    "health_http": 200,
+    "health": {
+      "status": "ready"
+    },
+    "mode": "segmented",
+    "alignment": "decoder",
+    "main_app_sha256": "9e55fc58a736a0b5db233a77bd79426d255214bc49fe3a2854471bff85192c92"
+  },
+  "containers": [
+    {
+      "name": "shrimple-ai-1",
+      "image_id": "sha256:fa9148f596dca121087c5127bfc69ae27ace6e206b96e0e76c72093aee1cad49",
+      "running": true,
+      "health": "not_configured",
+      "gpu_device_requests": null
+    },
+    {
+      "name": "shrimple-whisper-1",
+      "image_id": "sha256:a29d0f87df3fea3b3633febf46f2d68d875746128925f508e0873e684270a9c1",
+      "running": true,
+      "health": "healthy",
+      "gpu_device_requests": [
+        {
+          "Driver": "nvidia",
+          "Count": 1,
+          "DeviceIDs": null,
+          "Capabilities": [
+            [
+              "gpu"
+            ]
+          ],
+          "Options": null
+        }
+      ]
+    },
+    {
+      "name": "shrimple-phowhisper-1",
+      "image_id": "sha256:a29d0f87df3fea3b3633febf46f2d68d875746128925f508e0873e684270a9c1",
+      "running": true,
+      "health": "healthy",
+      "gpu_device_requests": [
+        {
+          "Driver": "nvidia",
+          "Count": 1,
+          "DeviceIDs": null,
+          "Capabilities": [
+            [
+              "gpu"
+            ]
+          ],
+          "Options": null
+        }
+      ]
+    }
+  ],
+  "concurrent_replays": [
+    {
+      "label": "restored-dual-vi-en",
+      "source": "vi",
+      "target": "en",
+      "input_clips": 2,
+      "audio_seconds": 15.488,
+      "wall_seconds": 16.090825997000138,
+      "partials": 20,
+      "finals": 3,
+      "translations": 3,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.3974191060005978,
+      "errors": [
+        {
+          "status": 429,
+          "type": "status"
+        }
+      ],
+      "asr_metrics": {
+        "wer_percent": 2.0408163265306123,
+        "cer_percent": 0.6211180124223602,
+        "word_errors": 1,
+        "reference_words": 49,
+        "char_errors": 1,
+        "reference_chars": 161
+      }
+    },
+    {
+      "label": "restored-dual-en-vi",
+      "source": "en",
+      "target": "vi",
+      "input_clips": 2,
+      "audio_seconds": 8.32,
+      "wall_seconds": 9.1412082249999,
+      "partials": 0,
+      "finals": 3,
+      "translations": 3,
+      "revisions_match": true,
+      "median_translation_after_final_seconds": 0.2668064260005849,
+      "errors": [
+        {
+          "status": 429,
+          "type": "status"
+        },
+        {
+          "status": 429,
+          "type": "status"
+        }
+      ],
+      "asr_metrics": {
+        "wer_percent": 0.0,
+        "cer_percent": 0.0,
+        "word_errors": 0,
+        "reference_words": 13,
+        "char_errors": 0,
+        "reference_chars": 56
+      }
+    }
+  ],
+  "temporary_dtw_container_stopped": true,
+  "localagreement_default": false
+}

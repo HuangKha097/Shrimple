@@ -1,0 +1,54 @@
+{
+  "document": "Tai-Lieu-Kien-Truc-Ky-Thuat-He-Thong-Shrimple-GPU-CPU.docx",
+  "date": "2026-11-03",
+  "timezone": "Asia/Saigon",
+  "pages": 10,
+  "tables": 9,
+  "figures": 3,
+  "comments": 2,
+  "sha256": "5f3563c6aa169eebfc92f2091ae2ddd05737bc0f8cdf2ff0bd8bd4fbda9013a0",
+  "previous_sha256": "e46be75dbe3c424010ab23a0b17b69336007b006544d5c4b89461bafdab8736b",
+  "renderer": "Microsoft Word ExportAsFixedFormat plus packaged render_docx.py rasterization adapter",
+  "visual_review": {
+    "pages_reviewed": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "landscape_pages": [
+      5,
+      6
+    ],
+    "tables_and_figures": "verified readable, no clipping or overlap",
+    "final_iteration_unchanged_pages": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      7,
+      8
+    ],
+    "final_iteration_reopened_pages": [
+      4,
+      9,
+      10
+    ]
+  },
+  "scope": [
+    "English/Vietnamese only",
+    "Vietnamese PhoWhisper-base GGML f16",
+    "English Whisper-base GGML Q5_1",
+    "GPU ASR and CPU VAD/MT",
+    "decoder profiles and partial status handling",
+    "small-sample diagnostic and internal PCM replay separated from user feedback"
+  ],
+  "historical_main_document_unchanged_sha256": "a6071dd87d60ffd1ad084994accc809bad2b6e7a5b4ff8f969c12427ec23bab5"
+}

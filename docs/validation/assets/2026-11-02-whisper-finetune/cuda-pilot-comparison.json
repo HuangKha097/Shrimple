@@ -1,0 +1,114 @@
+{
+  "run_id": "20261102T125916Z-5464619c",
+  "comparison": {
+    "baseline_test": {
+      "wer_percent": 33.86861313868613,
+      "cer_percent": 19.16376306620209,
+      "word_errors": 232,
+      "reference_words": 685,
+      "char_errors": 440,
+      "reference_chars": 2296,
+      "samples": 60,
+      "inference_seconds": 15.743392599997605,
+      "latency_note": "Sequential model.generate, includes GPU work; excludes feature extraction/network/WebRTC; no warmup exclusion",
+      "by_language": {
+        "vi": {
+          "wer_percent": 33.86861313868613,
+          "cer_percent": 19.16376306620209,
+          "word_errors": 232,
+          "reference_words": 685,
+          "char_errors": 440,
+          "reference_chars": 2296
+        }
+      }
+    },
+    "tuned_test": {
+      "wer_percent": 34.74452554744526,
+      "cer_percent": 19.16376306620209,
+      "word_errors": 238,
+      "reference_words": 685,
+      "char_errors": 440,
+      "reference_chars": 2296,
+      "samples": 60,
+      "inference_seconds": 16.186774100006005,
+      "latency_note": "Sequential model.generate, includes GPU work; excludes feature extraction/network/WebRTC; no warmup exclusion",
+      "by_language": {
+        "vi": {
+          "wer_percent": 34.74452554744526,
+          "cer_percent": 19.16376306620209,
+          "word_errors": 238,
+          "reference_words": 685,
+          "char_errors": 440,
+          "reference_chars": 2296
+        }
+      }
+    },
+    "baseline_validation": {
+      "wer_percent": 27.918781725888326,
+      "cer_percent": 16.10558530986993,
+      "word_errors": 220,
+      "reference_words": 788,
+      "char_errors": 421,
+      "reference_chars": 2614,
+      "samples": 60,
+      "inference_seconds": 15.669537399993715,
+      "latency_note": "Sequential model.generate, includes GPU work; excludes feature extraction/network/WebRTC; no warmup exclusion",
+      "by_language": {
+        "vi": {
+          "wer_percent": 27.918781725888326,
+          "cer_percent": 16.10558530986993,
+          "word_errors": 220,
+          "reference_words": 788,
+          "char_errors": 421,
+          "reference_chars": 2614
+        }
+      }
+    },
+    "tuned_validation": {
+      "wer_percent": 30.20304568527919,
+      "cer_percent": 16.832440703902066,
+      "word_errors": 238,
+      "reference_words": 788,
+      "char_errors": 440,
+      "reference_chars": 2614,
+      "samples": 60,
+      "inference_seconds": 17.38982429999851,
+      "latency_note": "Sequential model.generate, includes GPU work; excludes feature extraction/network/WebRTC; no warmup exclusion",
+      "by_language": {
+        "vi": {
+          "wer_percent": 30.20304568527919,
+          "cer_percent": 16.832440703902066,
+          "word_errors": 238,
+          "reference_words": 788,
+          "char_errors": 440,
+          "reference_chars": 2614
+        }
+      }
+    },
+    "test_wer_change_percentage_points": 0.8759124087591275,
+    "peak_allocated_vram_bytes": 421611008,
+    "acceptance": "Experiment completed; no automatic quality/deployment acceptance",
+    "quantization": "HF fp32 comparison only; repeat comparison after GGML q5_1 export"
+  },
+  "parameters": {
+    "trainable": 294912,
+    "total": 72888832
+  },
+  "train": {
+    "train_runtime": 48.6111,
+    "train_samples_per_second": 3.291,
+    "train_steps_per_second": 0.823,
+    "total_flos": 1.04455471104e+16,
+    "train_loss": 2.3817382633686064,
+    "epoch": 1.0
+  },
+  "status": {
+    "command": "train",
+    "purpose": "research",
+    "device": "cuda",
+    "started_utc": "2026-11-02T12:59:16.389914+00:00",
+    "status": "experiment_completed",
+    "finished_utc": "2026-11-02T13:01:44.470427+00:00"
+  },
+  "artifacts_verified": 59
+}

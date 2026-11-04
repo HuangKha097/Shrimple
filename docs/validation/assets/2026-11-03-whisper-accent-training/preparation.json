@@ -1,0 +1,118 @@
+{
+  "source": {
+    "repo": "nguyendv02/ViMD_Dataset",
+    "revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+    "split": "train",
+    "selected_by_region": {
+      "North": "data/train-00000-of-00103.parquet",
+      "Central": "data/train-00036-of-00103.parquet",
+      "South": "data/train-00050-of-00103.parquet"
+    },
+    "files": [
+      {
+        "path": "data/train-00000-of-00103.parquet",
+        "local_name": "train-00000-of-00103.parquet",
+        "bytes": 407660709,
+        "sha256": "d3dccc59d7865fc3a5f919c1dcb87ac1f16b4d94995f32e548d1ed786f32d03c"
+      },
+      {
+        "path": "data/train-00036-of-00103.parquet",
+        "local_name": "train-00036-of-00103.parquet",
+        "bytes": 334720660,
+        "sha256": "7cc373c028b8a6c367e4f0794fb496c1d99450f8434611ce96b4b385c3d09fcc"
+      },
+      {
+        "path": "data/train-00050-of-00103.parquet",
+        "local_name": "train-00050-of-00103.parquet",
+        "bytes": 458799533,
+        "sha256": "fcc02cfe16f66b0caae86ab9bbc931109abdf317adf0fc05107b50516b9506bf"
+      }
+    ],
+    "metadata_sha256": "480554cdcf934ee28256854361b901fb0dee63f41e4aa1c32cdb38623897e6ec",
+    "script_sha256": "721f41e3807fcf1bca57762e82d09f0068ad607d8a89b167d458c18a6717b66d",
+    "license_declared": "CC-BY-NC-ND-4.0",
+    "use": "User-requested private non-commercial academic fine-tuning; no model/data publication or deployment",
+    "test_read": false,
+    "validation_downloaded": false
+  },
+  "manifest_sha256": "5a7a4af8e11a61c10ccfc3148d8c063cf2acea0a592ca5d10eae707cfa259d56",
+  "benchmark_manifest_sha256": "54fa6a3e75da1058a7d7a348cc7c934011e11e2d4444626c4a81b273735928b5",
+  "vivos_manifest_sha256": "08f5be4a96d769d94aa8351334df60480987ceba853c5462c1f54e780de75e54",
+  "source_script_sha256": "73bc541fda2e63d708b686178718ff7777d9bc92f14e72f0e6cb51b182308dd0",
+  "audit": {
+    "manifest_sha256": "5a7a4af8e11a61c10ccfc3148d8c063cf2acea0a592ca5d10eae707cfa259d56",
+    "counts": {
+      "train": 576,
+      "validation": 150
+    },
+    "evaluation_scope": "development",
+    "languages": {
+      "vi": 726
+    },
+    "seconds_by_split": {
+      "train": 6388.1965,
+      "validation": 1957.1149375
+    },
+    "speakers_by_split": {
+      "train": 284,
+      "validation": 93
+    },
+    "normalization": "NFC, casefold, punctuation-to-space, collapse whitespace; CER excludes spaces",
+    "permission_note": "Declared by dataset owner; audit does not verify legal rights",
+    "leakage_note": "Rejects repeated speaker IDs and exact audio/PCM duplicates; cannot detect renamed speakers or near-duplicate audio"
+  },
+  "regional_training": {
+    "north": {
+      "samples": 116,
+      "speakers": 74,
+      "seconds": 1753.08275,
+      "provinces": [
+        "CaoBang"
+      ]
+    },
+    "central": {
+      "samples": 104,
+      "speakers": 98,
+      "seconds": 1765.4659375,
+      "provinces": [
+        "DaNang",
+        "HaTinh"
+      ]
+    },
+    "south": {
+      "samples": 103,
+      "speakers": 69,
+      "seconds": 1670.5490625,
+      "provinces": [
+        "LongAn",
+        "TienGiang"
+      ]
+    }
+  },
+  "vivos_replay": {
+    "samples": 253,
+    "seconds": 1199.09875
+  },
+  "qa_rejections": {
+    "duration_outside_1_to_25_seconds": 86,
+    "ellipsis_in_source_reference": 1
+  },
+  "overlap_exclusions": {},
+  "selection": {
+    "seed": 42,
+    "region_budget_seconds": 1765.800875,
+    "speaker_cap_seconds": 60,
+    "vivos_replay_budget_seconds": 1200,
+    "vivos_speaker_cap_seconds": 45,
+    "replacement": false
+  },
+  "label_policy": "Published labels + automated structural/audio QA only; not marked human-reviewed by this project",
+  "test_evaluated": false,
+  "augmentation": "none; isolate the new-source exploratory round",
+  "limitations": [
+    "Limited train shards/provinces",
+    "Unknown cross-corpus identities and pretraining overlap",
+    "No broadcast episode IDs; cannot assert episode-disjointness",
+    "Not a data-only causal ablation: learning rate also reduced"
+  ]
+}

@@ -19,6 +19,10 @@ FRAME_BYTES = FRAME_SAMPLES * 2
 PRE_ROLL_FRAMES = 8  # 256 ms before the first detected speech frame.
 END_SILENCE_FRAMES = 10  # 320 ms.
 MAX_UTTERANCE_FRAMES = 250  # Eight seconds, including pre-roll and tail.
+SOFT_UTTERANCE_FRAMES = 125  # After four seconds, a short pause can settle a clause.
+SOFT_SILENCE_FRAMES = 3  # 96 ms; normal end-of-speech still uses 320 ms.
+CUT_LOOKBACK_FRAMES = 40  # Search the last 1.28 s if speech never pauses.
+CUT_ENERGY_FRAMES = 3  # Prefer a quiet 96 ms interval over a single zero crossing.
 PARTIAL_AFTER_FRAMES = 19  # 608 ms of actual speech.
 PARTIAL_STRIDE_FRAMES = 16  # 512 ms between growing-window snapshots.
 MODEL_PATH = Path(__file__).parent / "models" / "silero-vad-v6.2.onnx"
@@ -108,6 +112,16 @@ class SpeechSegmenter:
         self.silence = self.voiced = self.since_partial = 0
         self.continuation = False
 
+    def forced_boundary(self):
+        # No overlap or transcript trimming: each input frame belongs to one final.
+        # Pick the end of the quietest short interval near the deadline. This is
+        # acoustic segmentation, not a guarantee of word/sentence boundaries.
+        first = max(SOFT_UTTERANCE_FRAMES, len(self.frames) - CUT_LOOKBACK_FRAMES)
+        energies = [float(np.mean(np.square(np.frombuffer(frame, dtype="<i2").astype(np.float32))))
+                    for frame in self.frames]
+        candidates = range(first, len(self.frames) + 1)
+        return min(candidates, key=lambda cut: (sum(energies[cut - CUT_ENERGY_FRAMES:cut]), -cut))
+
     def feed(self, packet):
         if len(packet) != PACKET_BYTES:
             raise ValueError("Invalid PCM packet")
@@ -132,17 +146,30 @@ class SpeechSegmenter:
             else:
                 self.silence += 1
             self.since_partial += 1
-            final = (self.silence >= END_SILENCE_FRAMES
-                     or len(self.frames) >= MAX_UTTERANCE_FRAMES)
-            if final or (self.voiced >= PARTIAL_AFTER_FRAMES
-                         and self.since_partial >= PARTIAL_STRIDE_FRAMES):
-                snapshots.append(SpeechSnapshot(self.utterance, b"".join(self.frames), final))
-                self.since_partial = 0
+            soft_pause = len(self.frames) >= SOFT_UTTERANCE_FRAMES and self.silence >= SOFT_SILENCE_FRAMES
+            at_limit = len(self.frames) >= MAX_UTTERANCE_FRAMES
+            final = self.silence >= END_SILENCE_FRAMES or soft_pause or at_limit
             if final:
-                self.continuation = len(self.frames) >= MAX_UTTERANCE_FRAMES and not self.silence
-                # Preserve only the silent tail; never repeat recognized speech in
-                # the next eight-second segment of a continuous utterance.
-                self.pre_roll.extend(self.frames[-min(self.silence, PRE_ROLL_FRAMES):]
-                                     if self.silence else [])
-                self.frames = []
+                cut = self.forced_boundary() if at_limit and not self.silence else len(self.frames)
+                snapshots.append(SpeechSnapshot(self.utterance, b"".join(self.frames[:cut]), True))
+                remainder = self.frames[cut:]
+                if remainder:
+                    # These frames were already VAD-processed: retain them exactly
+                    # once without replaying VAD state or losing a mid-packet tail.
+                    self.utterance += 1
+                    self.frames = remainder
+                    self.voiced = len(remainder)
+                    self.silence = self.since_partial = 0
+                    self.continuation = False
+                else:
+                    self.continuation = at_limit and not self.silence
+                    self.pre_roll.extend(self.frames[-min(self.silence, PRE_ROLL_FRAMES):]
+                                         if self.silence else [])
+                    self.frames = []
+                    self.since_partial = 0
+                continue
+            if (self.voiced >= PARTIAL_AFTER_FRAMES
+                         and self.since_partial >= PARTIAL_STRIDE_FRAMES):
+                snapshots.append(SpeechSnapshot(self.utterance, b"".join(self.frames), False))
+                self.since_partial = 0
         return snapshots

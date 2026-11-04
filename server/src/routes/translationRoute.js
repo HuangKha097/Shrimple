@@ -108,8 +108,8 @@ router.get("/health", async (req, res) => {
 router.post("/chunk", parseAudio, async (req, res) => {
     const { kind, sessionId, speakerId, targetLanguage, sourceLanguage = "auto" } = req.body || {};
     const viewerId = req.user._id.toString();
-    if (!req.file || !["en", "vi", "zh"].includes(targetLanguage) ||
-        !["en", "vi", "zh", "auto"].includes(sourceLanguage) || !["group", "direct"].includes(kind)) {
+    if (!req.file || !["en", "vi"].includes(targetLanguage) ||
+        !["en", "vi"].includes(sourceLanguage) || sourceLanguage === targetLanguage || !["group", "direct"].includes(kind)) {
         return res.status(400).json({ message: "Dữ liệu âm thanh hoặc ngôn ngữ không hợp lệ" });
     }
     const session = getTranslationSession(kind, sessionId, viewerId, speakerId);
@@ -167,8 +167,8 @@ router.post("/chunk", parseAudio, async (req, res) => {
 router.post("/chunk-stream", parseAudio, async (req, res) => {
     const { kind, sessionId, speakerId, targetLanguage, sourceLanguage = "auto" } = req.body || {};
     const viewerId = req.user._id.toString();
-    if (!req.file || !["en", "vi", "zh"].includes(targetLanguage) ||
-        !["en", "vi", "zh", "auto"].includes(sourceLanguage) || !["group", "direct"].includes(kind)) {
+    if (!req.file || !["en", "vi"].includes(targetLanguage) ||
+        !["en", "vi"].includes(sourceLanguage) || sourceLanguage === targetLanguage || !["group", "direct"].includes(kind)) {
         return res.status(400).json({ message: "Dữ liệu âm thanh hoặc ngôn ngữ không hợp lệ" });
     }
     const session = getTranslationSession(kind, sessionId, viewerId, speakerId);
@@ -220,7 +220,7 @@ router.post("/chunk-stream", parseAudio, async (req, res) => {
             if (event.type === "transcript" && !receivedTranscript &&
                 Object.keys(event).every(key => ["type", "original", "source_language"].includes(key)) &&
                 typeof event.original === "string" && typeof event.source_language === "string" &&
-                (event.original ? ["en", "vi", "zh", "auto"].includes(event.source_language) : ["", "en", "vi", "zh", "auto"].includes(event.source_language))) {
+                (event.original ? ["en", "vi"].includes(event.source_language) : ["", "en", "vi"].includes(event.source_language))) {
                 receivedTranscript = true;
                 sendEvent({ type: "transcript", speakerId, speakerName: speaker.displayName || speaker.username || "Người dùng",
                     original: event.original, sourceLanguage: event.source_language, targetLanguage });

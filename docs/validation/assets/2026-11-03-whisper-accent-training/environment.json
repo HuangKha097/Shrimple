@@ -1,0 +1,50 @@
+{
+  "python": "3.12.14 (main, Aug 25 2026, 14:01:42) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "packages": {
+    "accelerate": "1.10.1",
+    "certifi": "2026.10.23",
+    "cffi": "2.1.1",
+    "charset-normalizer": "3.5.2",
+    "colorama": "0.4.6",
+    "filelock": "4.2.4",
+    "fsspec": "2026.9.0",
+    "huggingface_hub": "0.36.2",
+    "idna": "3.20",
+    "Jinja2": "3.1.6",
+    "MarkupSafe": "3.0.3",
+    "mpmath": "1.3.0",
+    "networkx": "3.7",
+    "numpy": "2.5.4",
+    "packaging": "26.3",
+    "peft": "0.17.1",
+    "psutil": "7.2.2",
+    "pycparser": "3.12",
+    "PyYAML": "6.0.3",
+    "regex": "2026.9.29",
+    "requests": "2.34.2",
+    "safetensors": "0.8.0",
+    "scipy": "1.18.1",
+    "setuptools": "78.1.0",
+    "soundfile": "0.13.1",
+    "sympy": "1.13.1",
+    "tokenizers": "0.22.2",
+    "torch": "2.6.0+cu124",
+    "tqdm": "4.70.1",
+    "transformers": "4.57.1",
+    "typing_extensions": "4.16.0",
+    "urllib3": "2.8.0"
+  },
+  "git_head": {
+    "exit_code": 0,
+    "stdout": "37ceb493300e850c002bb26fc7154c930d4ecc43"
+  },
+  "git_status": {
+    "exit_code": 0,
+    "stdout": "M .gitignore\n M docs/codebase-summary.md\n M docs/design.md\n M docs/kanban.md\n M docs/plan.md\n M docs/prd.md\n D docs/~$i-Lieu-Kien-Truc-Ky-Thuat-He-Thong-Shrimple-GPU-CPU.docx\n?? ai-service/training/\n?? docs/validation/2026-11-02-whisper-finetuning.md\n?? docs/validation/2026-11-02-whisper-train-validation-analysis.md\n?? docs/validation/2026-11-02-whisper-vivos-pilot.md\n?? docs/validation/2026-11-03-accent-benchmark.md\n?? docs/validation/2026-11-03-whisper-development.md\n?? docs/validation/assets/2026-11-02-whisper-analysis/\n?? docs/validation/assets/2026-11-02-whisper-finetune/\n?? docs/validation/assets/2026-11-03-accent-benchmark/\n?? docs/validation/assets/2026-11-03-whisper-development/\n?? docs/vietnamese-accent-benchmark.md\n?? docs/whisper-finetuning.md"
+  },
+  "gpu": {
+    "exit_code": 0,
+    "stdout": "NVIDIA GeForce GTX 1650 SUPER, 4096 MiB, 1850 MiB, 617.14"
+  }
+}

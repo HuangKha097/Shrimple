@@ -1,0 +1,72 @@
+[
+  {
+    "path": "ai-service/pcm_agreement.py",
+    "files": 1,
+    "bytes": 13007,
+    "kind": "unselected LocalAgreement runtime/test",
+    "sha256": "bc7bb7c3418f1b3ad0670e91a7df4e194f5400c0acc298e3c75d0f1762ccd842"
+  },
+  {
+    "path": "ai-service/pcm_incremental.py",
+    "files": 1,
+    "bytes": 6728,
+    "kind": "unselected LocalAgreement runtime/test",
+    "sha256": "9694e66ff4f41aeb2c7686cba6c3b4aa5d45fe7cca8b1cf773f6d6d092937f0f"
+  },
+  {
+    "path": "ai-service/tests/test_pcm_agreement.py",
+    "files": 1,
+    "bytes": 14108,
+    "kind": "unselected LocalAgreement runtime/test",
+    "sha256": "74ace28aeec566dcc0c6d7d635c175b6ae7d5e847f38de73b80cbc02b2e6217f"
+  },
+  {
+    "path": "compose.localagreement.yaml",
+    "files": 1,
+    "bytes": 504,
+    "kind": "unselected LocalAgreement runtime/test",
+    "sha256": "8ef59d0683b6820543d4d9a05683368a3e19c464b7192ac7407dbbef091d5988"
+  },
+  {
+    "path": ".cache/localagreement-trial",
+    "files": 18,
+    "bytes": 4916477,
+    "kind": "task temporary probes, duplicates or QA",
+    "sha256": null
+  },
+  {
+    "path": ".cache/translation-runtime-probe",
+    "files": 33,
+    "bytes": 1675765,
+    "kind": "task temporary probes, duplicates or QA",
+    "sha256": null
+  },
+  {
+    "path": ".cache/translation-runtime-image",
+    "files": 2,
+    "bytes": 2169,
+    "kind": "task temporary probes, duplicates or QA",
+    "sha256": null
+  },
+  {
+    "path": ".cache/architecture-doc-update",
+    "files": 71,
+    "bytes": 22602491,
+    "kind": "task temporary probes, duplicates or QA",
+    "sha256": null
+  },
+  {
+    "path": ".tmp/stable-prefix-check",
+    "files": 4,
+    "bytes": 431319,
+    "kind": "task temporary probes, duplicates or QA",
+    "sha256": null
+  },
+  {
+    "path": ".tmp/long-speech-check",
+    "files": 1,
+    "bytes": 40709,
+    "kind": "task temporary probes, duplicates or QA",
+    "sha256": null
+  }
+]

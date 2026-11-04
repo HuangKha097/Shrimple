@@ -1,0 +1,10 @@
+{
+  "previous_benchmark_run": "accent-vimd-20261103-baseline-v1",
+  "previous_heuristic": "length >= max_new_tokens + 4; prefix assumption can miss capped sequences",
+  "previous_reported_flags": 0,
+  "new_baseline_eos_aware_flags": 7,
+  "decoded_predictions_match_prior_benchmark": true,
+  "matched_benchmark_samples": 90,
+  "prior_token_sequences_available": false,
+  "correction": "Historical zero flag count is unreliable; retain historical raw evidence and WER/CER, use current EOS-aware diagnostic; no change to generation or decoded text"
+}

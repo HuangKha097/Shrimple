@@ -1,0 +1,34 @@
+{
+  "source": "https://doi.org/10.5281/zenodo.7068130",
+  "actual_download_url": "https://huggingface.co/datasets/AILAB-VNUHCM/vivos/resolve/main/data/vivos.tar.gz",
+  "archive_sha256": "147477f7a7702cbafc2ee3808d1c142989d0dbc8d9fce8e07d5f329d5119e4ca",
+  "license": "CC BY-NC-SA 4.0, academic use only",
+  "seed": 42,
+  "summary": {
+    "manifest_sha256": "2549e37d88cbb528f96239bd1fff73e1ad934b9fc7f327d54779d1844d5ff266",
+    "counts": {
+      "test": 60,
+      "train": 160,
+      "validation": 60
+    },
+    "languages": {
+      "vi": 280
+    },
+    "seconds_by_split": {
+      "test": 220.0375,
+      "train": 829.1675,
+      "validation": 272.0625
+    },
+    "speakers_by_split": {
+      "test": 3,
+      "train": 8,
+      "validation": 3
+    },
+    "normalization": "NFC, casefold, punctuation-to-space, collapse whitespace; CER excludes spaces",
+    "permission_note": "Declared by dataset owner; audit does not verify legal rights",
+    "leakage_note": "Rejects repeated speaker IDs and exact audio/PCM duplicates; cannot detect renamed speakers or near-duplicate audio"
+  },
+  "selection": "8 original-train speakers for training, 3 original-train for validation, 3 original-test for test; first eligible clips per speaker in archive order",
+  "limitations": "Small pilot of read speech; not a general conversation benchmark. Whisper pretraining overlap is unknown. Preserve official attribution and NC/SA/academic restrictions; not approved for commercial deployment.",
+  "user_recording_in_training": false
+}

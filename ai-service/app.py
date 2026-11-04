@@ -26,9 +26,10 @@ from pcm_vad import get_model
 
 logger = logging.getLogger("uvicorn.error")
 API_KEY = os.getenv("TRANSLATION_AI_KEY", "")
-LANGUAGE_NAMES = {"en": "English", "vi": "Vietnamese", "zh": "Chinese"}
+LANGUAGE_NAMES = {"en": "English", "vi": "Vietnamese"}
 QWEN_URL = os.getenv("QWEN_URL", "http://qwen:8080").rstrip("/")
 WHISPER_CPP_URL = os.getenv("WHISPER_CPP_URL", "http://127.0.0.1:8080").rstrip("/")
+PHOWHISPER_CPP_URL = os.getenv("PHOWHISPER_CPP_URL", "http://127.0.0.1:8082").rstrip("/")
 WHISPER_TIMEOUT_SECONDS = 70
 TRANSLATION_TIMEOUT_SECONDS = 80
 MAX_AUDIO_BYTES = 2 * 1024 * 1024
@@ -249,8 +250,11 @@ def remaining_timeout(deadline, limit):
 
 def whisper_ready():
     try:
-        response = httpx.get(f"{WHISPER_CPP_URL}/health", timeout=2)
-        return response.status_code == 200 and response.json().get("status") == "ok"
+        for url in (WHISPER_CPP_URL, PHOWHISPER_CPP_URL):
+            response = httpx.get(f"{url}/health", timeout=2)
+            if response.status_code != 200 or response.json().get("status") != "ok":
+                return False
+        return True
     except (httpx.HTTPError, ValueError):
         return False
 
@@ -300,6 +304,11 @@ def abnormal_recognition(result, seconds):
 
 def transcribe_audio(content, source_language, *, timeout=WHISPER_TIMEOUT_SECONDS,
                      retry_on_repetition=True, cancelled=None):
+    if source_language not in ("en", "vi"):
+        raise HTTPException(status_code=400, detail="Unsupported source language")
+    # PhoWhisper specializes in Vietnamese. Do not send English to it or silently
+    # fall back to the other checkpoint when one recognizer is unavailable.
+    asr_url = PHOWHISPER_CPP_URL if source_language == "vi" else WHISPER_CPP_URL
     # Whisper's full window is 30 seconds; keep a second of padding for short clips.
     with wave.open(io.BytesIO(content), "rb") as wav:
         seconds = wav.getnframes() / wav.getframerate()
@@ -322,12 +331,17 @@ def transcribe_audio(content, source_language, *, timeout=WHISPER_TIMEOUT_SECOND
         "max_context": "0",
         "audio_ctx": str(audio_context),
     }
+    if source_language == "vi":
+        # PhoWhisper was fine-tuned for text transcription on the full Whisper
+        # window. Reusing the English short-context/timestamp profile corrupts
+        # words even though the checkpoint itself loads and reports healthy.
+        data.update(audio_ctx="0", no_timestamps="true")
     for attempt in range(2 if retry_on_repetition else 1):
         if cancelled is not None and cancelled.is_set():
             return None
         remaining = remaining_timeout(deadline, timeout)
         response = httpx.post(
-            f"{WHISPER_CPP_URL}/inference",
+            f"{asr_url}/inference",
             files={"file": ("clip.wav", content, "audio/wav")},
             data=dict(data),
             timeout=httpx.Timeout(remaining, connect=min(2, remaining),
@@ -341,10 +355,7 @@ def transcribe_audio(content, source_language, *, timeout=WHISPER_TIMEOUT_SECOND
             return None
         remaining_timeout(deadline, timeout)
         if not abnormal_recognition(result, seconds) and (attempt == 0 or result["text"].strip()):
-            source = source_language if source_language != "auto" else {
-                "english": "en", "vietnamese": "vi", "chinese": "zh", "mandarin": "zh", "en": "en", "vi": "vi", "zh": "zh"
-            }.get(str(result.get("language", "")).strip().lower(), "auto" if str(result.get("language", "")).strip() else "")
-            return result["text"].strip(), source
+            return result["text"].strip(), source_language
         # Only a final/HTTP utterance retries, within the original job budget.
         # Retain audio and language; do not forward a guessed, truncated sentence.
         if attempt == 0:
@@ -356,8 +367,6 @@ def translate_qwen(original, source, target, *, timeout=65):
     time_terms = (
         "- In Vietnamese, tonight means tối nay; today means hôm nay. Do not confuse them.\n"
         if target == "vi" else
-        "- In Chinese, tonight means 今晚; today means 今天. Do not confuse them.\n"
-        if target == "zh" else
         "- In English, tối nay means tonight; hôm nay means today. Do not confuse them.\n"
     )
     prompt = (
@@ -487,9 +496,9 @@ def translate(
     stream: bool = Form(False),
 ):
     authorize(x_api_key)
-    if target_language not in ("en", "vi", "zh"):
+    if target_language not in ("en", "vi"):
         raise HTTPException(status_code=400, detail="Unsupported target language")
-    if source_language not in ("en", "vi", "zh", "auto"):
+    if source_language not in ("en", "vi") or source_language == target_language:
         raise HTTPException(status_code=400, detail="Unsupported source language")
     if (audio.content_type or "").split(";")[0].strip().lower() not in AUDIO_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported audio type")

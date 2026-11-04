@@ -1,0 +1,87 @@
+{
+  "source": {
+    "repo": "nguyendv02/ViMD_Dataset",
+    "revision": "3a5b30157034e7eadd5c75fae1a820c6f9383398",
+    "split": "valid",
+    "files": [
+      {
+        "path": "data/valid-00000-of-00013.parquet",
+        "bytes": 447061476,
+        "sha256": "a82f66020fed9d3c1cf15e77f14ed6e4c98bf8e8b55074a46e26ca6ea89473c5",
+        "local_path": "C:\\Users\\quach\\Desktop\\Project\\Shrimple\\ai-service\\training\\data\\accent-vimd-valid-v1\\source\\valid-00000-of-00013.parquet"
+      },
+      {
+        "path": "data/valid-00004-of-00013.parquet",
+        "bytes": 431006425,
+        "sha256": "7cabb4237084fe29f24f816a397f5e94d2ba01fbc911accdc28c9a8b638aaeed",
+        "local_path": "C:\\Users\\quach\\Desktop\\Project\\Shrimple\\ai-service\\training\\data\\accent-vimd-valid-v3\\source\\valid-00004-of-00013.parquet"
+      },
+      {
+        "path": "data/valid-00006-of-00013.parquet",
+        "bytes": 489465961,
+        "sha256": "23a3d6efe0aecdcf94449ed33d08a78ab7a417bed17f8298f14f48f641714640",
+        "local_path": "C:\\Users\\quach\\Desktop\\Project\\Shrimple\\ai-service\\training\\data\\accent-vimd-valid-v2\\source\\valid-00006-of-00013.parquet"
+      }
+    ],
+    "use": "private non-commercial evaluation; original source retained; no trained model or audio/transcript redistribution",
+    "license_declared": "CC-BY-NC-ND-4.0",
+    "license_url": "https://creativecommons.org/licenses/by-nc-nd/4.0/",
+    "source_metadata_sha256": "480554cdcf934ee28256854361b901fb0dee63f41e4aa1c32cdb38623897e6ec",
+    "test_read": false,
+    "train_read": false
+  },
+  "selected_validation": {
+    "north": {
+      "samples": 30,
+      "speakers": 30,
+      "seconds": 532.6940625,
+      "provinces": [
+        "CaoBang",
+        "HaiPhong",
+        "LangSon",
+        "NinhBinh",
+        "QuangNinh",
+        "ThaiBinh"
+      ]
+    },
+    "central": {
+      "samples": 30,
+      "speakers": 30,
+      "seconds": 539.8403125,
+      "provinces": [
+        "DaNang",
+        "HaTinh",
+        "NgheAn",
+        "ThanhHoa"
+      ]
+    },
+    "south": {
+      "samples": 30,
+      "speakers": 30,
+      "seconds": 612.5180625,
+      "provinces": [
+        "BinhDuong",
+        "CanTho",
+        "DongNai",
+        "LongAn",
+        "TienGiang",
+        "VinhLong"
+      ]
+    }
+  },
+  "audit": {
+    "samples": 90,
+    "speakers": 90,
+    "recordings": 90,
+    "identity_note": "Supplied dataset-scoped speaker/recording IDs checked; cross-corpus identity and near-duplicate speech are not established"
+  },
+  "manifest_sha256": "54fa6a3e75da1058a7d7a348cc7c934011e11e2d4444626c4a81b273735928b5",
+  "script_sha256": "5d4c8d5dfd5fb3643d87649bebaa25834c094fa1f16419f25f1b6ba5c4b33d01",
+  "selection": "fixed valid shards 0/4/6 after region metadata probe; duration<=30s, seed42 speaker round-robin cap per region",
+  "limitations": [
+    "Limited provinces; not representative of 63 release dialect labels",
+    "No independent full official-train speaker audit",
+    "Recording ID only identifies utterance; broadcast-episode overlap not established",
+    "Whisper pretraining overlap unknown"
+  ]
+}

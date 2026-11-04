@@ -1,0 +1,20 @@
+{
+  "status": "corrections_imported_not_training_approved",
+  "created_utc": "2026-11-02T12:41:21.978199+00:00",
+  "counts": {
+    "clips": 13,
+    "changed_from_draft": 13,
+    "clip_review_checked": 0,
+    "contains_ellipsis": 8,
+    "possible_vercel_spelling_to_check": 1
+  },
+  "checks": {
+    "all_ids_match": true,
+    "all_timestamps_match": true,
+    "all_audio_exists": true,
+    "same_speaker_preserved": true,
+    "all_splits_unassigned": true
+  },
+  "raw_transcript_included": false,
+  "training_started": false
+}

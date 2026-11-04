@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import classNames from 'classnames/bind';
 import { motion as Motion } from 'motion/react';
 import styles from '../../assets/css/Message.module.scss';
 import profilePic_test from "../../../public/favicon.png";
-import { X, MapPin, ExternalLink, File, Download, Pin, CornerUpRight, RotateCcw, Trash2, MoreHorizontal, PinOff, Check, CheckCheck, PhoneCall, PhoneOff, Radio, BarChart2 } from '../icons';
+import { X, MapPin, ExternalLink, File, Download, Pin, CornerUpRight, RotateCcw, Trash2, MoreHorizontal, PinOff, Check, CheckCheck, PhoneCall, PhoneOff, Radio, BarChart2, Languages, Volume2 } from '../icons';
 import { useChatStore } from "../../stores/useChatStore.js";
 import { useAuthStore } from "../../stores/useAuthStore.js";
 import { useGroupCallStore } from "../../stores/useGroupCallStore.js";
 import CustomAudioPlayer from './CustomAudioPlayer.jsx';
 import ForwardModal from './ForwardModal.jsx';
 import { formatHashtags } from '../../utils/hashtagFormatter.jsx';
+import { parseVoiceMessageContent, resolveReceiverVoiceView } from '../../utils/voiceTranslation.js';
 import { toast } from 'sonner';
 
 const cx = classNames.bind(styles);
@@ -41,10 +43,12 @@ const Message = ({
     isFirstInGroup = true,
     isLastInGroup = true
 }) => {
+    const { i18n } = useTranslation();
     const [pickerStyle, setPickerStyle] = useState({});
     const [showDropdown, setShowDropdown] = useState(false);
     const [isForwardOpen, setIsForwardOpen] = useState(false);
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+    const [manualShowTranslation, setManualShowTranslation] = useState(false);
     const containerRef = React.useRef(null);
     const timeoutRef = React.useRef(null);
 
@@ -64,7 +68,7 @@ const Message = ({
     const navigate = useNavigate();
 
     const isMentioningMe = React.useMemo(() => {
-        if (!text || typeof text !== 'string' || isMe) return false;
+        if (!text || typeof text !== 'string' || isMe || messageType === 'audio') return false;
         const lower = text.toLowerCase();
         if (/(?:^|\s)@(?:everyone|all)\b/i.test(lower)) return true;
         if (currentUser?.username) {
@@ -73,7 +77,21 @@ const Message = ({
             if (myRegex.test(text)) return true;
         }
         return false;
-    }, [text, isMe, currentUser?.username]);
+    }, [text, isMe, messageType, currentUser?.username]);
+
+    const voiceMeta = React.useMemo(() => {
+        if (messageType !== 'audio' || isRecalled) return null;
+        return parseVoiceMessageContent(text);
+    }, [messageType, text, isRecalled]);
+
+    const voiceView = React.useMemo(() => {
+        if (!voiceMeta) return null;
+        return resolveReceiverVoiceView({
+            voiceTranslation: voiceMeta.voiceTranslation,
+            viewerAppLang: i18n.resolvedLanguage || i18n.language || 'vi',
+            isMe,
+        });
+    }, [voiceMeta, i18n.resolvedLanguage, i18n.language, isMe]);
 
     const {
         activeGroupCalls,
@@ -412,7 +430,76 @@ const Message = ({
                                 </div>
                             ) : messageType === 'audio' ? (
                                 <div className={cx('audio-bubble')}>
-                                    <CustomAudioPlayer src={fileUrl} />
+                                    <CustomAudioPlayer
+                                        src={fileUrl}
+                                        isVoiceToVoice={Boolean(voiceView?.isVoiceToVoice)}
+                                        muteOriginalByDefault={Boolean(voiceView?.muteOriginalByDefault)}
+                                        targetLangMeta={voiceView?.targetLangMeta}
+                                        translatedText={voiceMeta?.voiceTranslation?.translatedText}
+                                        translatedAudioUrl={voiceMeta?.voiceTranslation?.translatedAudioUrl}
+                                    />
+
+                                    {voiceView && (voiceView.shouldAutoShowTranslationCard || manualShowTranslation) ? (
+                                        <div
+                                            className={cx('voice-translation-card', {
+                                                'v2v-translation-card': voiceView.isVoiceToVoice,
+                                            })}
+                                        >
+                                            <div className={cx('vt-header')}>
+                                                <div className={cx('vt-title')}>
+                                                    {voiceView.isVoiceToVoice ? (
+                                                        <>
+                                                            <Volume2 size={13} className={cx('vt-icon')} />
+                                                            <span>
+                                                                Voice-to-Voice → {voiceView.targetLangMeta.label}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Languages size={13} className={cx('vt-icon')} />
+                                                            <span>
+                                                                Bảng dịch ({voiceView.sourceLangMeta.short} → {voiceView.targetLangMeta.short})
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+
+                                                <span className={cx('vt-badge', { 'vt-badge-v2v': voiceView.isVoiceToVoice })}>
+                                                    {voiceView.isVoiceToVoice
+                                                        ? `Mute gốc • Phát âm ${voiceView.targetLangMeta.short}`
+                                                        : `Ngôn ngữ hiển thị: ${voiceView.targetLangMeta.nativeName}`}
+                                                </span>
+                                            </div>
+
+                                            {voiceMeta?.voiceTranslation?.originalTranscript && (
+                                                <p className={cx('vt-original')}>
+                                                    <strong>Lời gốc ({voiceView.sourceLangMeta.short}):</strong>{' '}
+                                                    {voiceMeta.voiceTranslation.originalTranscript}
+                                                </p>
+                                            )}
+
+                                            <p className={cx('vt-translated')}>
+                                                {voiceMeta?.voiceTranslation?.translatedText ? (
+                                                    voiceMeta.voiceTranslation.translatedText
+                                                ) : voiceView.isVoiceToVoice ? (
+                                                    `[Voice-to-Voice] Đã tắt âm thanh gốc — bản dịch và phát âm tiếng ${voiceView.targetLangMeta.nativeName} sẽ được tạo bởi model.`
+                                                ) : (
+                                                    `[Tự động dịch] Bản dịch sang ${voiceView.targetLangMeta.nativeName} (theo ngôn ngữ mặc định của người nhận) sẽ hiển thị tại đây.`
+                                                )}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        voiceView && (
+                                            <button
+                                                type="button"
+                                                className={cx('vt-toggle-btn')}
+                                                onClick={() => setManualShowTranslation(true)}
+                                            >
+                                                <Languages size={12} />
+                                                <span>Xem bảng dịch ({voiceView.targetLangMeta.short})</span>
+                                            </button>
+                                        )
+                                    )}
                                 </div>
                             ) : messageType === 'group_call' ? (
                                 <div className={cx('group-call-bubble', { 'active-call': isThisCallActive })}>

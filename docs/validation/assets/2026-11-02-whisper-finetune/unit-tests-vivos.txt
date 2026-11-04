@@ -1,0 +1,21 @@
+test_config_rejects_wrong_model_or_nan (test_evidence.EvidenceTests.test_config_rejects_wrong_model_or_nan) ... ok
+test_corpus_weighting_and_insertions (test_evidence.EvidenceTests.test_corpus_weighting_and_insertions) ... ok
+test_empty_reference_rejected (test_evidence.EvidenceTests.test_empty_reference_rejected) ... ok
+test_failed_run_keeps_status_without_leaking_reference_to_console (test_evidence.EvidenceTests.test_failed_run_keeps_status_without_leaking_reference_to_console) ... ok
+test_manifest_conversion_refuses_overwrite (test_evidence.EvidenceTests.test_manifest_conversion_refuses_overwrite) ... ok
+test_missing_held_out_split (test_evidence.EvidenceTests.test_missing_held_out_split) ... ok
+test_missing_permission (test_evidence.EvidenceTests.test_missing_permission) ... ok
+test_pcm_duplicate_with_different_container (test_evidence.EvidenceTests.test_pcm_duplicate_with_different_container) ... ok
+test_renamed_duplicate_audio (test_evidence.EvidenceTests.test_renamed_duplicate_audio) ... ok
+test_speaker_leakage (test_evidence.EvidenceTests.test_speaker_leakage) ... ok
+test_unicode_and_punctuation (test_evidence.EvidenceTests.test_unicode_and_punctuation) ... ok
+test_unreviewed_draft_cannot_become_manifest (test_evidence.EvidenceTests.test_unreviewed_draft_cannot_become_manifest) ... ok
+test_valid_manifest (test_evidence.EvidenceTests.test_valid_manifest) ... ok
+test_vivos_rejects_corrupted_archive_before_output (test_evidence.EvidenceTests.test_vivos_rejects_corrupted_archive_before_output) ... ok
+test_vivos_split_and_path_traversal_protection (test_evidence.EvidenceTests.test_vivos_split_and_path_traversal_protection) ... ok
+test_wrong_sample_rate (test_evidence.EvidenceTests.test_wrong_sample_rate) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 1.929s
+
+OK

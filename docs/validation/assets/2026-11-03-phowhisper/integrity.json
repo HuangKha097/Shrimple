@@ -1,0 +1,19 @@
+{
+  "evidence": {
+    "ai-service\\training\\runs\\phowhisper-base-trial\\english-result\\phowhisper-base.predictions.private.json": "98967bd8c415680f8818a8bef94e1f3cd15386ac76a046d8abcea5a89375bb3e",
+    "ai-service\\training\\runs\\phowhisper-base-trial\\english-result\\whisper-base.predictions.private.json": "7cfdc5c10bb9b2696a986d564c118038f7b17003953b40c81d97357bdfcc5861",
+    "ai-service\\training\\runs\\phowhisper-base-trial\\vimd-v2\\phowhisper-base.predictions.private.json": "f41f16c522b053ec752f6afd2c342b9c10f6391c30b9c7dac8346c59b74090b8",
+    "ai-service\\training\\runs\\phowhisper-base-trial\\vimd-v2\\whisper-base.predictions.private.json": "0c6e639bac01b4897eac5c1189829eb751bed59c050fb876926d1fb40b273313"
+  },
+  "current_reproduction_scripts": {
+    "ai-service\\training\\trial_phowhisper.py": "34dce6bd4f0ab55922b9b113b925188ca6e7674a98874f5e078969b14d655fbe",
+    "ai-service\\training\\prepare_phowhisper.py": "d90fd42224c22d983239c9866da2ebe3ddc99701ce8bbf2f53db69428f3efcf1"
+  },
+  "public_files": {
+    "ai-tests.txt": "e0697f2d50db09dd98b3728bdb67da4548bf50322c3a946db7ac6373293072b8",
+    "english-summary.json": "8e8965300b7c97f96aaad3d1b19455170e27d156522a54b8ee79674a22519302",
+    "export.json": "23e9aa96247bac23e031c1b841742f831c0b45ac98e88fdd394270a6385a2bd7",
+    "vimd-summary.json": "803227a1e231795eb0a5cd4496802a4af04f23da06e1c8b52bece64f1b90669e"
+  },
+  "note": "Current reproduction scripts hashed after trials; not a claim of exact launch-time source snapshot."
+}

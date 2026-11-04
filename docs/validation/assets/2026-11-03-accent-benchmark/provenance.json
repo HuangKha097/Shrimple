@@ -1,0 +1,19 @@
+{
+  "private_run": "accent-vietmed-20261103-baseline-v2",
+  "manifest_sha256": "56bd4c37c3fbcde77d0f81ccb91a260448683f16814f007863b398e14845fd9c",
+  "predictions_sha256": "4786bf872c86142ea8cad882e4292e02bb8eb51d8d6799c9c28fc408f5a7d21f",
+  "raw_audio_transcripts_exported": false,
+  "test_evaluated": false,
+  "trained_model_created": false,
+  "report_time_source_sha256": {
+    "accent_benchmark.py": "edb7facbb6b494a4927a4ab0cabf2baaecfcb00f08d04d8d93110ef3a2cfc315",
+    "benchmark.protocol.json": "5477c968a297a4de3c24b8aee5bbc4af95980eaf955c69198c79def45b9663d6",
+    "evaluate_accent.py": "63e512936731e0c558857b496a5c42cfeb2468965b0cbc78e595fd2d0a929530",
+    "prepare_vietmed.py": "07678d0f17e3a1c45173c527f2e4caf207683a3e033d34ce9cded09bda7dc526",
+    "report_accent.py": "e2f83840728ecbf7551e1f47de184f191bd2401824875d2e7c1518ca9e82be1b",
+    "evidence.py": "7759ac672ad932b8866637adefaee69499bbe3df9f61825bd8be639944a78ad3",
+    "analyze_asr.py": "e96606e64fdfc2d56d1698eedd7eed647d313d3c23026d6c483864e7e5f76bf7"
+  },
+  "evaluation_used_script_sha256": "63e512936731e0c558857b496a5c42cfeb2468965b0cbc78e595fd2d0a929530",
+  "preparation_used_script_sha256": "8960adef1c1a0a33700a99e397261d1aa547b00d2bd515f494bcb3aa08422168"
+}

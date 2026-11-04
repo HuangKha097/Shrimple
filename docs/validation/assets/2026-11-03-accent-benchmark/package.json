@@ -1,0 +1,8 @@
+{
+  "archive": "ai-service/training/runs/accent-evidence-20261103.zip",
+  "files": 39,
+  "bytes": 187439,
+  "sha256": "e090cdf1169dc243a0f9c2d63b7b0f98bd45bc300fb1a779fcbfd184177aca9a",
+  "includes": "aggregate reports, code, figures and CSVs; no audio/raw transcripts/model",
+  "testzip": "passed"
+}

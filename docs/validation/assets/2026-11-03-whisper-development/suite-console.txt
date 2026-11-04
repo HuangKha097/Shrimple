@@ -1,0 +1,163 @@
+PRIVATE SUITE: C:\Users\quach\Desktop\Project\Shrimple\ai-service\training\runs\development-20261103T045533Z-eecb2e
+START control (600 steps)
+PROGRESS control {}
+PROGRESS control {"phase": "baseline_or_model_load"}
+PROGRESS control {"phase": "baseline_or_model_load"}
+PROGRESS control {"step": 5, "loss": 2.8443, "learning_rate": 9.933333333333334e-05}
+PROGRESS control {"step": 25, "loss": 2.3153, "learning_rate": 9.6e-05}
+PROGRESS control {"step": 45, "loss": 2.3032, "learning_rate": 9.266666666666666e-05}
+PROGRESS control {"step": 57, "loss": 1.975, "learning_rate": 9.066666666666667e-05}
+PROGRESS control {"step": 76, "loss": 1.8068, "learning_rate": 8.75e-05}
+PROGRESS control {"step": 97, "loss": 1.7359, "learning_rate": 8.4e-05}
+PROGRESS control {"step": 112, "loss": 1.7511, "learning_rate": 8.15e-05}
+PROGRESS control {"step": 133, "loss": 1.4365, "learning_rate": 7.800000000000001e-05}
+PROGRESS control {"step": 154, "loss": 1.4371, "learning_rate": 7.450000000000001e-05}
+PROGRESS control {"step": 175, "loss": 1.3841, "learning_rate": 7.1e-05}
+PROGRESS control {"step": 195, "loss": 1.2936, "learning_rate": 6.766666666666667e-05}
+PROGRESS control {"step": 212, "loss": 1.3126, "learning_rate": 6.483333333333333e-05}
+PROGRESS control {"step": 232, "loss": 1.1802, "learning_rate": 6.15e-05}
+PROGRESS control {"step": 253, "loss": 1.5158, "learning_rate": 5.8e-05}
+PROGRESS control {"step": 274, "loss": 1.3937, "learning_rate": 5.45e-05}
+PROGRESS control {"step": 295, "loss": 1.2996, "learning_rate": 5.1000000000000006e-05}
+PROGRESS control {"step": 311, "loss": 1.2764, "learning_rate": 4.8333333333333334e-05}
+PROGRESS control {"step": 331, "loss": 1.2615, "learning_rate": 4.5e-05}
+PROGRESS control {"step": 352, "loss": 1.2476, "learning_rate": 4.15e-05}
+PROGRESS control {"step": 373, "loss": 1.3915, "learning_rate": 3.8e-05}
+PROGRESS control {"step": 393, "loss": 0.9671, "learning_rate": 3.466666666666667e-05}
+PROGRESS control {"step": 406, "loss": 1.4983, "learning_rate": 3.2500000000000004e-05}
+PROGRESS control {"step": 423, "loss": 1.0756, "learning_rate": 2.9666666666666672e-05}
+PROGRESS control {"step": 438, "loss": 1.0, "learning_rate": 2.716666666666667e-05}
+PROGRESS control {"step": 456, "loss": 1.3247, "learning_rate": 2.4166666666666667e-05}
+PROGRESS control {"step": 474, "loss": 1.2754, "learning_rate": 2.116666666666667e-05}
+PROGRESS control {"step": 492, "loss": 1.3826, "learning_rate": 1.8166666666666667e-05}
+PROGRESS control {"step": 505, "loss": 1.1761, "learning_rate": 1.6000000000000003e-05}
+PROGRESS control {"step": 523, "loss": 1.2171, "learning_rate": 1.3000000000000001e-05}
+PROGRESS control {"step": 542, "loss": 1.2905, "learning_rate": 9.833333333333333e-06}
+PROGRESS control {"step": 560, "loss": 1.1128, "learning_rate": 6.833333333333333e-06}
+PROGRESS control {"step": 578, "loss": 1.0259, "learning_rate": 3.833333333333334e-06}
+PROGRESS control {"step": 595, "loss": 1.2224, "learning_rate": 1.0000000000000002e-06}
+PROGRESS control {"step": 600}
+PROGRESS control {"step": 600}
+COMPLETE control: validation WER=88.0711, CER=47.1691
+START warmup (600 steps)
+PROGRESS warmup {}
+PROGRESS warmup {"phase": "baseline_or_model_load"}
+PROGRESS warmup {"phase": "baseline_or_model_load"}
+PROGRESS warmup {"step": 13, "loss": 2.7884, "learning_rate": 2e-05}
+PROGRESS warmup {"step": 30, "loss": 2.2372, "learning_rate": 4.8333333333333334e-05}
+PROGRESS warmup {"step": 50, "loss": 2.0319, "learning_rate": 8.166666666666667e-05}
+PROGRESS warmup {"step": 70, "loss": 2.4872, "learning_rate": 9.833333333333333e-05}
+PROGRESS warmup {"step": 90, "loss": 1.796, "learning_rate": 9.462962962962963e-05}
+PROGRESS warmup {"step": 106, "loss": 1.8026, "learning_rate": 9.166666666666667e-05}
+PROGRESS warmup {"step": 127, "loss": 1.663, "learning_rate": 8.777777777777778e-05}
+PROGRESS warmup {"step": 148, "loss": 1.6319, "learning_rate": 8.38888888888889e-05}
+PROGRESS warmup {"step": 169, "loss": 1.5654, "learning_rate": 8e-05}
+PROGRESS warmup {"step": 189, "loss": 1.6762, "learning_rate": 7.62962962962963e-05}
+PROGRESS warmup {"step": 205, "loss": 1.4871, "learning_rate": 7.333333333333333e-05}
+PROGRESS warmup {"step": 224, "loss": 1.159, "learning_rate": 6.981481481481482e-05}
+PROGRESS warmup {"step": 240, "loss": 1.4384, "learning_rate": 6.685185185185185e-05}
+PROGRESS warmup {"step": 254, "loss": 1.4007, "learning_rate": 6.425925925925927e-05}
+PROGRESS warmup {"step": 269, "loss": 1.4575, "learning_rate": 6.148148148148148e-05}
+PROGRESS warmup {"step": 285, "loss": 1.2065, "learning_rate": 5.851851851851852e-05}
+PROGRESS warmup {"step": 300, "loss": 1.2023, "learning_rate": 5.574074074074075e-05}
+PROGRESS warmup {"step": 312, "loss": 1.2809, "learning_rate": 5.3518518518518525e-05}
+PROGRESS warmup {"step": 327, "loss": 1.3203, "learning_rate": 5.0740740740740744e-05}
+PROGRESS warmup {"step": 343, "loss": 1.0301, "learning_rate": 4.7777777777777784e-05}
+PROGRESS warmup {"step": 359, "loss": 1.4587, "learning_rate": 4.481481481481482e-05}
+PROGRESS warmup {"step": 375, "loss": 1.0543, "learning_rate": 4.185185185185185e-05}
+PROGRESS warmup {"step": 391, "loss": 1.1827, "learning_rate": 3.888888888888889e-05}
+PROGRESS warmup {"step": 402, "loss": 1.0617, "learning_rate": 3.685185185185185e-05}
+PROGRESS warmup {"step": 418, "loss": 1.4689, "learning_rate": 3.388888888888889e-05}
+PROGRESS warmup {"step": 433, "loss": 1.1318, "learning_rate": 3.111111111111111e-05}
+PROGRESS warmup {"step": 449, "loss": 1.0838, "learning_rate": 2.814814814814815e-05}
+PROGRESS warmup {"step": 465, "loss": 1.1737, "learning_rate": 2.5185185185185183e-05}
+PROGRESS warmup {"step": 480, "loss": 1.0954, "learning_rate": 2.240740740740741e-05}
+PROGRESS warmup {"step": 495, "loss": 1.2305, "learning_rate": 1.962962962962963e-05}
+PROGRESS warmup {"step": 508, "loss": 1.2523, "learning_rate": 1.7222222222222224e-05}
+PROGRESS warmup {"step": 526, "loss": 1.2089, "learning_rate": 1.388888888888889e-05}
+PROGRESS warmup {"step": 546, "loss": 1.4854, "learning_rate": 1.0185185185185185e-05}
+PROGRESS warmup {"step": 564, "loss": 1.1435, "learning_rate": 6.851851851851852e-06}
+PROGRESS warmup {"step": 580, "loss": 1.3866, "learning_rate": 3.888888888888889e-06}
+PROGRESS warmup {"step": 595, "loss": 1.2047, "learning_rate": 1.1111111111111112e-06}
+PROGRESS warmup {"step": 600}
+PROGRESS warmup {"step": 600}
+COMPLETE warmup: validation WER=86.2944, CER=46.5953
+START low-lr (600 steps)
+PROGRESS low-lr {}
+PROGRESS low-lr {"phase": "baseline_or_model_load"}
+PROGRESS low-lr {"phase": "baseline_or_model_load"}
+PROGRESS low-lr {"step": 11, "loss": 2.9328, "learning_rate": 3.3333333333333333e-06}
+PROGRESS low-lr {"step": 30, "loss": 2.2936, "learning_rate": 9.666666666666667e-06}
+PROGRESS low-lr {"step": 49, "loss": 2.5288, "learning_rate": 1.6000000000000003e-05}
+PROGRESS low-lr {"step": 66, "loss": 2.4804, "learning_rate": 1.9814814814814816e-05}
+PROGRESS low-lr {"step": 86, "loss": 2.3536, "learning_rate": 1.9074074074074075e-05}
+PROGRESS low-lr {"step": 100, "eval_loss": 2.353191375732422}
+PROGRESS low-lr {"step": 119, "loss": 2.8269, "learning_rate": 1.7851851851851853e-05}
+PROGRESS low-lr {"step": 137, "loss": 2.3662, "learning_rate": 1.7185185185185185e-05}
+PROGRESS low-lr {"step": 157, "loss": 2.1244, "learning_rate": 1.6444444444444444e-05}
+PROGRESS low-lr {"step": 177, "loss": 2.2041, "learning_rate": 1.5703703703703705e-05}
+PROGRESS low-lr {"step": 197, "loss": 2.3438, "learning_rate": 1.4962962962962964e-05}
+PROGRESS low-lr {"step": 213, "loss": 1.922, "learning_rate": 1.4370370370370372e-05}
+PROGRESS low-lr {"step": 233, "loss": 2.4854, "learning_rate": 1.362962962962963e-05}
+PROGRESS low-lr {"step": 253, "loss": 2.2338, "learning_rate": 1.288888888888889e-05}
+PROGRESS low-lr {"step": 273, "loss": 2.0152, "learning_rate": 1.2148148148148149e-05}
+PROGRESS low-lr {"step": 293, "loss": 1.8774, "learning_rate": 1.1407407407407409e-05}
+PROGRESS low-lr {"step": 308, "loss": 2.0054, "learning_rate": 1.0851851851851853e-05}
+PROGRESS low-lr {"step": 327, "loss": 1.8894, "learning_rate": 1.014814814814815e-05}
+PROGRESS low-lr {"step": 348, "loss": 1.9072, "learning_rate": 9.370370370370371e-06}
+PROGRESS low-lr {"step": 369, "loss": 1.6302, "learning_rate": 8.592592592592593e-06}
+PROGRESS low-lr {"step": 389, "loss": 2.0934, "learning_rate": 7.851851851851853e-06}
+PROGRESS low-lr {"step": 406, "loss": 2.1185, "learning_rate": 7.222222222222223e-06}
+PROGRESS low-lr {"step": 426, "loss": 2.0738, "learning_rate": 6.481481481481482e-06}
+PROGRESS low-lr {"step": 446, "loss": 1.8657, "learning_rate": 5.740740740740741e-06}
+PROGRESS low-lr {"step": 465, "loss": 1.7289, "learning_rate": 5.037037037037037e-06}
+PROGRESS low-lr {"step": 485, "loss": 1.9299, "learning_rate": 4.296296296296296e-06}
+PROGRESS low-lr {"step": 500, "eval_loss": 1.881692886352539}
+PROGRESS low-lr {"step": 519, "loss": 1.8794, "learning_rate": 3.0370370370370372e-06}
+PROGRESS low-lr {"step": 537, "loss": 2.0387, "learning_rate": 2.3703703703703707e-06}
+PROGRESS low-lr {"step": 558, "loss": 1.8164, "learning_rate": 1.5925925925925927e-06}
+PROGRESS low-lr {"step": 578, "loss": 1.7252, "learning_rate": 8.518518518518519e-07}
+PROGRESS low-lr {"step": 598, "loss": 1.7612, "learning_rate": 1.1111111111111112e-07}
+PROGRESS low-lr {"step": 600}
+COMPLETE low-lr: validation WER=71.5736, CER=48.2402
+START lowercase (600 steps)
+PROGRESS lowercase {}
+PROGRESS lowercase {"phase": "baseline_or_model_load"}
+PROGRESS lowercase {"phase": "baseline_or_model_load"}
+PROGRESS lowercase {"step": 20, "loss": 1.1088, "learning_rate": 6.333333333333333e-06}
+PROGRESS lowercase {"step": 40, "loss": 1.2563, "learning_rate": 1.3000000000000001e-05}
+PROGRESS lowercase {"step": 59, "loss": 1.185, "learning_rate": 1.9333333333333333e-05}
+PROGRESS lowercase {"step": 78, "loss": 0.9424, "learning_rate": 1.9370370370370372e-05}
+PROGRESS lowercase {"step": 98, "loss": 1.2451, "learning_rate": 1.862962962962963e-05}
+PROGRESS lowercase {"step": 112, "loss": 1.1599, "learning_rate": 1.8111111111111112e-05}
+PROGRESS lowercase {"step": 131, "loss": 0.7844, "learning_rate": 1.740740740740741e-05}
+PROGRESS lowercase {"step": 150, "loss": 1.0351, "learning_rate": 1.6703703703703703e-05}
+PROGRESS lowercase {"step": 171, "loss": 0.9801, "learning_rate": 1.5925925925925926e-05}
+PROGRESS lowercase {"step": 191, "loss": 1.0148, "learning_rate": 1.5185185185185187e-05}
+PROGRESS lowercase {"step": 203, "loss": 1.392, "learning_rate": 1.4740740740740741e-05}
+PROGRESS lowercase {"step": 217, "loss": 0.8512, "learning_rate": 1.4222222222222224e-05}
+PROGRESS lowercase {"step": 229, "loss": 0.847, "learning_rate": 1.377777777777778e-05}
+PROGRESS lowercase {"step": 246, "loss": 1.0714, "learning_rate": 1.314814814814815e-05}
+PROGRESS lowercase {"step": 262, "loss": 0.8556, "learning_rate": 1.2555555555555557e-05}
+PROGRESS lowercase {"step": 278, "loss": 0.8057, "learning_rate": 1.1962962962962964e-05}
+PROGRESS lowercase {"step": 295, "loss": 1.4083, "learning_rate": 1.1333333333333334e-05}
+PROGRESS lowercase {"step": 307, "loss": 0.9711, "learning_rate": 1.088888888888889e-05}
+PROGRESS lowercase {"step": 324, "loss": 1.0766, "learning_rate": 1.025925925925926e-05}
+PROGRESS lowercase {"step": 342, "loss": 0.7513, "learning_rate": 9.592592592592593e-06}
+PROGRESS lowercase {"step": 359, "loss": 0.9176, "learning_rate": 8.962962962962963e-06}
+PROGRESS lowercase {"step": 375, "loss": 0.8327, "learning_rate": 8.37037037037037e-06}
+PROGRESS lowercase {"step": 394, "loss": 0.7798, "learning_rate": 7.666666666666667e-06}
+PROGRESS lowercase {"step": 409, "loss": 0.9406, "learning_rate": 7.111111111111112e-06}
+PROGRESS lowercase {"step": 429, "loss": 0.7242, "learning_rate": 6.370370370370371e-06}
+PROGRESS lowercase {"step": 451, "loss": 1.0099, "learning_rate": 5.555555555555557e-06}
+PROGRESS lowercase {"step": 472, "loss": 0.7062, "learning_rate": 4.777777777777778e-06}
+PROGRESS lowercase {"step": 492, "loss": 0.8948, "learning_rate": 4.037037037037037e-06}
+PROGRESS lowercase {"step": 508, "loss": 0.823, "learning_rate": 3.444444444444445e-06}
+PROGRESS lowercase {"step": 529, "loss": 1.0101, "learning_rate": 2.666666666666667e-06}
+PROGRESS lowercase {"step": 546, "loss": 1.06, "learning_rate": 2.037037037037037e-06}
+PROGRESS lowercase {"step": 564, "loss": 0.6023, "learning_rate": 1.3703703703703706e-06}
+PROGRESS lowercase {"step": 581, "loss": 0.7105, "learning_rate": 7.407407407407407e-07}
+PROGRESS lowercase {"step": 598, "loss": 0.8674, "learning_rate": 1.1111111111111112e-07}
+PROGRESS lowercase {"step": 600}
+COMPLETE lowercase: validation WER=29.8223, CER=16.0673
+SUITE completed: 4/4 trials

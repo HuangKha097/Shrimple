@@ -1,0 +1,47 @@
+{
+  "north": {
+    "wer_percent": 60.89108910891089,
+    "cer_percent": 49.22377887163953,
+    "word_errors": 984,
+    "reference_words": 1616,
+    "char_errors": 2600,
+    "reference_chars": 5282,
+    "samples": 70,
+    "operations": {
+      "insertion": 179,
+      "substitution": 471,
+      "deletion": 334
+    },
+    "substitutions_differing_only_in_diacritics": 35
+  },
+  "south": {
+    "wer_percent": 95.91065292096219,
+    "cer_percent": 82.6857020180335,
+    "word_errors": 2791,
+    "reference_words": 2910,
+    "char_errors": 7703,
+    "reference_chars": 9316,
+    "samples": 130,
+    "operations": {
+      "substitution": 1006,
+      "insertion": 1224,
+      "deletion": 561
+    },
+    "substitutions_differing_only_in_diacritics": 76
+  },
+  "central_highlands": {
+    "wer_percent": 70.11070110701107,
+    "cer_percent": 68.58823529411765,
+    "word_errors": 190,
+    "reference_words": 271,
+    "char_errors": 583,
+    "reference_chars": 850,
+    "samples": 10,
+    "operations": {
+      "deletion": 45,
+      "substitution": 101,
+      "insertion": 44
+    },
+    "substitutions_differing_only_in_diacritics": 2
+  }
+}

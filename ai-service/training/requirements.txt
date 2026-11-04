@@ -1,0 +1,9 @@
+# Separate training environment; never install into the inference container.
+# Install a suitable CUDA/CPU torch wheel separately using pytorch.org instructions.
+torch>=2.6,<3
+transformers==4.57.1
+peft==0.17.1
+accelerate==1.10.1
+numpy>=1.26,<3
+soundfile==0.13.1
+scipy>=1.15,<2

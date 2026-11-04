@@ -1,0 +1,113 @@
+{
+  "status": "prepared_not_started",
+  "manifest": "ai-service/training/data/vivos-development-v2/manifest.jsonl",
+  "manifest_sha256": "08f5be4a96d769d94aa8351334df60480987ceba853c5462c1f54e780de75e54",
+  "model_revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+  "trials": [
+    {
+      "name": "control",
+      "config": "ai-service/training/config.dev-control.json",
+      "config_sha256": "602820d10a641c3277c04e3db58baa4299161ac625230f1a04719fbd2dc2d86d",
+      "values": {
+        "model_id": "openai/whisper-base",
+        "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+        "seed": 42,
+        "max_steps": 600,
+        "learning_rate": 0.0001,
+        "gradient_accumulation_steps": 4,
+        "eval_steps": 100,
+        "lora_r": 8,
+        "lora_alpha": 16,
+        "lora_dropout": 0.05,
+        "precision": "fp32",
+        "max_new_tokens": 225,
+        "evaluation_scope": "development",
+        "label_case": "preserve",
+        "warmup_steps": 0,
+        "load_best_model_at_end": true
+      }
+    },
+    {
+      "name": "warmup",
+      "config": "ai-service/training/config.dev-warmup.json",
+      "config_sha256": "040bd45f8383a0a6171400aa754c2df11277b8e8a0ccc39a6bc61b2e776933ff",
+      "values": {
+        "model_id": "openai/whisper-base",
+        "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+        "seed": 42,
+        "max_steps": 600,
+        "learning_rate": 0.0001,
+        "gradient_accumulation_steps": 4,
+        "eval_steps": 100,
+        "lora_r": 8,
+        "lora_alpha": 16,
+        "lora_dropout": 0.05,
+        "precision": "fp32",
+        "max_new_tokens": 225,
+        "evaluation_scope": "development",
+        "label_case": "preserve",
+        "warmup_steps": 60,
+        "load_best_model_at_end": true
+      }
+    },
+    {
+      "name": "low-lr",
+      "config": "ai-service/training/config.dev-low-lr.json",
+      "config_sha256": "07210db20408b7d18c32327d966edb15b755fd941f12486591584bdbbdf17cba",
+      "values": {
+        "model_id": "openai/whisper-base",
+        "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+        "seed": 42,
+        "max_steps": 600,
+        "learning_rate": 2e-05,
+        "gradient_accumulation_steps": 4,
+        "eval_steps": 100,
+        "lora_r": 8,
+        "lora_alpha": 16,
+        "lora_dropout": 0.05,
+        "precision": "fp32",
+        "max_new_tokens": 225,
+        "evaluation_scope": "development",
+        "label_case": "preserve",
+        "warmup_steps": 60,
+        "load_best_model_at_end": true
+      }
+    },
+    {
+      "name": "lowercase",
+      "config": "ai-service/training/config.dev-lowercase.json",
+      "config_sha256": "36e6ffc6229169ceadb1e55eefdf6caa2b7f96713a85af8ebf8d69dbeeaf5103",
+      "values": {
+        "model_id": "openai/whisper-base",
+        "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+        "seed": 42,
+        "max_steps": 600,
+        "learning_rate": 2e-05,
+        "gradient_accumulation_steps": 4,
+        "eval_steps": 100,
+        "lora_r": 8,
+        "lora_alpha": 16,
+        "lora_dropout": 0.05,
+        "precision": "fp32",
+        "max_new_tokens": 225,
+        "evaluation_scope": "development",
+        "label_case": "lower",
+        "warmup_steps": 60,
+        "load_best_model_at_end": true
+      }
+    }
+  ],
+  "selection": {
+    "within_trial_checkpoint": "lowest validation loss, proxy only",
+    "between_trials": "generated validation WER on unchanged references; CER secondary",
+    "do_not_compare_loss_between_label_cases": true,
+    "do_not_use_old_or_reserved_test_for_hyperparameter_selection": true
+  },
+  "limitations": [
+    "43 train speakers, only 3 validation speakers; selection can overfit validation",
+    "600 steps and learning rates are planned hypotheses, not optimized values",
+    "Only Vietnamese read speech, not noisy conversation or multilingual acceptance"
+  ],
+  "reserved_original_test_speakers_not_evaluated": 16,
+  "user_recording_not_used_for_training_or_selection": true
+}

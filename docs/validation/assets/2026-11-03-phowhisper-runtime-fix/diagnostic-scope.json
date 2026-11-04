@@ -1,0 +1,11 @@
+{
+  "dataset": "VIVOS development validation",
+  "selection": "first six validation rows in existing manifest whose WAV duration is between 2 and 8 seconds",
+  "samples": 6,
+  "reference_words": 133,
+  "audio_seconds": 34.6875,
+  "mode": "real whisper.cpp v1.9.4 CPU, two threads",
+  "scope": "small decoder diagnostic, not new independent held-out test or call-accuracy acceptance",
+  "upstream_training_overlap": "unknown",
+  "privacy": "raw labels, audio and predictions stay in ignored cache"
+}

@@ -42,6 +42,7 @@ services:
       - ./ai-service/.env
     environment:
       WHISPER_CPP_URL: http://whisper:8080
+      PHOWHISPER_CPP_URL: http://phowhisper:8080
       QWEN_URL: http://qwen:8080
       CT2_MODEL_DIR: /models/ct2
       WHISPER_GPU: ${WHISPER_GPU:-false}
@@ -52,10 +53,29 @@ services:
     depends_on:
       whisper:
         condition: service_healthy
+      phowhisper:
+        condition: service_healthy
       qwen:
         condition: service_started
     ports:
       - "127.0.0.1:8001:8001"
+    restart: unless-stopped
+
+  phowhisper:
+    image: qtmshrimple-whisper-cpu
+    build:
+      context: ./ai-service/whisper
+      dockerfile: Dockerfile
+    environment:
+      WHISPER_MODEL: phowhisper-base
+      WHISPER_THREADS: ${WHISPER_THREADS:-2}
+    volumes:
+      - ./ai-service/training/runs/phowhisper-base-trial/ggml:/opt/phowhisper:ro
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 120
     restart: unless-stopped
 
   qwen:

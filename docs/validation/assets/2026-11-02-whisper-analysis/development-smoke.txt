@@ -1,0 +1,53 @@
+Private evidence directory: C:\Users\quach\Desktop\Project\Shrimple\ai-service\training\runs\20261102T132546Z-498db717
+
+  0%|          | 0/2 [00:00<?, ?it/s]You're using a WhisperTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+
+ 50%|#####     | 1/2 [00:02<00:02,  2.79s/it]
+                                             
+
+{'loss': 5.4473, 'grad_norm': 6.2488532066345215, 'learning_rate': 0.0, 'epoch': 1.0}
+ 50%|#####     | 1/2 [00:02<00:02,  2.79s/it]
+
+  0%|          | 0/1 [00:00<?, ?it/s][A
+                                             
+
+
+                                     
+[A
+ 50%|#####     | 1/2 [00:03<00:02,  2.79s/it]
+
+100%|##########| 1/1 [00:00<00:00, 498.08it/s][A
+
+                                              [AC:\Users\quach\Desktop\Project\Shrimple\ai-service\training\.venv\Lib\site-packages\peft\utils\save_and_load.py:286: UserWarning: Could not find a config file in openai/whisper-base - will assume that the vocabulary was not modified.
+  warnings.warn(
+
+100%|##########| 2/2 [00:06<00:00,  3.32s/it]
+                                             
+
+{'eval_loss': 5.463344573974609, 'eval_runtime': 0.7123, 'eval_samples_per_second': 1.404, 'eval_steps_per_second': 1.404, 'epoch': 1.0}
+100%|##########| 2/2 [00:06<00:00,  3.32s/it]
+{'loss': 5.4473, 'grad_norm': 6.355869770050049, 'learning_rate': 0.0001, 'epoch': 2.0}
+
+  0%|          | 0/1 [00:00<?, ?it/s][A
+                                             
+
+
+                                     
+[A
+100%|##########| 2/2 [00:07<00:00,  3.32s/it]
+
+100%|##########| 1/1 [00:00<00:00, 58.96it/s][A
+
+                                             [AC:\Users\quach\Desktop\Project\Shrimple\ai-service\training\.venv\Lib\site-packages\peft\utils\save_and_load.py:286: UserWarning: Could not find a config file in openai/whisper-base - will assume that the vocabulary was not modified.
+  warnings.warn(
+
+                                             
+
+100%|##########| 2/2 [00:07<00:00,  3.32s/it]
+100%|##########| 2/2 [00:07<00:00,  3.77s/it]
+C:\Users\quach\Desktop\Project\Shrimple\ai-service\training\.venv\Lib\site-packages\peft\utils\save_and_load.py:286: UserWarning: Could not find a config file in openai/whisper-base - will assume that the vocabulary was not modified.
+  warnings.warn(
+C:\Users\quach\Desktop\Project\Shrimple\ai-service\training\.venv\Lib\site-packages\transformers\modeling_utils.py:3918: UserWarning: Moving the following attributes in the config to the generation config: {'max_length': 448, 'suppress_tokens': [1, 2, 7, 8, 9, 10, 14, 25, 26, 27, 28, 29, 31, 58, 59, 60, 61, 62, 63, 90, 91, 92, 93, 359, 503, 522, 542, 873, 893, 902, 918, 922, 931, 1350, 1853, 1982, 2460, 2627, 3246, 3253, 3268, 3536, 3846, 3961, 4183, 4667, 6585, 6647, 7273, 9061, 9383, 10428, 10929, 11938, 12033, 12331, 12562, 13793, 14157, 14635, 15265, 15618, 16553, 16604, 18362, 18956, 20075, 21675, 22520, 26130, 26161, 26435, 28279, 29464, 31650, 32302, 32470, 36865, 42863, 47425, 49870, 50254, 50258, 50358, 50359, 50360, 50361, 50362], 'begin_suppress_tokens': [220, 50257]}. You are seeing this warning because you've set generation parameters in the model config, as opposed to in the generation config.
+  warnings.warn(
+{'eval_loss': 5.381927013397217, 'eval_runtime': 0.778, 'eval_samples_per_second': 1.285, 'eval_steps_per_second': 1.285, 'epoch': 2.0}
+{'train_runtime': 7.525, 'train_samples_per_second': 0.266, 'train_steps_per_second': 0.266, 'train_loss': 5.447347164154053, 'epoch': 2.0}

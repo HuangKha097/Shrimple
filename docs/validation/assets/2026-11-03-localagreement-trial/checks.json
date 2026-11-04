@@ -1,0 +1,24 @@
+{
+  "ai_regression": {
+    "passed": 30,
+    "failed": 0,
+    "runner": "bounded 45s subprocess; unittest discover -s ai-service/tests -v",
+    "run_note": "Executed after v4 context-alignment and three regression tests; core source unchanged since pass"
+  },
+  "python_ast": "pass",
+  "powershell_parser": "pass",
+  "compose_overlay_config_quiet": "pass",
+  "normalized_image_shell_syntax": "pass",
+  "git_diff_check": "pass",
+  "new_report_relative_links": "pass",
+  "docs_under_800_lines": "pass",
+  "six_audio_sha256_reverified": true,
+  "runtime_restored": "runtime-restored.json",
+  "working_tree": "uncommitted; existing changes preserved",
+  "scope_excludes": [
+    "physical WebRTC",
+    "real user microphone",
+    "MT quality acceptance",
+    "full Compose LocalAgreement image activation"
+  ]
+}

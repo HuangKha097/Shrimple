@@ -1,0 +1,8 @@
+﻿group,samples,speakers,seconds,wer_percent,cer_percent,status
+north,30,30,532.6940625,45.874934314240676,32.83108643933386,measured_development_only
+central,30,30,539.8403125,64.97844827586206,46.16634178037687,measured_development_only
+south,30,30,612.5180625,50.586113615870154,36.73666758773142,measured_development_only
+central_highlands,0,0,,,,not_measured_missing_labels_or_samples
+unknown,0,0,,,,not_measured_missing_labels_or_samples
+fast,0,0,,,,not_measured_missing_labels_or_samples
+heavy,0,0,,,,not_measured_missing_labels_or_samples

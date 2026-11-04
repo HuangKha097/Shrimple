@@ -12,10 +12,10 @@ export class TranslationStreamError extends Error {
 export const defaultTranslationDirection = language =>
     language?.startsWith('en') ? 'vi-en' : 'en-vi';
 
-export const SUPPORTED_TARGET_LANGUAGES = ['vi', 'en', 'zh'];
-export const SUPPORTED_SOURCE_LANGUAGES = ['auto', 'vi', 'en', 'zh'];
+export const SUPPORTED_TARGET_LANGUAGES = ['vi', 'en'];
+export const SUPPORTED_SOURCE_LANGUAGES = ['vi', 'en'];
 export const defaultTargetLanguage = language =>
-    language?.startsWith('zh') ? 'zh' : language?.startsWith('en') ? 'en' : 'vi';
+    language?.startsWith('en') ? 'en' : 'vi';
 
 export function defaultTranslationPair(language) {
     const targetLanguage = defaultTargetLanguage(language);

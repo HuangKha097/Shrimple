@@ -26,6 +26,41 @@ KaZhen chỉ làm mẫu cấu trúc. Tài liệu/plan cũ là dữ liệu tham k
 
 Không ấn định deadline/estimate, provider mới hoặc release scope khi chưa có quyết định. Ưu tiên khép quyền và data lifecycle trước thêm tính năng.
 
+### Nhánh nghiên cứu được yêu cầu 2026-11-02 — QS-AI01
+
+Người dùng yêu cầu triển khai fine-tune từ model hiện tại, lưu bằng chứng để viết báo cáo
+và cập nhật tài liệu. [Protocol](./whisper-finetuning.md) là nguồn chi tiết cho nhánh này.
+
+Cập nhật dữ liệu2026-11-03: [catalog và Accent Benchmark](./vietnamese-accent-benchmark.md),
+diagnostic VietMed/ViMD đã có source/split/version/evidence riêng. Bud500/VLSP chưa có
+quyền truy cập. Bước kế tiếp là QA nhãn/nhóm, tăng vùng/tỉnh và miền hội thoại; không
+tái dùng valid vào train hoặc tự chạy corpus lớn. [Evidence](./validation/2026-11-03-accent-benchmark.md).
+
+User đã yêu cầu train tiếp: tách official ViMD train ba vùng, thêm VIVOS replay,
+đóng băng150validation/93người và hoàn thành600steps LR1e-5 từ base. [Vòng train](./validation/2026-11-03-whisper-accent-training.md)
+đã giảm WER ViMD53,56→46,86% nhưng VIVOS tăng27,92→28,68%. Tiếp theo rà lỗi tăng,
+cân bằng replay/nguồn và kiểm budget giải mã; chưa mở test cuối hoặc đổi serving.
+Thứ tự: chuẩn bị audio → chủ dữ liệu rà lời chép/thuật ngữ và quyền → bổ sung người nói
+cho train/validation/test độc lập → audit → pilot CUDA/VRAM → thí nghiệm gốc/LoRA →
+phân tích kết quả → export và đối chiếu GGML Q5_1 → nghiệm thu cuộc gọi trước tích hợp.
+Một file giọng người dùng chưa có lời chép chỉ đủ bước chuẩn bị, không đủ kết luận chất
+lượng trên người nói mới. Không tự train bằng transcript nháp hoặc đổi runtime để bỏ gate.
+
+Cập nhật tiếp:13/13nhãn được người dùng xác nhận, mục tiêu nhiều người dùng đã chốt.
+[Pilot VIVOS CUDA40steps](./validation/2026-11-02-whisper-vivos-pilot.md) chạy xong nhưng
+validation/test kém hơn base; giữ runtime. Tiếp theo phân tích lỗi và thiết kế thí nghiệm
+trên train/validation, giữ test cuối mới chưa mở; chưa tiến sang export/deploy model này.
+
+Phần phân tích đã hoàn tất: [developmentv2 và bốn cấu hình](./validation/2026-11-02-whisper-train-validation-analysis.md)
+đã chuẩn bị, audit/tests pass. Vòng tiếp theo chỉ dùng train/validation để chọn cấu hình;
+chưa chạy nghiên cứu mới hoặc đo kết quả cải thiện. Validation3người vẫn là giới hạn.
+
+2026-11-03: người dùng đã yêu cầu chạy cả vòng; [suite development](./validation/2026-11-03-whisper-development.md)
+đã hoàn thành4config theo thứ tự,600steps/lượt. Lowercase tốt nhất trong fine-tune nhưng
+WER29.82% vẫn kém base27.92%; giữ runtime. Test cuối chưa chạy. Hướng nghiên cứu sau:
+rà objective/target và chọn checkpoint bằng generated validation WER; cần protocol riêng,
+không tự thay vòng đã chốt hoặc nâng release acceptance vì train xong.
+
 ## 2. Stack và ranh giới
 
 Các phiên bản dưới đây là range từ package.json, không khẳng định số patch đang cài trên mọi máy.
@@ -238,7 +273,7 @@ Sửa Docker build 2026-10-17: AI dùng `uvicorn` core + h11, bỏ optional nati
 
 Theo kiểm tra máy local chỉ nhận Intel UHD, Compose chuyển mặc định Whisper CPU; NVIDIA dùng thêm `-f compose.gpu.yaml`. Đợt chọn CPU ban đầu giữ medium q5_0, API, khóa và model volumes. [Whisper CPU build](./validation/2026-10-17-whisper-cpu-build.md) ghi phạm vi B/T; không hứa inference CPU theo kịp clip6s, không đánh dấu Q03 Done khi chưa đo latency.
 
-Đợt ưu tiên tốc độ local trước progressive đổi mặc định sang Whisper base-q5_1 + Qwen3-0.6B Q8_0; đây là snapshot lịch sử. Ngày 2026-11-02 đã thử medium-q5_0 rồi quay lại base-q5_1 theo phản hồi tốc độ; hiện chỉ chạy base làm model ASR chung en/vi/zh, giữ khóa A ⇒ B và Qwen. [Thử nghiệm medium và giới hạn](./validation/2026-11-02-whisper-medium-trial.md). Snapshot tốc độ cũ dùng chung một slot inference/tiến trình, không xếp hàng, bận429; UI bỏ clip bận/hết hạn và tiếp tục. Mặc định2 thread/model và Qwen polling0. [Evidence tốc độ cũ](./validation/2026-10-17-translation-speed.md); không coi CPU local là nghiệm thu realtime nhiều người. Tiếp theo cần đo nhận dạng giọng Việt vùng miền, tiếng Trung, độ trễ final và tải nhiều speaker trước khi chốt cấu hình đồ án.
+Đợt ưu tiên tốc độ local trước progressive đổi mặc định sang Whisper base-q5_1 + Qwen3-0.6B Q8_0; đây là snapshot lịch sử. Ngày 2026-11-02 đã thử medium-q5_0 rồi quay lại base-q5_1 theo phản hồi tốc độ; tại snapshot02/11 chỉ chạy base làm ASR chung en/vi/zh. Quyết định03/11 đã thay bằng PhoWhisper vi + Whisper en, phạm vi en↔vi; xem bản chốt cuối mục này. [Thử nghiệm medium và giới hạn](./validation/2026-11-02-whisper-medium-trial.md). Snapshot tốc độ cũ dùng chung một slot inference/tiến trình, không xếp hàng, bận429; UI bỏ clip bận/hết hạn và tiếp tục. Mặc định2 thread/model và Qwen polling0. [Evidence tốc độ cũ](./validation/2026-10-17-translation-speed.md); không coi CPU local là nghiệm thu realtime nhiều người. Tiếp theo cần đo nhận dạng giọng Việt vùng miền, tiếng Trung, độ trễ final và tải nhiều speaker trước khi chốt cấu hình đồ án.
 
 Bản progressive HTTP trước PCM đã tách original/translation và hai slot model, chỉ ghi remote; giữ evidence lịch sử ở [progressive notes](./validation/2026-10-17-translation-progressive.md). Hai route HTTP tiếp tục tương thích, bảng note mới chuyển sang socket PCM.
 
@@ -255,3 +290,13 @@ Q01 thêm poll/QR64+24hex/login retention, incoming group call và note dịch2b
 Compose upstream đã khai báo frontend/backend/ai/whisper/qwen; backend trỏ http://ai:8001, AI trỏ whisper/qwen:8080. Whisper build dùng Dockerfile.cuda và GPU NVIDIA reservation; Qwen image pinned digest/model Qwen3-1.7B-GGUF Q8_0. Có model-cache volumes, AI port bind127.0.0.1:8001. Đây là cấu hình source, chưa chạy compose/model download/health trong đợt conflict. Lệnh test tree cuối: server20/20, client8/8, lint0errors8warnings, build pass18,68s; xem validation mới.
 
 Delta 2026-11-02 GPU/CPU: [runtime CUDA + CPU](./validation/2026-11-02-translation-gpu-cpu.md) giữ base-q5_1 và khóa A ⇒ B; Whisper dùng GPU, VAD/CT2/Qwen dùng CPU. Đã kiểm tra hai làn chạy chồng thời gian bằng model thật. Máy hiện tại GTX1650SUPER khác snapshot Intel UHD trước đây. Q01/Q03 tiếp tục kiểm chứng Việt/Trung, WebRTC và tải nhiều speaker; không dùng số đo ba câu tổng hợp làm SLA.
+
+Cập nhật FR-23 nói liên tục2026-11-03: [sửa chia đoạn và regression](./validation/2026-11-03-continuous-speech.md) đã pass7tests; còn áp dụng AI mới/replay audio dài có bản lời và WebRTC để nghiệm thu ngữ nghĩa. Không suy cải thiện dịch từ unit tests.
+
+Delta2026-11-03 — quyết định hiện hành: chỉ en↔vi; dùng PhoWhisper-base cho vi và Whisper-base cho en theo xác nhận người dùng sau diagnostic. Kết quả/config tại [validation](./validation/2026-11-03-phowhisper.md). Các bước Việt/Trung/sáu cặp trước đó không còn thuộc scope dịch hiện tại. Tiếp theo: bật Docker Linux Engine, build/recreate frontend/backend/ai/whisper/phowhisper, kiểm GGML/health/PCM và hai browser WebRTC trên cả hai chiều. Giữ Q01/Q03 và QS-AI01 mở tới khi có runtime/quality evidence phù hợp.
+
+Follow-up runtime2026-11-03: [sửa PhoWhisper](./validation/2026-11-03-phowhisper-runtime-fix.md) ưu tiên profile decoder/full-context và GPU thật trước thay/train model. Giữ hai chiều en↔vi; kiểm real PCM/MT sau recreate, rồi kiểm lại giọng người dùng qua WebRTC. Không lấy benchmark HF hoặc6câu làm acceptance cuộc gọi.
+
+Runtime follow-up đã khép bước nội bộ: ASR CUDA0, health và PCM/MT hai chiều + hai nguồn đồng thời pass theo [evidence](./validation/2026-11-03-phowhisper-runtime-fix.md). Bước tiếp theo là tải lại client và kiểm đúng giọng/câu người dùng qua WebRTC, không train/thay model thêm từ kết quả6WAV.
+
+Chốt2026-11-03 sau [thử LocalAgreement](./validation/2026-11-03-localagreement-trial.md): người dùng xác nhận ổn, yêu cầu giữ model và dọn file dư. Giữ segmented; bỏ nhánh thử/overlay/test riêng, giữ bằng chứng đo. [Bản chốt và cleanup](./validation/2026-11-03-translation-finalization.md). Không lên kế hoạch đổi/train model thêm trong scope hiện tại; gate mic/WebRTC/Q01/Q03 giữ mở.

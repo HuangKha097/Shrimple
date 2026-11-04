@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-03",
+  "timezone": "Asia/Saigon",
+  "ai_regression": {
+    "passed": 12,
+    "failed": 0,
+    "command": "PYTHONPATH=ai-service python -m unittest discover -s ai-service/tests -v",
+    "removed_unselected_branch_tests": 18
+  },
+  "javascript_regression": {
+    "passed": 2,
+    "failed": 0,
+    "command": "node --test server/test/translationLanguages.test.js"
+  },
+  "python_syntax": "pass",
+  "server_node_check": "pass",
+  "powershell_parser": "pass",
+  "image_normalized_shell_syntax": "pass",
+  "compose_gpu_config_quiet": "pass",
+  "git_diff_check": "pass",
+  "removed_branch_reference_scan": "pass",
+  "docker_copy_sources_exist": true,
+  "report_relative_links": "pass",
+  "docs_line_limit": "pass",
+  "source_sha256": {
+    "ai-service/app.py": "8c8d1213b32a0787def170464c9b80d4c0d3e48021402b9d217855dcdaf22677",
+    "ai-service/pcm_stream.py": "c693af6598ac4084a82600d3bc0996f956f123c1fdfb3e3c80cffcb97486de80",
+    "ai-service/pcm_vad.py": "47ee51c0e33169a53c34e09ec97c30314771472ca64c8c1361826ffdbd6b8c9a",
+    "ai-service/start-gpu.ps1": "9f163aa4eb1da7888a5f962ecac7b1a217ccc7edc62a37595ca7a4ac6b8917f1",
+    "ai-service/whisper/start.sh": "3ff8468090c9314437a4d60a9a0b9cc39b0e057bb359f231977c8238f286e8a0",
+    "ai-service/Dockerfile": "1fc4d22f211d6d0cfcbc1b47905128f806b4c50b06c4c141d0e2457dc617c9a9",
+    "ai-service/.env.example": "b2911658ce07e80d62de2fe0fb0a595cb03ebf26be63db79db1a52552e2f6bf3",
+    "ai-service/tests/test_pcm_segmentation.py": "12a6e570fc895aa78d5f199fb19dda420ff53a5cd52910facfa9c65f83ea7c54",
+    "ai-service/tests/test_translation_languages.py": "0b3fc72330266960032e463316f00dc95826bd9b346a79c5f8c1f71ad7179a8c",
+    "server/test/translationLanguages.test.js": "a7cf6fedeee86a926bc9706d8a403c7d5c78dc896d7fca32721ffe71ba66e02b"
+  },
+  "not_run": [
+    "full client lint/build",
+    "server DB suite",
+    "fresh recognition/translation quality benchmark",
+    "physical WebRTC/microphone acceptance"
+  ],
+  "staging_or_commit": false
+}

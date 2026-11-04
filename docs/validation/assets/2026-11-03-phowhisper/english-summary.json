@@ -1,0 +1,66 @@
+{
+  "status": "completed",
+  "manifest_sha256": "013aabcdb9debfcec87b6e44eca2076d7612267b455263c9a6ebb962934da57f",
+  "samples": 5,
+  "language": "en",
+  "python": "3.12.14",
+  "torch": "2.6.0+cu124",
+  "transformers": "4.57.1",
+  "device": "cuda",
+  "generation": {
+    "task": "transcribe",
+    "language": "en",
+    "do_sample": false,
+    "num_beams": 1,
+    "max_new_tokens": 225
+  },
+  "scope": "HF fp32 validation diagnostic; unknown overlap with upstream pretraining; not live call acceptance",
+  "models": {
+    "whisper-base": {
+      "revision": "e37978b90ca9030d5170a5c07aadb050351a65bb",
+      "metrics": {
+        "wer_percent": 7.894736842105263,
+        "cer_percent": 2.3121387283236996,
+        "word_errors": 3,
+        "reference_words": 38,
+        "char_errors": 4,
+        "reference_chars": 173
+      },
+      "inference_seconds": 1.1858302999999069,
+      "cap_flags": 0,
+      "groups": {
+        "unknown": {
+          "wer_percent": 7.894736842105263,
+          "cer_percent": 2.3121387283236996,
+          "word_errors": 3,
+          "reference_words": 38,
+          "char_errors": 4,
+          "reference_chars": 173
+        }
+      }
+    },
+    "phowhisper-base": {
+      "revision": "7ebdb9e88f5cc5271fb88f4d642c82ff9388650e",
+      "metrics": {
+        "wer_percent": 136.8421052631579,
+        "cer_percent": 81.5028901734104,
+        "word_errors": 52,
+        "reference_words": 38,
+        "char_errors": 141,
+        "reference_chars": 173
+      },
+      "inference_seconds": 1.5157145000002856,
+      "cap_flags": 0,
+      "groups": {
+        "unknown": {
+          "wer_percent": 136.8421052631579,
+          "cer_percent": 81.5028901734104,
+          "word_errors": 52,
+          "reference_words": 38,
+          "char_errors": 141,
+          "reference_chars": 173
+        }
+      }
+    }
+  }
+}

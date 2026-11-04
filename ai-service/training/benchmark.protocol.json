@@ -1,0 +1,15 @@
+{
+  "benchmark_id": "shrimple-vietnamese-accent-v1-development",
+  "stage": "development",
+  "primary_accents": ["north", "central", "south"],
+  "auxiliary_accents": ["central_highlands", "unknown"],
+  "minimum_speakers_per_primary_accent": 10,
+  "minimum_seconds_per_primary_accent": 1800,
+  "coverage_thresholds_status": "proposed_research_design_not_a_universal_standard",
+  "natural_fast_label": "human_reviewed_or_documented_source_annotation",
+  "heavy_accent_label": "blind_human_annotation_not_inferred_from_model_errors_or_province",
+  "user_example_targets_status": "illustrative_not_acceptance_or_measured_results",
+  "user_example_wer_targets_percent": {"north": 8, "central": 15, "south": 12, "fast": 15, "heavy": 20},
+  "confidence": {"method": "speaker_cluster_bootstrap_conditional_on_this_sample", "iterations": 1000, "seed": 42, "minimum_speakers": 5},
+  "normalization": "Reuse evidence.py NFC/casefold/punctuation-to-space; keep diacritics and words; CER excludes spaces"
+}

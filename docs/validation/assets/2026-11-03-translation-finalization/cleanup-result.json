@@ -1,0 +1,43 @@
+{
+  "RemovedSourceFiles": 4,
+  "RemovedExperimentalTests": 18,
+  "RemovedTemporaryFiles": 129.0,
+  "RemovedTemporaryBytes": 29668930.0,
+  "RemovedOrphanBytecodeFiles": 3,
+  "TemporaryTargets": [
+    {
+      "Path": ".cache/localagreement-trial",
+      "Files": 18,
+      "Bytes": 4916477.0
+    },
+    {
+      "Path": ".cache/translation-runtime-probe",
+      "Files": 33,
+      "Bytes": 1675765.0
+    },
+    {
+      "Path": ".cache/translation-runtime-image",
+      "Files": 2,
+      "Bytes": 2169.0
+    },
+    {
+      "Path": ".cache/architecture-doc-update",
+      "Files": 71,
+      "Bytes": 22602491.0
+    },
+    {
+      "Path": ".tmp/stable-prefix-check",
+      "Files": 4,
+      "Bytes": 431319.0
+    },
+    {
+      "Path": ".tmp/long-speech-check",
+      "Files": 1,
+      "Bytes": 40709.0
+    }
+  ],
+  "ModelsDataAndMongoCacheExcluded": true,
+  "FinalizationTemporaryFiles": 28,
+  "FinalizationTemporaryBytes": 7811831.0,
+  "AllPlannedTemporaryDirectoriesRemoved": true
+}
