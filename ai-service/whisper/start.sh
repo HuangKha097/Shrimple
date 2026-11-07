@@ -7,7 +7,7 @@ case "$model_name" in
         model=/opt/phowhisper/ggml-model.bin
         checksum=/opt/phowhisper/ggml-model.bin.sha256
         if [ ! -s "$model" ] || [ ! -s "$checksum" ]; then
-            echo "Prepare PhoWhisper with ai-service/training/prepare_phowhisper.py first" >&2
+            echo "Bundled PhoWhisper is missing; rebuild the whisper image" >&2
             exit 1
         fi
         expected_sha256=$(cut -d ' ' -f 1 "$checksum") ;;

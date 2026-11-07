@@ -1,0 +1,31 @@
+{
+  "model": "vinai/PhoWhisper-base",
+  "revision": "7ebdb9e88f5cc5271fb88f4d642c82ff9388650e",
+  "format": "GGML f16",
+  "whisper_cpp": "v1.9.4",
+  "sha256": "d2d55964ba390fdbd32642a36555961df7fe3a171c41c841e4257f46a157c367",
+  "bytes": 147951482,
+  "source_files": {
+    "added_tokens.json": "ce949fe720c14311cb6c446e69cfe340dc669d7b006077a6feed6ae571dd7e88",
+    "config.json": "c75f5d458f497b7ea8748ab0c857db7ce2fd274b64cc70df30b17cb84723caf0",
+    "generation_config.json": "b7e529b1281934e5b029058c1947e05475f90907f36bde98b93f4b42ab90b73f",
+    "merges.txt": "78f27f801feb4283ae969d4cadacb28fc051b655647402b1a252c7079ea11c46",
+    "normalizer.json": "bf1c507dc8724ca9cf9903640dacfb69dae2f00edee4f21ceba106a7392f26dd",
+    "preprocessor_config.json": "a6a76d28c93edb273669eb9e0b0636a2bddbb1272c3261e47b7ca6dfdbac1b8d",
+    "pytorch_model.bin": "910b9e8875497078efa83dc506ea7ee378e4e759a206ceecbf23e088aec9b9f8",
+    "special_tokens_map.json": "b0aac6950381c4ae2f60b3f0fab04bcfe399a6a320cb3e4c7aee2d52924d733e",
+    "tokenizer.json": "c218b12acbc2168cad951ae8a8c8d345df09dfa63b787214d4ac27762170fd7b",
+    "tokenizer_config.json": "60f582a7f2855456bba9be70140f51be7c64e88e1258d80e10f17cd4a49e0e7d",
+    "vocab.json": "8f680bba319e01a653d2e8a5dbc17a9157179e0576e6ce74ce0c06356c6e24f9"
+  },
+  "converter_sources": {
+    "convert-h5-to-ggml.py": {
+      "url": "https://raw.githubusercontent.com/ggml-org/whisper.cpp/v1.9.4/models/convert-h5-to-ggml.py",
+      "sha256": "9cc282dfcd9a24da03ffa1b4123b5508ee935e19e369c33520b1a73f89440094"
+    },
+    "mel_filters.npz": {
+      "url": "https://raw.githubusercontent.com/openai/whisper/v20250625/whisper/assets/mel_filters.npz",
+      "sha256": "7450ae70723a5ef9d341e3cee628c7cb0177f36ce42c44b7ed2bf3325f0f6d4c"
+    }
+  }
+}

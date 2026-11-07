@@ -44,6 +44,8 @@ server/public/uploads/
 ai-service/training/.venv-check/
 
 # Private training data, transcripts, models and experiment evidence
+# Docker builds PhoWhisper from the tracked whisper/phowhisper.json manifest.
+# Keep research artifacts ignored; do not force-add runtime weights here.
 ai-service/training/data/
 ai-service/training/runs/
 

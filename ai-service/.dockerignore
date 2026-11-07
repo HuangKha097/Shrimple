@@ -3,3 +3,7 @@
 __pycache__/
 *.pyc
 *.log
+training/data/
+training/runs/
+training/.venv/
+training/.venv-check/

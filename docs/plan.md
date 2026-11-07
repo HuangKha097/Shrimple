@@ -300,3 +300,5 @@ Follow-up runtime2026-11-03: [sửa PhoWhisper](./validation/2026-11-03-phowhisp
 Runtime follow-up đã khép bước nội bộ: ASR CUDA0, health và PCM/MT hai chiều + hai nguồn đồng thời pass theo [evidence](./validation/2026-11-03-phowhisper-runtime-fix.md). Bước tiếp theo là tải lại client và kiểm đúng giọng/câu người dùng qua WebRTC, không train/thay model thêm từ kết quả6WAV.
 
 Chốt2026-11-03 sau [thử LocalAgreement](./validation/2026-11-03-localagreement-trial.md): người dùng xác nhận ổn, yêu cầu giữ model và dọn file dư. Giữ segmented; bỏ nhánh thử/overlay/test riêng, giữ bằng chứng đo. [Bản chốt và cleanup](./validation/2026-11-03-translation-finalization.md). Không lên kế hoạch đổi/train model thêm trong scope hiện tại; gate mic/WebRTC/Q01/Q03 giữ mở.
+
+Docker portability 07/11/2026: bỏ phụ thuộc file model local bằng build stage PhoWhisper có checksum, giữ model gốc. Chưa xác nhận clean Docker build khi Engine không chạy; bước tiếp theo build/health trên máy mới đã cấu hình env và có mạng. Không đổi gate WebRTC/Q01/Q03. [Evidence](./validation/2026-11-07-portable-docker-models.md).

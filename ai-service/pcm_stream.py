@@ -10,8 +10,9 @@ import time
 import httpx
 from fastapi import HTTPException, WebSocketDisconnect
 from fastapi.responses import JSONResponse
+from speech_quality import safe_punctuation, punctuate_vietnamese
 
-from pcm_vad import PACKET_BYTES, PACKET_SAMPLES, SAMPLE_RATE, SpeechSegmenter, get_model, pcm_wav
+from pcm_vad import FRAME_BYTES, PACKET_BYTES, PACKET_SAMPLES, SAMPLE_RATE, SpeechSegmenter, get_model, pcm_wav
 
 MAX_STREAMS = 64
 MAX_FINAL_JOBS = 3
@@ -67,7 +68,7 @@ class PcmPipeline:
         self.websocket, self.backend = websocket, backend
         self.source, self.target = source, target
         self.translate_enabled = bool(translate_enabled)
-        self.segmenter = SpeechSegmenter() if segmenter is None else segmenter
+        self.segmenter = SpeechSegmenter(language=source) if segmenter is None else segmenter
         self.finals = deque()
         self.translations = deque()
         self.partial = None
@@ -125,7 +126,7 @@ class PcmPipeline:
                 self.partial = job
             self.asr_signal.set()
 
-    async def run_lane(self, slot, work, deadline, *, partial=False, final_asr=False):
+    async def run_lane(self, slot, work, deadline, *, partial=False, final_asr=False, best_effort=False):
         global _final_waiters
         wait_until = min(deadline, time.monotonic() + LANE_WAIT_SECONDS)
         if final_asr:
@@ -137,7 +138,7 @@ class PcmPipeline:
                     acquired = (not partial or not _final_waiters) and slot.acquire(blocking=False)
                 if acquired:
                     break
-                if partial or time.monotonic() >= wait_until:
+                if partial or best_effort or time.monotonic() >= wait_until:
                     raise HTTPException(429, "Inference is busy")
                 if self.stopped.is_set():
                     raise asyncio.CancelledError()
@@ -190,7 +191,7 @@ class PcmPipeline:
                     result = await self.run_lane(self.backend.stt_slot,
                         lambda remaining: self.backend.transcribe_audio(pcm_wav(job.pcm), self.source,
                             timeout=min(remaining, self.backend.WHISPER_TIMEOUT_SECONDS),
-                            retry_on_repetition=job.final, cancelled=self.stopped),
+                            retry_on_repetition=job.final, cancelled=self.stopped, final=job.final),
                         job.deadline, partial=not job.final, final_asr=job.final)
                     if result is None or self.stopped.is_set() or utterance.failed:
                         continue
@@ -207,6 +208,33 @@ class PcmPipeline:
                         if job.final and utterance.revision:
                             await self.error(422, "No speech recognized in the final utterance", utterance)
                         continue
+                    if self.segmenter is not None:
+                        self.segmenter.observe_transcript(int(utterance.identifier[1:]), original,
+                                                         len(job.pcm) // FRAME_BYTES)
+                    if (job.final and self.source == "vi" and hasattr(self.backend, "punctuate_transcript")
+                            and getattr(self.backend, "VI_PUNCTUATION_MODE", "qwen") != "off"):
+                        raw_original = original
+                        original = punctuate_vietnamese(raw_original)
+                        try:
+                            if getattr(self.backend, "VI_PUNCTUATION_MODE", "qwen") in ("model", "rules"):
+                                polished = await asyncio.to_thread(self.backend.punctuate_transcript,
+                                    raw_original, self.source, cancelled=self.stopped)
+                            else:
+                                polished = await self.run_lane(self.backend.text_translation_slot,
+                                    lambda remaining: self.backend.punctuate_transcript(raw_original, self.source,
+                                        timeout=min(4, remaining), cancelled=self.stopped),
+                                    min(job.deadline, time.monotonic()+4), best_effort=True)
+                            if self.stopped.is_set():
+                                continue
+                            if polished:
+                                # Defense in depth even for an injected backend.
+                                original = safe_punctuation(raw_original, polished)
+                        except asyncio.CancelledError:
+                            raise
+                        except Exception:
+                            pass  # Busy/failed formatter preserves raw ASR.
+                        if len(original) > MAX_TEXT_CHARS:
+                            original = raw_original
                     utterance.revision += 1
                     utterance.final_emitted = job.final
                     event = {"type": "transcript", "utteranceId": utterance.identifier,

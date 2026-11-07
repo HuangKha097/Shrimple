@@ -62,6 +62,10 @@ docker compose up -d --build
 
 Mở `http://localhost:5173`; backend local dùng `http://localhost:5001`. Script tạo khóa AI dùng chung backend/AI, không in hoặc ghi đè khóa đã có. Không chia sẻ output `docker compose config` thiếu `--quiet`, vì có thể chứa secrets.
 
+Từ 07/11/2026, Docker build tự tải PhoWhisper-base tại revision đã khóa, kiểm SHA-256 nguồn/converter và export GGML vào image CPU/CUDA. Không cần chép `training/runs/`, cài Python/PyTorch trên host hoặc đưa model vào Git. Lần build đầu cần mạng và tải thêm PyTorch CPU cho build stage; runtime image chỉ giữ model GGML gần 148 MB. Whisper tiếng Anh và Qwen tải/cache model ở lần chạy đầu như trước.
+
+Compose mặc định dùng `VI_PUNCTUATION_MODE=rules`, không phụ thuộc classifier ViMD nghiên cứu có hạn chế phân phối lại. Không mount model nghiên cứu từ `training/runs/` theo mặc định. Các file `.env` và cấu hình MongoDB/dịch vụ bên ngoài vẫn phải thiết lập như trên; chúng không được đưa vào Git. [Kiểm chứng và giới hạn](docs/validation/2026-11-07-portable-docker-models.md).
+
 Trên máy NVIDIA hiện tại, chạy thêm profile GPU/CPU sau khi đã khởi động stack:
 
 ~~~powershell

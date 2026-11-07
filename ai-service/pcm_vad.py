@@ -7,6 +7,7 @@ import hashlib
 import io
 import threading
 import wave
+from speech_quality import unfinished_vietnamese, words
 
 import numpy as np
 import onnxruntime as ort
@@ -104,13 +105,33 @@ class SpeechSnapshot:
 
 
 class SpeechSegmenter:
-    def __init__(self, vad=None):
+    def __init__(self, vad=None, *, language="en"):
         self.vad = SileroStream() if vad is None else vad
         self.pre_roll = deque(maxlen=PRE_ROLL_FRAMES)
         self.frames = []
         self.utterance = 0
         self.silence = self.voiced = self.since_partial = 0
         self.continuation = False
+        self.language = language
+        self.max_frames = 375 if language == "vi" else MAX_UTTERANCE_FRAMES
+        self.transcript_hint = None
+
+    def observe_transcript(self, utterance, text, audio_frames):
+        # One immutable assignment from the async worker; the VAD thread checks
+        # identity and age before using it. No text is shared across streams.
+        self.transcript_hint = (utterance, text, audio_frames)
+
+    def end_silence_frames(self):
+        if self.language != "vi":
+            return END_SILENCE_FRAMES
+        hint = self.transcript_hint
+        if hint and hint[0] == self.utterance and 0 <= len(self.frames)-hint[2] <= 64:
+            if unfinished_vietnamese(hint[1]):
+                return 35  # 1.12s for an explicit dangling connector/predicate.
+            tokens = words(hint[1])
+            if len(tokens) >= 4 and tokens[-1] in ("nhé", "ạ"):
+                return 16  # 512ms after a likely closing particle.
+        return 20  # 640ms; do not settle a thinking pause at 96/320ms.
 
     def forced_boundary(self):
         # No overlap or transcript trimming: each input frame belongs to one final.
@@ -146,9 +167,10 @@ class SpeechSegmenter:
             else:
                 self.silence += 1
             self.since_partial += 1
-            soft_pause = len(self.frames) >= SOFT_UTTERANCE_FRAMES and self.silence >= SOFT_SILENCE_FRAMES
-            at_limit = len(self.frames) >= MAX_UTTERANCE_FRAMES
-            final = self.silence >= END_SILENCE_FRAMES or soft_pause or at_limit
+            soft_pause = (self.language != "vi" and len(self.frames) >= SOFT_UTTERANCE_FRAMES
+                          and self.silence >= SOFT_SILENCE_FRAMES)
+            at_limit = len(self.frames) >= self.max_frames
+            final = self.silence >= self.end_silence_frames() or soft_pause or at_limit
             if final:
                 cut = self.forced_boundary() if at_limit and not self.silence else len(self.frames)
                 snapshots.append(SpeechSnapshot(self.utterance, b"".join(self.frames[:cut]), True))

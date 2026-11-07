@@ -25,6 +25,9 @@ class LanguageTests(unittest.TestCase):
                 self.assertEqual(post.call_args.kwargs["data"]["language"], source)
                 self.assertEqual(post.call_args.kwargs["data"]["audio_ctx"], "0" if source == "vi" else "128")
                 self.assertEqual(post.call_args.kwargs["data"]["no_timestamps"], "true" if source == "vi" else "false")
+                self.assertEqual(post.call_args.kwargs["data"]["beam_size"], str(app.VI_FINAL_BEAM_SIZE) if source == "vi" else "1")
+            app.transcribe_audio(wav.getvalue(), "vi", final=False)
+            self.assertEqual(post.call_args.kwargs["data"]["beam_size"], "1")
 
     def test_readiness_requires_both_checkpoints(self):
         healthy = SimpleNamespace(status_code=200, json=lambda: {"status": "ok"})

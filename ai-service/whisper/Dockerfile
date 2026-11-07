@@ -1,3 +1,9 @@
+FROM python:3.12-slim AS phowhisper-model
+RUN pip install --no-cache-dir torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu \
+    && pip install --no-cache-dir transformers==4.57.1 numpy==2.2.6
+COPY prepare-model.py phowhisper.json /build-tools/
+RUN python /build-tools/prepare-model.py
+
 FROM debian:bookworm-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -8,7 +14,7 @@ RUN git clone --depth 1 --recurse-submodules --shallow-submodules --branch v1.9.
     https://github.com/ggml-org/whisper.cpp.git /src/whisper.cpp \
     && cmake -S /src/whisper.cpp -B /src/whisper.cpp/build \
        -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF \
-       -DGGML_NATIVE=ON -DWHISPER_BUILD_SERVER=ON -DWHISPER_BUILD_TESTS=OFF \
+       -DGGML_NATIVE=OFF -DWHISPER_BUILD_SERVER=ON -DWHISPER_BUILD_TESTS=OFF \
     && cmake --build /src/whisper.cpp/build --config Release --target whisper-server -j 2
 
 FROM debian:bookworm-slim
@@ -18,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /src/whisper.cpp/build/bin/whisper-server /usr/local/bin/whisper-server
+COPY --from=phowhisper-model /build/ggml/ /opt/phowhisper/
 COPY start.sh /usr/local/bin/start-whisper
 RUN sed -i 's/\r$//' /usr/local/bin/start-whisper \
     && chmod +x /usr/local/bin/start-whisper \

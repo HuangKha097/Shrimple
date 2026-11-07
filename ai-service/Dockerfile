@@ -12,7 +12,7 @@ RUN python -m pip install --no-cache-dir -r requirements.txt \
 RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-COPY app.py pcm_stream.py pcm_vad.py ./
+COPY app.py pcm_stream.py pcm_vad.py speech_quality.py punctuation_vi.py ./
 COPY models/ ./models/
 RUN python -c "from pcm_vad import get_model; get_model()"
 

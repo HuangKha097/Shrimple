@@ -46,6 +46,9 @@ services:
       QWEN_URL: http://qwen:8080
       CT2_MODEL_DIR: /models/ct2
       WHISPER_GPU: ${WHISPER_GPU:-false}
+      VI_FINAL_BEAM_SIZE: ${VI_FINAL_BEAM_SIZE:-5}
+      VI_PUNCTUATION_MODE: ${VI_PUNCTUATION_MODE:-rules}
+      VI_PUNCTUATION_MODEL_DIR: /models/punctuation-vi
     volumes:
       - qwen-model-cache:/models
     tmpfs:
@@ -69,8 +72,6 @@ services:
     environment:
       WHISPER_MODEL: phowhisper-base
       WHISPER_THREADS: ${WHISPER_THREADS:-2}
-    volumes:
-      - ./ai-service/training/runs/phowhisper-base-trial/ggml:/opt/phowhisper:ro
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]
       interval: 15s
