@@ -1,12 +1,15 @@
 import { create } from "zustand";
 import { useAuthStore } from "./useAuthStore";
 
+let nextCallId = 0;
+
 export const useCallStore = create((set, get) => ({
     // State
     isCallIncoming: false,
     isCallActive: false,
     isCallEnded: false,
     callType: null, // "audio" | "video"
+    callId: null, // Local lifecycle identity; stays fixed when the call is accepted.
     callerSignal: null,
     callerInfo: null, // { id, name, avatar }
     stream: null,
@@ -14,7 +17,10 @@ export const useCallStore = create((set, get) => ({
     
     // Actions
     setCallIncoming: (data) => set({
+        callId: ++nextCallId,
         isCallIncoming: true,
+        isCallActive: false,
+        isCallEnded: false,
         callerSignal: data.signal,
         callerInfo: { id: data.from, name: data.name, avatar: data.avatar },
         callType: data.isVideo ? "video" : "audio"
@@ -27,6 +33,7 @@ export const useCallStore = create((set, get) => ({
 
     setCallEnded: () => {
         set({ 
+            callId: null,
             isCallIncoming: false, 
             isCallActive: false, 
             isCallEnded: true,
@@ -46,6 +53,11 @@ export const useCallStore = create((set, get) => ({
         socket.off("endCall");
 
         socket.on("callUser", (data) => {
+            if (get().callId) {
+                // A second incoming call cannot replace the peer owning the mic.
+                if (data.from !== get().callerInfo?.id) socket.emit("endCall", { to: data.from });
+                return;
+            }
             get().setCallIncoming(data);
         });
         
@@ -67,9 +79,13 @@ export const useCallStore = create((set, get) => ({
     
     // Call Actions (emitters)
     initiateCall: (recipientId, isVideo = false, recipientInfo = null) => {
+         if (get().callId) return;
          // Set state to active so Modal opens and starts getting media/signaling
          set({ 
+             callId: ++nextCallId,
              isCallActive: true, 
+             isCallIncoming: false,
+             callerSignal: null,
              isCallEnded: false, 
              callType: isVideo ? "video" : "audio",
              // We reuse callerInfo to store the person we are talking to

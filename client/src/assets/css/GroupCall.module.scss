@@ -53,6 +53,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
 
     .group-icon-box {
       width: 38px;
@@ -71,6 +72,7 @@
       display: flex;
       flex-direction: column;
       gap: 2px;
+      min-width: 0;
 
       .group-name {
         font-size: 1.5rem;
@@ -78,6 +80,9 @@
         color: #f3f4f6;
         margin: 0;
         line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .participant-count {
@@ -98,6 +103,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 
     .view-mode-wrapper {
       position: relative;
@@ -680,6 +686,8 @@
   flex-shrink: 0;
   padding: 10px 22px;
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: calc(100% - 24px);
   align-items: center;
   justify-content: center;
   gap: 16px;
@@ -687,6 +695,25 @@
   border: 1px solid rgba(255, 255, 255, 0.09);
   border-radius: 22px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
+
+  .spoken-language {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 160px;
+    color: #fff;
+    font-size: 11px;
+    select {
+      min-width: 0;
+      padding: 6px;
+      color: #fff;
+      background: #20232b;
+      border: 1px solid #626879;
+      border-radius: 8px;
+      &:focus-visible { outline: 2px solid #84b4ff; outline-offset: 2px; }
+      &:disabled { opacity: .6; }
+    }
+  }
 
   .dock-divider {
     width: 1px;
@@ -1017,6 +1044,20 @@
 // 7. Responsive Adjustments
 // ------------------------------------------
 @media (max-width: 768px) {
+  .call-header {
+    padding: 0 12px;
+    gap: 8px;
+    .header-left {
+      gap: 8px;
+      .group-meta .group-name { font-size: 16px; }
+      .group-meta .participant-count { font-size: 12px; white-space: nowrap; }
+    }
+    .header-right {
+      gap: 2px;
+      .view-mode-btn { padding: 0 8px; }
+      .view-mode-btn > span { display: none; }
+    }
+  }
   .speaker-workspace {
     flex-direction: column-reverse;
   }

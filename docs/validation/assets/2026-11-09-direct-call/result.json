@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "microphoneAcquisitions": 2,
+  "peers": 2,
+  "translationStarts": 5,
+  "realWorkletPackets": 8,
+  "screenshots": [
+    {
+      "name": "desktop-dark",
+      "width": 352,
+      "left": 912,
+      "right": 1264,
+      "viewport": 1280,
+      "selects": 3,
+      "overflow": false,
+      "controlsTop": 532.5,
+      "panelBottom": 884
+    },
+    {
+      "name": "mobile-light",
+      "width": 366,
+      "left": 12,
+      "right": 378,
+      "viewport": 390,
+      "selects": 3,
+      "overflow": false,
+      "controlsTop": 761,
+      "panelBottom": 752
+    }
+  ],
+  "scope": "Synthetic audio, real React/MediaStream/AudioWorklet; mocked peer/signaling/AI. No real mic/WebRTC/model quality acceptance."
+}

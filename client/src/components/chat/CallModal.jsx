@@ -1,217 +1,116 @@
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useState, useRef, useMemo } from 'react';
 import Peer from 'simple-peer';
 import { useCallStore } from '../../stores/useCallStore';
 import { useAuthStore } from '../../stores/useAuthStore';
 import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff } from '../icons';
 import { toast } from 'sonner';
 import TranslationNotes from './TranslationNotes.jsx';
+import { createDirectCallSession } from './directCallSession.js';
+import { useTranslation } from 'react-i18next';
+import './DirectCall.css';
 
 const defaultAvatar = '/favicon.png';
 
 const CallModal = () => {
     const {
         isCallIncoming, isCallActive, isCallEnded,
-        callType, callerInfo,
+        callId, callType, callerInfo,
         callerSignal,
-        setCallAccepted, setCallEnded, rejectCall
+        setCallAccepted, setCallEnded
     } = useCallStore();
 
     const { user, socket } = useAuthStore();
+    const { t } = useTranslation();
 
     const [stream, setStream] = useState(null);
     const [remoteStream, setRemoteStream] = useState(null);
     const [callAcceptedState, setCallAcceptedState] = useState(false);
     const [micOn, setMicOn] = useState(true);
     const [cameraOn, setCameraOn] = useState(true);
+    const [remoteMuted, setRemoteMuted] = useState(false);
+    const [answering, setAnswering] = useState(false);
 
     const myVideo = useRef(null);
     const userVideo = useRef(null);
-    const connectionRef = useRef(null);
-    const streamRef = useRef(null);
+    const sessionRef = useRef(null);
     const translationSources = useMemo(() => [
         { id: user?._id, stream, muted: !micOn },
-        { id: callerInfo?.id, stream: remoteStream, muted: false },
-    ], [user?._id, stream, micOn, callerInfo?.id, remoteStream]);
+        { id: callerInfo?.id, stream: remoteStream, muted: remoteMuted },
+    ], [user?._id, stream, micOn, callerInfo?.id, remoteStream, remoteMuted]);
 
-    const stopLocalStream = useCallback(() => {
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach((track) => track.stop());
-            streamRef.current = null;
-        }
-        setStream((prev) => {
-            if (prev) {
-                prev.getTracks().forEach((track) => track.stop());
-            }
-            return null;
-        });
-    }, []);
+    const callerId = callerInfo?.id;
+    const viewerId = user?._id;
+    // Snapshot signaling data once for this local call identity. Accepting it only
+    // changes the store's UI flags; it must not recreate media or the peer.
+    const callSetup = useRef(null);
+    callSetup.current = { incoming: isCallIncoming, signal: callerSignal, user, t };
 
-    // 4. Handle Leaving Call
-    const leaveCall = useCallback(() => {
-        if (connectionRef.current) {
-            connectionRef.current.destroy();
-            connectionRef.current = null;
-        }
-        stopLocalStream();
+    useLayoutEffect(() => {
+        setStream(null);
         setRemoteStream(null);
         setCallAcceptedState(false);
-        if (socket && callerInfo?.id) {
-            socket.emit('endCall', { to: callerInfo.id });
-        }
-        setCallEnded();
-    }, [stopLocalStream, socket, callerInfo?.id, setCallEnded]);
-
-    // 1. Handle user media (Camera/Mic)
-    useEffect(() => {
-        if (!isCallIncoming && !isCallActive) {
-            stopLocalStream();
-            setRemoteStream(null);
-            setCallAcceptedState(false);
-            return undefined;
-        }
-
-        let cancelled = false;
-        const hasVideo = callType === 'video';
-        navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: true })
-            .then((currentStream) => {
-                if (cancelled) {
-                    currentStream.getTracks().forEach((track) => track.stop());
-                    return;
-                }
-                streamRef.current = currentStream;
-                setStream(currentStream);
-            })
-            .catch((err) => {
-                if (cancelled) return;
-                console.error("Failed to get media", err);
-                toast.error("Không thể truy cập camera hoặc micro");
-                leaveCall();
-            });
-
+        setMicOn(true);
+        setCameraOn(true);
+        setRemoteMuted(false);
+        setAnswering(false);
+        if (!callId || !callerId) return;
+        if (!socket?.connected || !viewerId) { setCallEnded(); return; }
+        const setup = callSetup.current;
+        const session = createDirectCallSession({
+            socket, peerId: callerId, incoming: setup.incoming,
+            signal: setup.signal, isVideo: callType === 'video', user: setup.user,
+            createPeer: options => new Peer(options),
+            getUserMedia: constraints => navigator.mediaDevices.getUserMedia(constraints),
+            onLocalStream: setStream,
+            onRemoteStream: setRemoteStream,
+            onRemoteMute: setRemoteMuted,
+            onAccepted: () => {
+                setCallAcceptedState(true);
+                setAnswering(false);
+                setCallAccepted();
+            },
+            onEnded: setCallEnded,
+            onError: reason => toast.error(setup.t(`directCall.${reason}Error`)),
+        });
+        sessionRef.current = session;
+        void session.start();
         return () => {
-            cancelled = true;
+            sessionRef.current = null;
+            session.stop();
         };
-    }, [isCallIncoming, isCallActive, callType, leaveCall, stopLocalStream]);
+    }, [callId, callerId, callType, socket, viewerId, setCallAccepted, setCallEnded]);
 
-    // Attach local stream to myVideo
+    // Attach playback independently of signaling and microphone ownership.
     useEffect(() => {
-        if (myVideo.current && stream) {
-            myVideo.current.srcObject = stream;
-        }
+        if (myVideo.current) myVideo.current.srcObject = stream;
     }, [stream]);
-
-    // Attach remote stream to userVideo whenever userVideo mounts or remoteStream changes
     useEffect(() => {
-        if (userVideo.current && remoteStream) {
-            userVideo.current.srcObject = remoteStream;
-        }
+        if (userVideo.current) userVideo.current.srcObject = remoteStream;
     }, [remoteStream, callAcceptedState]);
 
-    // 2. Initiate Call (Caller Side)
-    useEffect(() => {
-        if (isCallActive && !isCallIncoming && stream && !connectionRef.current && socket && callerInfo?.id) {
-             const peer = new Peer({ initiator: true, trickle: false, stream: stream });
-
-             peer.on('signal', (data) => {
-                 socket.emit('callUser', {
-                     userToCall: callerInfo.id,
-                     signalData: data,
-                     from: user?._id, // Caller ID
-                     name: user?.displayName || user?.username,
-                     avatar: user?.avatarURL,
-                     isVideo: callType === 'video'
-                 });
-             });
-
-             peer.on('stream', (currentStream) => {
-                 setRemoteStream(currentStream);
-             });
-
-             const handleCallAccepted = (signal) => {
-                 setCallAcceptedState(true);
-                 peer.signal(signal);
-             };
-
-             const handleCallUserOffline = () => {
-                 toast.error("Người dùng hiện không trực tuyến");
-                 leaveCall();
-             };
-
-             socket.off('callAccepted');
-             socket.off('callUserOffline');
-             socket.on('callAccepted', handleCallAccepted);
-             socket.on('callUserOffline', handleCallUserOffline);
-
-             connectionRef.current = peer;
-
-             return () => {
-                 socket.off('callAccepted', handleCallAccepted);
-                 socket.off('callUserOffline', handleCallUserOffline);
-             };
-        }
-    }, [isCallActive, isCallIncoming, stream, callerInfo, socket, user, callType, leaveCall]);
-
-    // 3. Handle Incoming Call Answer
-    const answerCall = async () => {
-        try {
-            let activeStream = stream;
-            if (!activeStream) {
-                const hasVideo = callType === 'video';
-                activeStream = await navigator.mediaDevices.getUserMedia({ video: hasVideo, audio: true });
-                streamRef.current = activeStream;
-                setStream(activeStream);
-            }
-
-            setCallAcceptedState(true);
-            setCallAccepted();
-
-            const peer = new Peer({ initiator: false, trickle: false, stream: activeStream });
-
-            peer.on('signal', (data) => {
-                socket?.emit('answerCall', { signal: data, to: callerInfo?.id });
-            });
-
-            peer.on('stream', (currentStream) => {
-                setRemoteStream(currentStream);
-            });
-
-            if (callerSignal) {
-                peer.signal(callerSignal);
-            }
-            connectionRef.current = peer;
-        } catch (err) {
-            console.error("Failed to answer call:", err);
-            toast.error("Không thể kết nối micro/camera để trả lời");
-            leaveCall();
-        }
+    const leaveCall = useCallback(() => {
+        sessionRef.current?.end();
+    }, []);
+    const answerCall = () => {
+        if (!sessionRef.current || answering) return;
+        setAnswering(true);
+        void sessionRef.current.answer();
     };
-
-    // Toggle Mic
     const toggleMic = () => {
-        if (stream) {
-            const nextState = !micOn;
-            stream.getAudioTracks().forEach(track => {
-                track.enabled = nextState;
-            });
-            setMicOn(nextState);
-        }
+        const enabled = !micOn;
+        sessionRef.current?.setMicEnabled(enabled);
+        setMicOn(enabled);
     };
-
-    // Toggle Camera
     const toggleCamera = () => {
-        if (stream && callType === 'video') {
-            const nextState = !cameraOn;
-            stream.getVideoTracks().forEach(track => {
-                track.enabled = nextState;
-            });
-            setCameraOn(nextState);
-        }
+        const enabled = !cameraOn;
+        sessionRef.current?.setCameraEnabled(enabled);
+        setCameraOn(enabled);
     };
 
     if (!isCallIncoming && !isCallActive) return null;
 
     return (
-        <div style={{
+        <div className={`direct-call-modal ${callAcceptedState ? 'direct-call-connected' : ''}`} style={{
             position: 'fixed',
             top: 0,
             left: 0,
@@ -227,7 +126,7 @@ const CallModal = () => {
             backdropFilter: 'blur(8px)'
         }}>
 
-            <div style={{display: 'flex', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap', justifyContent: 'center'}}>
+            <div className="direct-call-media" style={{display: 'flex', gap: '2rem', marginBottom: '2rem', flexWrap: 'wrap', justifyContent: 'center'}}>
                 {/* My Video / Preview */}
                 {stream && callType === 'video' && (
                     <div style={{textAlign: 'center'}}>
@@ -261,7 +160,7 @@ const CallModal = () => {
                     <h2 style={{ fontSize: '1.4rem', fontWeight: 600 }}>Đang gọi cho {callerInfo?.name}...</h2>
                     <p style={{ opacity: 0.7, marginTop: '0.5rem' }}>{callType === 'video' ? 'Cuộc gọi video' : 'Cuộc gọi thoại'}</p>
                     <div style={{ marginTop: '2rem' }}>
-                        <button onClick={leaveCall} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'}}>
+                        <button onClick={leaveCall} aria-label={t('directCall.end')} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center'}}>
                             <PhoneOff size={24} />
                         </button>
                     </div>
@@ -279,12 +178,13 @@ const CallModal = () => {
                     <div style={{display: 'flex', gap: '1.5rem', justifyContent: 'center', marginTop: '2rem'}}>
                         <button
                             onClick={answerCall}
+                            disabled={answering}
                             style={{padding: '0.9rem 2rem', borderRadius: '2rem', border: 'none', background: '#2ecc71', color: 'white', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}
                         >
-                            <Phone size={20} /> Trả lời
+                            <Phone size={20} /> {t(answering ? 'directCall.answering' : 'directCall.answer')}
                         </button>
                         <button
-                            onClick={rejectCall}
+                            onClick={leaveCall}
                             style={{padding: '0.9rem 2rem', borderRadius: '2rem', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}
                         >
                             <PhoneOff size={20} /> Từ chối
@@ -295,15 +195,15 @@ const CallModal = () => {
 
             {/* Call Controls */}
             {callAcceptedState && !isCallEnded && (
-                <div style={{display: 'flex', gap: '1.5rem', alignItems: 'center'}}>
-                    <button onClick={toggleMic} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: micOn ? '#34495e' : '#e74c3c', color: 'white', cursor: 'pointer'}}>
+                <div className="direct-call-controls" style={{display: 'flex', gap: '1.5rem', alignItems: 'center'}}>
+                    <button onClick={toggleMic} aria-label={t(micOn ? 'directCall.mute' : 'directCall.unmute')} aria-pressed={!micOn} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: micOn ? '#34495e' : '#e74c3c', color: 'white', cursor: 'pointer'}}>
                         {micOn ? <Mic size={22} /> : <MicOff size={22} />}
                     </button>
-                    <button onClick={leaveCall} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer'}}>
+                    <button onClick={leaveCall} aria-label={t('directCall.end')} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: '#e74c3c', color: 'white', cursor: 'pointer'}}>
                         <PhoneOff size={24} />
                     </button>
                     {callType === 'video' && (
-                        <button onClick={toggleCamera} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: cameraOn ? '#34495e' : '#e74c3c', color: 'white', cursor: 'pointer'}}>
+                        <button onClick={toggleCamera} aria-label={t(cameraOn ? 'directCall.cameraOff' : 'directCall.cameraOn')} aria-pressed={!cameraOn} style={{padding: '1rem', borderRadius: '50%', border: 'none', background: cameraOn ? '#34495e' : '#e74c3c', color: 'white', cursor: 'pointer'}}>
                             {cameraOn ? <Video size={22} /> : <VideoOff size={22} />}
                         </button>
                     )}

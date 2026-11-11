@@ -3,8 +3,9 @@ const validRevision = value => Number.isSafeInteger(value) && value >= 0;
 const text = value => typeof value === 'string' && value.length <= 32768;
 
 export function interruptTranslationNotes(notes, streamId) {
-    return notes.map(note => (!streamId || note.streamId === streamId) && note.translationState === 'pending'
-        ? { ...note, translationState: 'interrupted' } : note);
+    return notes.map(note => (!streamId || note.streamId === streamId) &&
+        (note.translationState === 'pending' || (note.translationState === 'self' && !note.isFinal))
+        ? { ...note, isFinal: true, translationState: 'interrupted' } : note);
 }
 
 export function reduceTranslationNotes(notes, event, time) {
@@ -14,8 +15,9 @@ export function reduceTranslationNotes(notes, event, time) {
     const current = notes[index];
     let updated;
     if (event.type === 'transcript') {
-        const isSelf = event.translate === false;
-        const expectedState = isSelf ? 'self' : 'pending';
+        // 'self' is the legacy transcript-only state; sender identity is independent.
+        const transcriptOnly = event.translate === false;
+        const expectedState = transcriptOnly ? 'self' : 'pending';
         if (!text(event.original) || !event.original.trim() || typeof event.isFinal !== 'boolean' ||
             !validId(event.speakerId) || !['en', 'vi'].includes(event.sourceLanguage) ||
             !['en', 'vi'].includes(event.targetLanguage) ||

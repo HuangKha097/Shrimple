@@ -6,13 +6,21 @@ const savedLang = localStorage.getItem('app_language') || 'vi';
 const resources = {
     vi: {
         translation: {
+            directCall: {
+                answer: 'Trả lời', answering: 'Đang kết nối…', end: 'Kết thúc cuộc gọi',
+                mute: 'Tắt micro', unmute: 'Bật micro', cameraOff: 'Tắt camera', cameraOn: 'Bật camera',
+                mediaError: 'Không thể truy cập camera hoặc micro', connectionError: 'Kết nối cuộc gọi bị gián đoạn',
+                offlineError: 'Người dùng hiện không trực tuyến',
+            },
             translationNotes: {
                 toggle: 'Dịch', title: 'Note lời nói & bản dịch', open: 'Mở note hội thoại & bản dịch', close: 'Đóng note dịch', clear: 'Xóa note',
                 translateTo: 'Dịch sang', counterpartSpeech: 'Đối phương nói', readTranslation: 'Bản dịch bạn đọc', swap: 'Đổi ngôn ngữ đối phương và bản dịch', vi: 'Tiếng Việt', en: 'Tiếng Anh', zh: 'Tiếng Trung', auto: 'Tự nhận diện',
-                direction: 'Hướng dịch', pairHint: 'Đối phương nói {{source}}; bạn đọc và nói {{target}}.', groupPairHint: 'Các đối phương nói {{source}}; bạn đọc và nói {{target}}.',
+                direction: 'Hướng dịch', yourSpeech: 'Bạn nói', pairHint: 'Đối phương: {{source}} → bản dịch {{target}}. Lời bạn: {{self}}, chỉ hiện lời gốc.', groupPairHint: 'Mỗi thành viên chọn ngôn ngữ nói ở thanh cuộc gọi. Bạn đọc {{target}}; lời nói cùng ngôn ngữ chỉ hiện lời gốc.',
+                groupSpokenLanguage: 'Tôi nói ngôn ngữ…', groupReadLanguage: 'Tôi muốn đọc ngôn ngữ…', languageUpdateError: 'Chưa cập nhật được ngôn ngữ nói. Hãy thử lại.',
+                groupEmptyDescription: 'Chọn ngôn ngữ muốn đọc. Mỗi thành viên chọn ngôn ngữ nói ở thanh cuộc gọi; lời gốc và bản dịch được ghi riêng theo người nói.',
                 directionHint: 'Chọn cố định ngôn ngữ đối phương nói và ngôn ngữ bản dịch. Lời của bạn chỉ hiện văn bản gốc theo ngôn ngữ đích.',
                 waiting: 'Đang xử lý lời nói…', liveTitle: 'Ghi âm & dịch trực tiếp', starting: 'Đang khởi động nhận dạng…', listening: 'Cập nhật theo đoạn nói; bản dịch của đối phương đến ngay sau.',
-                emptyTitle: 'Đang chờ hội thoại', emptyDescription: 'Chọn hướng dịch A ⇒ B: A là ngôn ngữ đối phương nói, B là ngôn ngữ bạn đọc và nói. Chỉ nhận dạng theo cặp đã chọn.',
+                emptyTitle: 'Đang chờ hội thoại', emptyDescription: 'Chọn ngôn ngữ đối phương và bản dịch; kiểm tra ngôn ngữ bạn nói. Mỗi người có dòng lời gốc riêng.',
                 original: 'Lời gốc', translation: 'Bản dịch', pending: 'Translating...', interrupted: 'Đã dừng dịch đoạn này; lời gốc được giữ lại.', translationError: 'Chưa dịch được đoạn này; lời gốc được giữ lại.', participant: 'Đối phương', you: 'Bạn',
                 skipped: 'Một số đoạn bị gián đoạn hoặc chưa nhận dạng rõ. Lời gốc đã nhận vẫn được giữ lại; bạn có thể nói lại đoạn bị thiếu.',
                 reconnecting: 'Đang kết nối lại; tạm dừng nhận lời nói.', resumeAudio: 'Nhấn Thử lại để cho phép trình duyệt tiếp tục nhận âm thanh.',
@@ -180,13 +188,21 @@ const resources = {
     },
     en: {
         translation: {
+            directCall: {
+                answer: 'Answer', answering: 'Connecting…', end: 'End call',
+                mute: 'Mute microphone', unmute: 'Unmute microphone', cameraOff: 'Turn camera off', cameraOn: 'Turn camera on',
+                mediaError: 'Could not access the camera or microphone', connectionError: 'The call connection was interrupted',
+                offlineError: 'This user is currently offline',
+            },
             translationNotes: {
                 toggle: 'Translate', title: 'Speech & translation notes', open: 'Open speech & translation notes', close: 'Close translation notes', clear: 'Clear notes',
                 translateTo: 'Translate to', counterpartSpeech: 'They speak', readTranslation: 'You read', swap: 'Swap counterpart speech and translation languages', vi: 'Vietnamese', en: 'English', zh: 'Chinese', auto: 'Auto-detect',
-                direction: 'Translation direction', pairHint: 'They speak {{source}}; you read and speak {{target}}.', groupPairHint: 'All other participants speak {{source}}; you read and speak {{target}}.',
+                direction: 'Translation direction', yourSpeech: 'You speak', pairHint: 'Them: {{source}} → {{target}} translation. You: {{self}}, original text only.', groupPairHint: 'Each member selects their spoken language in the call controls. You read {{target}}; matching speech is shown as original text only.',
+                groupSpokenLanguage: 'I speak…', groupReadLanguage: 'I want to read…', languageUpdateError: 'Could not update your spoken language. Please try again.',
+                groupEmptyDescription: 'Choose your reading language. Each member selects their spoken language in the call controls; speech and translations stay attached to each speaker.',
                 directionHint: 'Choose a fixed source and target language. Your speech shows original text only, recognized in the target language.',
                 waiting: 'Processing speech…', liveTitle: 'Live speech & translation', starting: 'Starting speech recognition…', listening: 'Updates by speech segment; their translation follows immediately.',
-                emptyTitle: 'Waiting for speech', emptyDescription: 'Choose A ⇒ B: A is their spoken language; B is the language you read and speak. Recognition uses only the selected pair.',
+                emptyTitle: 'Waiting for speech', emptyDescription: 'Choose their spoken language and your translation language; check your own spoken language. Each speaker has separate original text.',
                 original: 'Original speech', translation: 'Translation', pending: 'Translating...', interrupted: 'Translation stopped for this segment; original text is kept.', translationError: 'Could not translate this segment; original text is kept.', participant: 'Participant', you: 'You',
                 skipped: 'Some speech was interrupted or could not be recognized clearly. Received original text is kept; you can repeat the missing part.',
                 reconnecting: 'Reconnecting; speech capture is paused.', resumeAudio: 'Press Retry to let the browser resume audio capture.',
@@ -351,13 +367,21 @@ const resources = {
     },
     zh: {
         translation: {
+            directCall: {
+                answer: '接听', answering: '正在连接…', end: '结束通话',
+                mute: '关闭麦克风', unmute: '打开麦克风', cameraOff: '关闭摄像头', cameraOn: '打开摄像头',
+                mediaError: '无法访问摄像头或麦克风', connectionError: '通话连接已中断',
+                offlineError: '此用户当前不在线',
+            },
             translationNotes: {
                 toggle: '翻译', title: '语音与翻译笔记', open: '打开语音与翻译笔记', close: '关闭翻译笔记', clear: '清空笔记',
                 translateTo: '翻译成', counterpartSpeech: '对方说的语言', readTranslation: '您阅读的译文', swap: '交换对方语言与译文语言', vi: '越南语', en: '英语', zh: '中文', auto: '自动识别',
-                direction: '翻译方向', pairHint: '对方说{{source}}，您阅读并说{{target}}。', groupPairHint: '其他参与者均说{{source}}，您阅读并说{{target}}。',
+                direction: '翻译方向', yourSpeech: '您说的语言', pairHint: '对方：{{source}} → {{target}}译文。您：{{self}}，仅显示原文。', groupPairHint: '每位成员在通话栏选择说话语言。您阅读{{target}}；相同语言仅显示原文。',
+                groupSpokenLanguage: '我说的语言…', groupReadLanguage: '我想阅读的语言…', languageUpdateError: '无法更新说话语言，请重试。',
+                groupEmptyDescription: '选择阅读语言。每位成员在通话栏选择说话语言；原文和译文按说话者分别显示。',
                 directionHint: '选择固定的源语言和目标语言。您的语音按目标语言识别，仅显示原文。',
                 waiting: '正在处理语音…', liveTitle: '实时语音与翻译', starting: '正在启动语音识别…', listening: '按语音片段更新；对方译文将随后显示。',
-                emptyTitle: '等待说话', emptyDescription: '选择 A ⇒ B：A 是对方说的语言，B 是您阅读和说的语言。仅按所选语言对识别。',
+                emptyTitle: '等待说话', emptyDescription: '选择对方语言和译文语言，并确认您说的语言。每位发言者分别显示原文。',
                 original: '原文', translation: '译文', pending: 'Translating...', interrupted: '此片段的翻译已停止，原文已保留。', translationError: '无法翻译此片段，原文已保留。', participant: '对方', you: '你',
                 skipped: '部分语音中断或未能清晰识别。已收到的原文会保留，您可以重复缺失的部分。',
                 reconnecting: '正在重新连接；语音接收已暂停。', resumeAudio: '请点击重试，允许浏览器继续接收音频。',

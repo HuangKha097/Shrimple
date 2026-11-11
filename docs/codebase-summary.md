@@ -57,7 +57,7 @@ Không có workspace package.json root; client/server quản lý dependency/scri
 | Friends | friendRoute/friendController, Friend/FriendRequest | friendService, AddFriendPopUp, BodyRequests/BodyFriendsChat, FriendsContainer, WhoToFollowWidget |
 | Conversations/groups | conversationRoute/conversationController/groupController, Conversation, conversationHelper/conversationMiddleware | chatService/useChatStore, CreateGroupPopUp, ChatInfo/GroupDetails, JoinGroupPage |
 | Messages/media | messageRoute/messageController, Message, messageHelper/uploadMiddleware/cloudinary | ChatBody/ChatInput/Message/ForwardModal/CustomAudioPlayer, useChatStore |
-| Calls | socket.js room state/signaling | useCallStore/CallModal; useGroupCallStore/GroupCallModal/FloatingBar/Banner |
+| Calls | socket.js room state/signaling | useCallStore/CallModal; useGroupCallStore/GroupCallModal/FloatingBar/Banner; group stream gửi giữ mic + màn hình/camera hiện tại cho cả peer vào muộn |
 | Translation notes | translationPcm.js, translationRoute.js; AI app/pcm_stream/pcm_vad | TranslationNotes, translationPcmCapture/Socket/Worklet, translationNotesState; remote-only direction/source helper translationStream |
 | Feed/video/search | postRoute/postController, Post/Hashtag, Python classifier | usePostStore, PostsContainer/PostItem/PostCommentItem, VideoFeed/UploadModal, SearchResults/Trends/SavedPosts |
 | Notifications | notificationRoute/notificationController, Notification | useNotificationStore, NotificationDropdown |
@@ -80,8 +80,8 @@ File controller/route/model backend trong `server/src/` theo folder cùng tên; 
 
 | Package | Scripts xác nhận |
 | --- | --- |
-| client | dev (Vite), build, lint, preview, test (node:test tracker + translation helpers/PCM) |
-| server | dev (nodemon), start, test (node:test groups + translation session/HTTP/PCM), test:ai (live-service smoke) |
+| client | dev (Vite), build, lint, preview; direct/PCM regression chạy bằng Node và browser fixture từ root |
+| server | dev (nodemon), start; manifest hiện chưa có test/test:ai scripts, chạy trực tiếp node --test server/test/*.test.js |
 
 Kết quả 2026-10-08: client lint **0 errors/7 warnings**, tracker **8/8**, build **pass**; groups **10/10** trên MongoDB tạm với binary cache dự án; backend syntax/diff check pass. Source/dependency graph sau cleanup không phát hiện source unreachable trong phạm vi entry đã khảo sát. Review độc lập không tìm regression do cleanup. [Validation](./validation/codebase-cleanup.md) ghi actual commands, warnings và phạm vi.
 
@@ -169,3 +169,7 @@ Runtime của follow-up đã áp dụng local, hai ASR CUDA0 và AI PCM/MT thậ
 Chốt và dọn source2026-11-03: đã bỏ module/overlay/test LocalAgreement không được chọn; `pcm_stream.py` chỉ khởi tạo `PcmPipeline` segmented. Giữ `prepare_phowhisper.py` cùng dependency `trial_phowhisper.py`/`evidence.py`, model cache và tooling nghiên cứu có tài liệu riêng. `training/replay_pcm_runtime.py` giữ để tái kiểm runtime, mặc định chỉ lưu aggregate. [Danh mục dọn và kiểm chứng](./validation/2026-11-03-translation-finalization.md); [kết quả thử được lưu](./validation/2026-11-03-localagreement-trial.md).
 
 Docker portability 07/11/2026: `whisper/prepare-model.py` và `whisper/phowhisper.json` chuẩn bị PhoWhisper trong build stage CPU/CUDA, xác minh input/output; runtime không mount model local. Compose/app mặc định dấu câu rules; dữ liệu nghiên cứu vẫn ignore và loại khỏi Docker context. [Evidence](./validation/2026-11-07-portable-docker-models.md).
+
+Direct call delta 09/11/2026: `directCallSession.js` sở hữu mic/peer/signaling theo callId cục bộ, accept không xin lại mic; mute relay accepted ở `socket.js` dừng đúng source PCM. Note direct có Bạn nói riêng với nguồn remote/ngôn ngữ bản dịch, tránh ép self theo đích dịch. Regression ở `server/test/directCall.test.js`, `directCallSignaling.test.js` và browser fixture `server/test/browser/directCall.mjs`; [scope/evidence](./validation/2026-11-09-direct-call-mute-translation.md).
+
+Group delta 11/11/2026: `useGroupCallStore.js`/`GroupCallModal.jsx` khai báo ngôn ngữ nói; `TranslationNotes.jsx` chọn đích riêng và capture theo socket+attendance. `socket.js` sở hữu ngôn ngữ/revision, `translationPcm.js` xác minh nguồn và thu hồi luồng khi đổi nguồn/rời phòng. Cùng ngôn ngữ dùng `translate:false`, nhãn speaker độc lập. Test: `groupTranslation.test.js`, `groupCallLanguages.test.js`, browser `groupLanguages.mjs`; [scope/evidence](./validation/2026-11-11-group-language-routing.md).

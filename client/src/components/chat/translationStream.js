@@ -32,13 +32,26 @@ export function updateTranslationPair(pair, field, language) {
         : next;
 }
 
-export function createTranslationRequest({ kind, sessionId, speakerId, isSelf, sourceLanguage, targetLanguage }) {
+export function createTranslationRequest({ kind, sessionId, speakerId, isSelf, selfLanguage, sourceLanguage, targetLanguage,
+    speakerSocketId, speakerAttendanceId, speakerLanguageRevision, viewerAttendanceId }) {
+    if (kind === 'group') {
+        if (!SUPPORTED_SOURCE_LANGUAGES.includes(sourceLanguage) || !SUPPORTED_TARGET_LANGUAGES.includes(targetLanguage) ||
+            !speakerSocketId || !speakerAttendanceId || !viewerAttendanceId || !Number.isSafeInteger(speakerLanguageRevision) || speakerLanguageRevision < 0) {
+            throw new RangeError('A declared speaker language and current attendance are required.');
+        }
+        return { kind, sessionId, speakerId, speakerSocketId, speakerAttendanceId, speakerLanguageRevision, viewerAttendanceId,
+            sourceLanguage, targetLanguage, ...(sourceLanguage === targetLanguage ? { translate: false } : {}) };
+    }
     if (!SUPPORTED_TARGET_LANGUAGES.includes(sourceLanguage) ||
         !SUPPORTED_TARGET_LANGUAGES.includes(targetLanguage) || sourceLanguage === targetLanguage) {
         throw new RangeError('A distinct, explicit source and target language are required.');
     }
+    const spokenLanguage = selfLanguage ?? targetLanguage;
+    if (isSelf && !SUPPORTED_SOURCE_LANGUAGES.includes(spokenLanguage)) {
+        throw new RangeError('An explicit spoken language is required.');
+    }
     return isSelf
-        ? { kind, sessionId, speakerId, sourceLanguage: targetLanguage, targetLanguage, translate: false }
+        ? { kind, sessionId, speakerId, sourceLanguage: spokenLanguage, targetLanguage: spokenLanguage, translate: false }
         : { kind, sessionId, speakerId, sourceLanguage, targetLanguage };
 }
 
@@ -53,7 +66,7 @@ export function remoteTranslationSources(sources, viewerId) {
     for (const source of sources || []) {
         const id = sourceId(source.id);
         const track = source.stream?.getAudioTracks()[0];
-        if (!id || id === viewer || !track || source.muted || track.readyState !== 'live') continue;
+        if (!id || id === viewer || !track || source.muted || track.enabled === false || track.muted || track.readyState !== 'live') continue;
         unique.set(id, { id, track });
     }
     return [...unique.values()];
@@ -61,15 +74,21 @@ export function remoteTranslationSources(sources, viewerId) {
 
 // Includes both the viewer's own microphone (isSelf=true, transcribed without translation)
 // and remote peers (isSelf=false, transcribed and translated).
-export function conversationTranslationSources(sources, viewerId) {
+export function conversationTranslationSources(sources, viewerId, kind = 'direct') {
     const viewer = sourceId(viewerId);
     const unique = new Map();
     if (!viewer) return [];
     for (const source of sources || []) {
         const id = sourceId(source.id);
         const track = source.stream?.getAudioTracks()[0];
-        if (!id || !track || source.muted || track.readyState !== 'live') continue;
-        unique.set(id, { id, track, isSelf: id === viewer });
+        if (!id || !track || source.muted || track.enabled === false || track.muted || track.readyState !== 'live') continue;
+        if (kind === 'group') {
+            if (!source.socketId || !source.attendanceId || !SUPPORTED_SOURCE_LANGUAGES.includes(source.spokenLanguage) ||
+                !Number.isSafeInteger(source.languageRevision) || source.languageRevision < 0) continue;
+            const key = `${source.socketId}:${source.attendanceId}`;
+            unique.set(key, { id, key, track, isSelf: Boolean(source.isSelf), sourceLanguage: source.spokenLanguage,
+                speakerSocketId: source.socketId, speakerAttendanceId: source.attendanceId, speakerLanguageRevision: source.languageRevision });
+        } else unique.set(id, { id, track, isSelf: id === viewer });
     }
     return [...unique.values()];
 }

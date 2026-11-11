@@ -103,7 +103,7 @@ export function createTranslationPcmBridge({
     const validateEvent = (stream, value) => {
         if (!object(value)) throw new Error("Invalid upstream event");
         const { type } = value;
-        const isSelf = stream.request.translate === false;
+        const transcriptOnly = stream.request.translate === false;
         if (type === "transcript") {
             if (!allowedKeys(value, ["type", "utteranceId", "revision", "original", "sourceLanguage", "targetLanguage", "isFinal", "translate"]) ||
                 !utteranceId(value.utteranceId) || !revision(value.revision) ||
@@ -111,15 +111,15 @@ export function createTranslationPcmBridge({
                 value.sourceLanguage !== stream.request.sourceLanguage || value.targetLanguage !== stream.request.targetLanguage ||
                 typeof value.isFinal !== "boolean" ||
                 (value.translate !== undefined && typeof value.translate !== "boolean") ||
-                (isSelf && value.translate === true) || (!isSelf && value.translate === false)) throw new Error("Invalid transcript");
+                (transcriptOnly && value.translate === true) || (!transcriptOnly && value.translate === false)) throw new Error("Invalid transcript");
             const previous = stream.utterances.get(value.utteranceId);
             if (!previous) ensureFreshUtterance(stream, value.utteranceId);
             if (previous && (previous.final || value.revision <= previous.revision)) throw new Error("Invalid revision");
-            rememberUtterance(stream, value.utteranceId, { revision: value.revision, final: value.isFinal, settled: isSelf ? value.isFinal : false });
-            return isSelf ? { ...value, translate: false } : value;
+            rememberUtterance(stream, value.utteranceId, { revision: value.revision, final: value.isFinal, settled: transcriptOnly ? value.isFinal : false });
+            return transcriptOnly ? { ...value, translate: false } : value;
         }
         if (type === "translation") {
-            if (isSelf) throw new Error("Invalid translation");
+            if (transcriptOnly) throw new Error("Invalid translation");
             const previous = stream.utterances.get(value.utteranceId);
             if (!allowedKeys(value, ["type", "utteranceId", "revision", "translated"]) ||
                 !previous?.final || previous.settled || previous.revision !== value.revision ||
@@ -153,31 +153,29 @@ export function createTranslationPcmBridge({
         };
         const viewerId = socket.data.userId;
         if (!socket.connected || !viewerId) return ack(failure(403));
-        if (!object(payload) || !allowedKeys(payload, ["kind", "sessionId", "speakerId", "sourceLanguage", "targetLanguage", "translate"]) ||
+        if (!object(payload) || !allowedKeys(payload, ["kind", "sessionId", "speakerId", "sourceLanguage", "targetLanguage", "translate", "speakerSocketId", "speakerAttendanceId", "speakerLanguageRevision", "viewerAttendanceId"]) ||
             !["direct", "group"].includes(payload.kind) || !identifier(payload.sessionId) || !identifier(payload.speakerId) ||
             !["en", "vi"].includes(payload.sourceLanguage) || !["en", "vi"].includes(payload.targetLanguage) ||
             (payload.translate !== undefined && typeof payload.translate !== "boolean")) return ack(failure(400));
-        const isSelf = payload.translate === false;
-        if (isSelf) {
-            if (payload.speakerId !== viewerId || payload.sourceLanguage !== payload.targetLanguage) return ack(failure(400));
-        } else {
-            if (payload.sourceLanguage === payload.targetLanguage) return ack(failure(400));
-            if (payload.speakerId === viewerId) return ack(failure(403));
-        }
+        const transcriptOnly = payload.translate === false;
+        if (payload.kind === "direct" && ["speakerSocketId", "speakerAttendanceId", "speakerLanguageRevision", "viewerAttendanceId"].some(key => key in payload)) return ack(failure(400));
+        if (transcriptOnly !== (payload.sourceLanguage === payload.targetLanguage)) return ack(failure(400));
+        if (payload.kind === "direct" && (transcriptOnly ? payload.speakerId !== viewerId : payload.speakerId === viewerId)) return ack(failure(403));
         const session = getSession(payload.kind, payload.sessionId, viewerId, payload.speakerId);
         if (!session) return ack(failure(403));
         let attendance;
         if (payload.kind === "group") {
             const viewer = session.participants.get(socket.id);
-            const speakers = isSelf
-                ? (viewer ? [viewer] : [])
-                : [...session.participants.values()].filter(member => member.userId.toString() === payload.speakerId);
-            if (viewer?.userId.toString() !== viewerId || !speakers.length) return ack(failure(403));
-            attendance = isSelf ? [viewer] : [viewer, ...speakers];
+            const speaker = session.participants.get(payload.speakerSocketId);
+            if (viewer?.userId.toString() !== viewerId || speaker?.userId.toString() !== payload.speakerId) return ack(failure(403));
+            if (!identifier(payload.viewerAttendanceId) || !identifier(payload.speakerAttendanceId) || !revision(payload.speakerLanguageRevision)) return ack(failure(400));
+            if (viewer.attendanceId !== payload.viewerAttendanceId || speaker.attendanceId !== payload.speakerAttendanceId ||
+                speaker.languageRevision !== payload.speakerLanguageRevision || speaker.spokenLanguage !== payload.sourceLanguage) return ack(failure(409, "Ngôn ngữ hoặc lượt tham gia đã thay đổi"));
+            attendance = viewer === speaker ? [viewer] : [viewer, speaker];
         }
         const owned = owners.get(socket.id) || new Map();
         const replacing = [...owned.values()].filter(previous =>
-            ["kind", "sessionId", "speakerId"].every(key => previous.request[key] === payload[key]));
+            ["kind", "sessionId", "speakerId", "speakerSocketId"].every(key => previous.request[key] === payload[key]));
         const reclaimable = replacing.filter(previous => !previous.lookupPending).length;
         const socketReservations = [...reservations].filter(previous => previous.socket.id === socket.id).length;
         if (socketReservations - reclaimable >= limits.maxSocketStreams ||
@@ -226,7 +224,7 @@ export function createTranslationPcmBridge({
             stream.ws.on("open", () => {
                 if (!ensureAuthorized(stream)) return;
                 const config = { sourceLanguage: payload.sourceLanguage, targetLanguage: payload.targetLanguage };
-                if (isSelf) config.translate = false;
+                if (transcriptOnly) config.translate = false;
                 stream.ws.send(JSON.stringify(config));
             });
             stream.ws.on("message", (data, binary) => {
@@ -251,7 +249,8 @@ export function createTranslationPcmBridge({
                     }
                     const safe = validateEvent(stream, value);
                     if (safe.type === "error" && !safe.utteranceId) return stop(stream, failure(safe.status));
-                    socket.emit("translation:event", { ...safe, streamId: stream.id, speakerId: payload.speakerId, speakerName: stream.speakerName });
+                    socket.emit("translation:event", { ...safe, streamId: stream.id, speakerId: payload.speakerId, speakerName: stream.speakerName,
+                        ...(payload.kind === "group" ? { speakerSocketId: payload.speakerSocketId } : {}) });
                 } catch (error) { stop(stream, failure(error.status === 429 ? 429 : 503)); }
             });
             stream.ws.on("error", () => stop(stream, failure(503)));
@@ -301,6 +300,14 @@ export function createTranslationPcmBridge({
     };
 
     return {
+        invalidateGroupParticipant(sessionId, socketId) {
+            for (const stream of [...active]) {
+                if (stream.request.kind === "group" && stream.request.sessionId === sessionId &&
+                    (!socketId || stream.attendance?.some(member => member.socketId === socketId))) {
+                    stop(stream, failure(409, "Ngôn ngữ hoặc lượt tham gia đã thay đổi"));
+                }
+            }
+        },
         register(socket) {
             socket.on("translation:start", (payload, ack) => { void start(socket, payload, ack); });
             socket.on("translation:audio", (payload, ack) => audio(socket, payload, ack));

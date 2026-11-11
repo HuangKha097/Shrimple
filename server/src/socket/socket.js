@@ -145,6 +145,7 @@ const leaveParticipantFromGroupCall = async (conversationId, socket, reason = "l
     if (call.participants.has(socket.id)) {
         const participant = call.participants.get(socket.id);
         call.participants.delete(socket.id);
+        translationPcm.invalidateGroupParticipant(conversationId, socket.id);
         socket.leave("group-call-" + conversationId);
 
         // Notify all remaining participants in the group call room
@@ -170,6 +171,7 @@ const terminateGroupCall = async (conversationId, socket, reason = "ended") => {
     if (!call) return;
 
     activeGroupCalls.delete(conversationId);
+    translationPcm.invalidateGroupParticipant(conversationId);
 
     const startedAt = call.startedAt || new Date();
     const endedAt = new Date();
@@ -349,6 +351,15 @@ io.on("connection", (socket) => {
         }
     });
 
+    // Only authenticated participants in an accepted direct call can update mute.
+    socket.on("callMediaState", (data = {}) => {
+        const targetUserId = typeof data?.to === "string" ? data.to : null;
+        const call = targetUserId && directCalls.get(directKey(userId, targetUserId));
+        if (call?.accepted && call.users.includes(userId) && typeof data.isMuted === "boolean") {
+            io.to(targetUserId).emit("callMediaState", { from: userId, isMuted: data.isMuted });
+        }
+    });
+
     // 3. ICE Candidates (Network path discovery)
     socket.on("ice-candidate", ({ candidate, to }) => {
         const targetUserId = to?.toString();
@@ -360,7 +371,8 @@ io.on("connection", (socket) => {
     // 4. End Call / Reject Call
     socket.on("endCall", ({ to }) => {
         const targetUserId = to?.toString();
-        if (targetUserId) {
+        const call = targetUserId && directCalls.get(directKey(userId, targetUserId));
+        if (call?.users.includes(userId)) {
             directCalls.delete(directKey(userId, targetUserId));
             io.to(targetUserId).emit("endCall");
         }
@@ -369,13 +381,20 @@ io.on("connection", (socket) => {
     // --- DISCORD-LIKE GROUP CALLING (Mesh WebRTC & Voice Channels) ---
 
     // 1. Join Group Call Room
-    socket.on("joinGroupCall", async ({ conversationId, callId } = {}) => {
+    socket.on("joinGroupCall", async ({ conversationId, callId, spokenLanguage } = {}) => {
+        const joinEpoch = (socket.data.groupCallJoinEpoch || 0) + 1;
+        socket.data.groupCallJoinEpoch = joinEpoch;
         let call;
         let pending = false;
         try {
             if (!mongoose.isObjectIdOrHexString(conversationId)) return;
+            if (spokenLanguage !== undefined && !["vi", "en"].includes(spokenLanguage)) {
+                socket.emit("groupCallError", { message: "Ngôn ngữ nói không hợp lệ" });
+                return;
+            }
             conversationId = new mongoose.Types.ObjectId(conversationId).toString();
             const conversation = await Conversation.findById(conversationId);
+            if (socket.data.groupCallJoinEpoch !== joinEpoch) return;
             if (!conversation?.isGroup || !isConversationMember(conversation, userId)) {
                 socket.emit("groupCallError", { message: "Bạn không còn là thành viên của nhóm" });
                 return;
@@ -428,6 +447,7 @@ io.on("connection", (socket) => {
             // Async history creation may overlap removal, deletion, disconnect or call termination.
             // Keep this fresh check immediately adjacent to admission, with no await between them.
             const current = await Conversation.findById(conversationId);
+            if (socket.data.groupCallJoinEpoch !== joinEpoch) return;
             if (!current?.isGroup || !isConversationMember(current, userId)) {
                 socket.emit("groupCallError", { message: "Bạn không còn là thành viên của nhóm" });
                 return;
@@ -445,11 +465,15 @@ io.on("connection", (socket) => {
                 isCameraOn: false,
                 isScreenSharing: false,
                 joinedAt: new Date(),
+                attendanceId: new mongoose.Types.ObjectId().toString(),
+                spokenLanguage: spokenLanguage || null,
+                languageRevision: 0,
             };
             const existingParticipants = Array.from(call.participants.values()).filter(p => p.socketId !== socket.id);
             call.participants.set(socket.id, newParticipant);
+            translationPcm.invalidateGroupParticipant(conversationId, socket.id);
             socket.join(`group-call-${conversationId}`);
-            socket.emit("groupCallExistingUsers", { conversationId, participants: existingParticipants });
+            socket.emit("groupCallExistingUsers", { conversationId, callId: call.callId, self: newParticipant, participants: existingParticipants });
             socket.to(`group-call-${conversationId}`).emit("groupCallUserJoined", { conversationId, user: newParticipant });
 
             if (!call.announced) {
@@ -469,7 +493,7 @@ io.on("connection", (socket) => {
             await broadcastGroupCallStatus(conversationId, formatCallPayload(conversationId, call));
         } catch (error) {
             console.error("Cannot join group call", error);
-            socket.emit("groupCallError", { message: "Không thể tham gia cuộc gọi nhóm" });
+            if (socket.data.groupCallJoinEpoch === joinEpoch) socket.emit("groupCallError", { message: "Không thể tham gia cuộc gọi nhóm" });
         } finally {
             if (pending) {
                 call.pendingJoins -= 1;
@@ -482,19 +506,38 @@ io.on("connection", (socket) => {
 
     // 2. WebRTC Mesh Signaling (Offer / Answer / ICE)
     socket.on("groupCallSignal", ({ to, signal }) => {
-        const sharedCall = [...activeGroupCalls.values()].some(call =>
+        const sharedCall = [...activeGroupCalls.values()].find(call =>
             call.participants.has(socket.id) && call.participants.has(to));
         if (to && sharedCall) {
             io.to(to).emit("groupCallSignal", {
                 signal,
                 fromSocketId: socket.id,
                 fromUser: {
+                    ...sharedCall.participants.get(socket.id),
                     _id: socket.data.user._id,
                     name: socket.data.user.displayName || socket.data.user.username,
                     avatar: socket.data.user.avatarURL,
                 },
             });
         }
+    });
+
+    // Each socket can change only its own language in its current attendance.
+    socket.on("groupCallSetLanguage", async (payload = {}, acknowledge) => {
+        const ack = typeof acknowledge === "function" ? acknowledge : () => {};
+        const { conversationId, callId, attendanceId, spokenLanguage } = payload;
+        if (!["vi", "en"].includes(spokenLanguage)) return ack({ ok: false, status: 400 });
+        const call = activeGroupCalls.get(conversationId);
+        const current = call?.participants.get(socket.id);
+        if (!current || call.callId !== callId || current.attendanceId !== attendanceId) return ack({ ok: false, status: 403 });
+        if (current.spokenLanguage === spokenLanguage) return ack({ ok: true, participant: current });
+        // Replacing the reference also revokes every in-flight async start/event.
+        const participant = { ...current, spokenLanguage, languageRevision: current.languageRevision + 1 };
+        call.participants.set(socket.id, participant);
+        translationPcm.invalidateGroupParticipant(conversationId, socket.id);
+        io.to(`group-call-${conversationId}`).emit("groupCallLanguageChanged", { conversationId, callId, participant });
+        ack({ ok: true, participant });
+        await broadcastGroupCallStatus(conversationId, formatCallPayload(conversationId, call));
     });
 
     // 3. Toggle Media States (Mic Mute / Camera / Screen Share)
@@ -521,6 +564,7 @@ io.on("connection", (socket) => {
 
     // 4. Leave Group Call
     socket.on("leaveGroupCall", async ({ conversationId }) => {
+        socket.data.groupCallJoinEpoch = (socket.data.groupCallJoinEpoch || 0) + 1;
         if (conversationId) {
             await leaveParticipantFromGroupCall(conversationId, socket, "leave");
         } else {
@@ -571,6 +615,7 @@ io.on("connection", (socket) => {
     });
 
     socket.on("disconnect", async () => {
+        socket.data.groupCallJoinEpoch = (socket.data.groupCallJoinEpoch || 0) + 1;
         console.log("user disconnected", socket.id);
         if (userId && userSocketMap[userId]) {
             userSocketMap[userId].delete(socket.id);

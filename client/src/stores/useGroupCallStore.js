@@ -2,6 +2,8 @@ import { create } from "zustand";
 import Peer from "simple-peer";
 import { useAuthStore } from "./useAuthStore";
 import { toast } from "sonner";
+import i18n from "../i18n.js";
+import { defaultTargetLanguage } from "../components/chat/translationStream.js";
 
 // Keep audio analyzers and active peer instances outside reactive state to avoid unnecessary renders
 let localAudioContext = null;
@@ -21,6 +23,70 @@ export const useGroupCallStore = create((set, get) => {
     const peersRef = { current: {} }; // socketId -> { peer, user, stream, isMuted, isCameraOn, isScreenSharing }
     const localStreamRef = { current: null };
     const screenStreamRef = { current: null };
+    // Stable stream identity for every peer, including peers created during sharing.
+    // Keep capture/preview streams separate; only the selected video is sent.
+    const outgoingStreamRef = { current: null };
+    let joinGeneration = 0;
+    let cameraCaptureRequest = null;
+    let screenCaptureRequest = null;
+    const syncOutgoingVideo = () => {
+        const stream = outgoingStreamRef.current;
+        if (!stream) return;
+        const liveVideo = source => source?.getVideoTracks().find(track => track.readyState === 'live');
+        const next = liveVideo(screenStreamRef.current) || liveVideo(localStreamRef.current);
+        const previous = stream.getVideoTracks()[0];
+        if (previous === next) return;
+        Object.values(peersRef.current).forEach(({ peer }) => {
+            if (!peer || peer.destroyed) return;
+            try {
+                if (previous && next) peer.replaceTrack(previous, next, stream);
+                else if (previous) peer.removeTrack(previous, stream);
+                else if (next) peer.addTrack(next, stream);
+            } catch (error) {
+                console.warn('Group call video track update failed', error);
+            }
+        });
+        if (previous) stream.removeTrack(previous);
+        if (next) stream.addTrack(next);
+    };
+    const bindRemoteStream = (peer, socketId, participant) => {
+        const update = remoteStream => {
+            if (!get().isInCall || peersRef.current[socketId]?.peer !== peer) return;
+            set(state => ({ peers: { ...state.peers, [socketId]: {
+                ...state.peers[socketId], socketId,
+                user: state.peers[socketId]?.user || participant,
+                stream: remoteStream,
+                isMuted: state.peers[socketId]?.isMuted ?? participant?.isMuted ?? false,
+                isCameraOn: state.peers[socketId]?.isCameraOn ?? participant?.isCameraOn ?? false,
+                isScreenSharing: state.peers[socketId]?.isScreenSharing ?? participant?.isScreenSharing ?? false,
+            } } }));
+        };
+        peer.on('stream', remoteStream => {
+            if (peersRef.current[socketId]?.peer !== peer) return;
+            attachRemoteAudioAnalyser(socketId, remoteStream);
+            update(remoteStream);
+        });
+        // simple-peer emits "stream" once per stream; later video tracks still
+        // need a render when the call initially contained audio only.
+        peer.on('track', (_track, remoteStream) => queueMicrotask(() => update(remoteStream)));
+    };
+    const syncLanguage = participant => {
+        if (!participant) return;
+        const { socket } = useAuthStore.getState();
+        if (participant.socketId === socket?.id) {
+            const current = get().attendance;
+            if (current && current.attendanceId !== participant.attendanceId) return;
+            if (current && current.languageRevision > participant.languageRevision) return;
+            set({ attendance: participant, spokenLanguage: participant.spokenLanguage || get().spokenLanguage });
+            return;
+        }
+        const current = get().peers[participant.socketId];
+        if (!current || (current.user?.attendanceId && current.user.attendanceId !== participant.attendanceId) ||
+            current.user?.languageRevision > participant.languageRevision) return;
+        const next = { ...current, user: { ...current.user, ...participant } };
+        if (peersRef.current[participant.socketId]) peersRef.current[participant.socketId].user = next.user;
+        set(state => ({ peers: { ...state.peers, [participant.socketId]: next } }));
+    };
 
     const startAudioActivityDetection = () => {
         if (audioInterval) clearInterval(audioInterval);
@@ -133,6 +199,10 @@ export const useGroupCallStore = create((set, get) => {
         speakingSockets: new Set(), // Set of socketIds + "local"
         activeGroupCalls: {}, // { [conversationId]: { isActive, startedBy, startedAt, participants: [...] } }
         incomingCall: null,
+        callId: null,
+        attendance: null,
+        spokenLanguage: defaultTargetLanguage(i18n.resolvedLanguage || i18n.language),
+        languagePending: false,
 
         // Actions
         setModalOpen: (isOpen) => set({ isModalOpen: isOpen }),
@@ -144,6 +214,21 @@ export const useGroupCallStore = create((set, get) => {
             await get().joinGroupCall(incoming.conversationId, incoming.groupInfo, incoming.callId);
         },
         declineIncomingCall: () => set({ incomingCall: null }),
+        setSpokenLanguage: language => {
+            if (!["vi", "en"].includes(language) || get().languagePending || language === get().spokenLanguage) return;
+            const { socket } = useAuthStore.getState();
+            const { attendance, callId, currentConversationId } = get();
+            if (!get().isInCall) { set({ spokenLanguage: language }); return; }
+            if (!socket?.connected || !attendance) return;
+            set({ languagePending: true });
+            socket.timeout(5000).emit("groupCallSetLanguage", { conversationId: currentConversationId, callId,
+                attendanceId: attendance.attendanceId, spokenLanguage: language }, (error, answer) => {
+                if (get().attendance?.attendanceId !== attendance.attendanceId) return;
+                set({ languagePending: false });
+                if (error || !answer?.ok) { toast.error(i18n.t('translationNotes.languageUpdateError')); return; }
+                syncLanguage(answer.participant);
+            });
+        },
         removeConversationCalls: (conversationId) => {
             if (get().currentConversationId === conversationId) get().leaveGroupCall();
             set(state => {
@@ -164,12 +249,18 @@ export const useGroupCallStore = create((set, get) => {
             socket.off("groupCallUserJoined");
             socket.off("groupCallSignal");
             socket.off("groupCallParticipantMediaChanged");
+            socket.off("groupCallLanguageChanged");
+            socket.off("disconnect", get().onGroupDisconnect);
+            socket.on("disconnect", get().onGroupDisconnect);
             socket.off("groupCallUserLeft");
             socket.off("groupCallEnded");
             socket.off("groupCallError");
             socket.off("incomingGroupCall");
             socket.on("incomingGroupCall", incoming => {
                 if (incoming?.conversationId && !get().isInCall) set({ incomingCall: incoming });
+            });
+            socket.on("groupCallLanguageChanged", ({ conversationId, callId, participant }) => {
+                if (get().isInCall && get().currentConversationId === conversationId && get().callId === callId) syncLanguage(participant);
             });
 
             socket.on("groupCallError", ({ message }) => {
@@ -201,6 +292,8 @@ export const useGroupCallStore = create((set, get) => {
                         toast.info("Cuộc gọi nhóm đã kết thúc");
                         get().leaveGroupCall();
                     } else if (Array.isArray(data.participants)) {
+                        if (get().callId && data.callId !== get().callId) return;
+                        data.participants.forEach(syncLanguage);
                         const activeSocketIds = new Set(data.participants.map((p) => p.socketId));
                         const currentPeers = get().peers;
                         let changed = false;
@@ -245,8 +338,14 @@ export const useGroupCallStore = create((set, get) => {
             socket.emit("getAllActiveGroupCalls");
 
             // 3. Newly joined user receives existing participants
-            socket.on("groupCallExistingUsers", ({ participants }) => {
-                const stream = localStreamRef.current;
+            socket.on("groupCallExistingUsers", ({ conversationId, callId, self, participants }) => {
+                if (!get().isInCall || get().currentConversationId !== conversationId) return;
+                Object.values(peersRef.current).forEach(entry => entry.peer?.destroy());
+                peersRef.current = {};
+                remoteAnalysers.clear();
+                set({ peers: {} });
+                set({ callId, attendance: self, spokenLanguage: self?.spokenLanguage || get().spokenLanguage });
+                const stream = outgoingStreamRef.current;
 
                 participants.forEach((participant) => {
                     const peer = new Peer({
@@ -269,23 +368,7 @@ export const useGroupCallStore = create((set, get) => {
                         });
                     });
 
-                    peer.on("stream", (remoteStream) => {
-                        attachRemoteAudioAnalyser(participant.socketId, remoteStream);
-                        set((state) => ({
-                            peers: {
-                                ...state.peers,
-                                [participant.socketId]: {
-                                    ...state.peers[participant.socketId],
-                                    socketId: participant.socketId,
-                                    user: participant,
-                                    stream: remoteStream,
-                                    isMuted: participant.isMuted,
-                                    isCameraOn: participant.isCameraOn,
-                                    isScreenSharing: participant.isScreenSharing,
-                                },
-                            },
-                        }));
-                    });
+                    bindRemoteStream(peer, participant.socketId, participant);
 
                     peersRef.current[participant.socketId] = {
                         peer,
@@ -306,7 +389,8 @@ export const useGroupCallStore = create((set, get) => {
             });
 
             // 4. Other participants receive notification that a new user joined
-            socket.on("groupCallUserJoined", ({ user: newUser }) => {
+            socket.on("groupCallUserJoined", ({ conversationId, user: newUser }) => {
+                if (!get().isInCall || get().currentConversationId !== conversationId) return;
                 // Wait for their signal to create non-initiator peer
                 set((state) => ({
                     peers: {
@@ -325,10 +409,11 @@ export const useGroupCallStore = create((set, get) => {
 
             // 5. WebRTC Signaling (Offer / Answer)
             socket.on("groupCallSignal", ({ signal, fromSocketId, fromUser }) => {
+                if (!get().isInCall || !outgoingStreamRef.current) return;
                 let peerEntry = peersRef.current[fromSocketId];
 
                 if (!peerEntry) {
-                    const stream = localStreamRef.current;
+                    const stream = outgoingStreamRef.current;
                     const peer = new Peer({
                         initiator: false,
                         config: peerConfig,
@@ -349,28 +434,15 @@ export const useGroupCallStore = create((set, get) => {
                         });
                     });
 
-                    peer.on("stream", (remoteStream) => {
-                        attachRemoteAudioAnalyser(fromSocketId, remoteStream);
-                        set((state) => ({
-                            peers: {
-                                ...state.peers,
-                                [fromSocketId]: {
-                                    ...state.peers[fromSocketId],
-                                    socketId: fromSocketId,
-                                    user: fromUser || state.peers[fromSocketId]?.user,
-                                    stream: remoteStream,
-                                },
-                            },
-                        }));
-                    });
+                    bindRemoteStream(peer, fromSocketId, fromUser);
 
                     peerEntry = {
                         peer,
-                        user: fromUser,
+                        user: get().peers[fromSocketId]?.user || fromUser,
                         stream: null,
-                        isMuted: get().peers[fromSocketId]?.isMuted ?? false,
-                        isCameraOn: get().peers[fromSocketId]?.isCameraOn ?? false,
-                        isScreenSharing: get().peers[fromSocketId]?.isScreenSharing ?? false,
+                        isMuted: get().peers[fromSocketId]?.isMuted ?? fromUser?.isMuted ?? false,
+                        isCameraOn: get().peers[fromSocketId]?.isCameraOn ?? fromUser?.isCameraOn ?? false,
+                        isScreenSharing: get().peers[fromSocketId]?.isScreenSharing ?? fromUser?.isScreenSharing ?? false,
                     };
                     peersRef.current[fromSocketId] = peerEntry;
 
@@ -436,6 +508,8 @@ export const useGroupCallStore = create((set, get) => {
             socket.off("groupCallUserJoined");
             socket.off("groupCallSignal");
             socket.off("groupCallParticipantMediaChanged");
+            socket.off("groupCallLanguageChanged");
+            socket.off("disconnect", get().onGroupDisconnect);
             socket.off("groupCallUserLeft");
             socket.off("groupCallEnded");
             socket.off("groupCallError");
@@ -444,6 +518,7 @@ export const useGroupCallStore = create((set, get) => {
         },
 
         // Join Voice Channel / Room
+        onGroupDisconnect: () => { if (get().isInCall) get().leaveGroupCall(); },
         joinGroupCall: async (conversationId, groupInfo, targetCallId = null) => {
             const { socket, user } = useAuthStore.getState();
             if (!socket || !conversationId) return;
@@ -458,6 +533,7 @@ export const useGroupCallStore = create((set, get) => {
             if (get().isInCall) {
                 get().leaveGroupCall();
             }
+            const generation = ++joinGeneration;
 
             try {
                 // Request microphone access (audio-first for Discord voice channel)
@@ -469,8 +545,13 @@ export const useGroupCallStore = create((set, get) => {
                     },
                     video: false,
                 });
+                if (generation !== joinGeneration || !socket.connected || useAuthStore.getState().socket !== socket) {
+                    stream.getTracks().forEach(track => track.stop());
+                    return;
+                }
 
                 localStreamRef.current = stream;
+                outgoingStreamRef.current = new MediaStream(stream.getAudioTracks());
                 attachLocalAudioAnalyser(stream);
                 startAudioActivityDetection();
 
@@ -485,12 +566,16 @@ export const useGroupCallStore = create((set, get) => {
                     isCameraOn: false,
                     isScreenSharing: false,
                     peers: {},
+                    attendance: null,
+                    callId: null,
+                    languagePending: false,
                 });
 
                 // Join room via socket
                 socket.emit("joinGroupCall", {
                     conversationId,
                     callId: targetCallId || null,
+                    spokenLanguage: get().spokenLanguage,
                     user: {
                         _id: user?._id,
                         displayName: user?.displayName,
@@ -501,6 +586,7 @@ export const useGroupCallStore = create((set, get) => {
 
                 toast.success("Đã tham gia phòng thoại nhóm");
             } catch (err) {
+                if (generation !== joinGeneration) return;
                 console.error("Failed to access audio/microphone:", err);
                 toast.error("Không thể truy cập micro. Hãy kiểm tra quyền truy cập.");
             }
@@ -508,10 +594,13 @@ export const useGroupCallStore = create((set, get) => {
 
         // Leave Voice Room
         leaveGroupCall: () => {
+            joinGeneration += 1;
+            cameraCaptureRequest = null;
+            screenCaptureRequest = null;
             const { socket } = useAuthStore.getState();
             const { currentConversationId } = get();
 
-            if (socket && currentConversationId) {
+            if (socket?.connected && currentConversationId) {
                 socket.emit("leaveGroupCall", { conversationId: currentConversationId });
             }
 
@@ -523,9 +612,11 @@ export const useGroupCallStore = create((set, get) => {
 
             // Cleanup screen stream
             if (screenStreamRef.current) {
+                screenStreamRef.current.getVideoTracks().forEach(track => { track.onended = null; });
                 screenStreamRef.current.getTracks().forEach((track) => track.stop());
                 screenStreamRef.current = null;
             }
+            outgoingStreamRef.current = null;
 
             // Destroy all active peer connections
             Object.values(peersRef.current).forEach((entry) => {
@@ -549,6 +640,9 @@ export const useGroupCallStore = create((set, get) => {
                 isCameraOn: false,
                 isScreenSharing: false,
                 peers: {},
+                attendance: null,
+                callId: null,
+                languagePending: false,
             });
         },
 
@@ -578,6 +672,10 @@ export const useGroupCallStore = create((set, get) => {
         toggleCamera: async () => {
             const { isCameraOn, currentConversationId } = get();
             const { socket } = useAuthStore.getState();
+            if (!get().isInCall || cameraCaptureRequest) return;
+            const request = {};
+            cameraCaptureRequest = request;
+            const generation = joinGeneration;
             const nextState = !isCameraOn;
 
             try {
@@ -587,22 +685,17 @@ export const useGroupCallStore = create((set, get) => {
                         video: { width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 24 } },
                         audio: false,
                     });
+                    if (generation !== joinGeneration || !get().isInCall || !socket?.connected || useAuthStore.getState().socket !== socket) {
+                        videoStream.getTracks().forEach(track => track.stop());
+                        return;
+                    }
                     const videoTrack = videoStream.getVideoTracks()[0];
 
                     if (localStreamRef.current) {
                         localStreamRef.current.addTrack(videoTrack);
                     }
 
-                    // Add / replace track in all peer connections
-                    Object.values(peersRef.current).forEach(({ peer }) => {
-                        try {
-                            if (peer) {
-                                peer.addTrack(videoTrack, localStreamRef.current);
-                            }
-                        } catch (e) {
-                            console.warn("Peer addTrack video error:", e);
-                        }
-                    });
+                    syncOutgoingVideo();
 
                     set({ isCameraOn: true, localStream: localStreamRef.current });
                 } else {
@@ -610,17 +703,9 @@ export const useGroupCallStore = create((set, get) => {
                     if (localStreamRef.current) {
                         const videoTrack = localStreamRef.current.getVideoTracks()[0];
                         if (videoTrack) {
-                            videoTrack.stop();
                             localStreamRef.current.removeTrack(videoTrack);
-                            Object.values(peersRef.current).forEach(({ peer }) => {
-                                try {
-                                    if (peer) {
-                                        peer.removeTrack(videoTrack, localStreamRef.current);
-                                    }
-                                } catch (e) {
-                                    console.warn("Peer removeTrack video error:", e);
-                                }
-                            });
+                            syncOutgoingVideo();
+                            videoTrack.stop();
                         }
                     }
                     set({ isCameraOn: false });
@@ -633,8 +718,11 @@ export const useGroupCallStore = create((set, get) => {
                     });
                 }
             } catch (err) {
+                if (generation !== joinGeneration) return;
                 console.error("Camera toggle failed:", err);
                 toast.error("Không thể bật camera. Hãy kiểm tra quyền truy cập.");
+            } finally {
+                if (cameraCaptureRequest === request) cameraCaptureRequest = null;
             }
         },
 
@@ -642,36 +730,30 @@ export const useGroupCallStore = create((set, get) => {
         toggleScreenShare: async () => {
             const { isScreenSharing, currentConversationId } = get();
             const { socket } = useAuthStore.getState();
+            if (!get().isInCall || screenCaptureRequest) return;
 
             if (!isScreenSharing) {
+                const request = {};
+                screenCaptureRequest = request;
+                const generation = joinGeneration;
                 try {
                     const displayStream = await navigator.mediaDevices.getDisplayMedia({
                         video: { cursor: "always" },
                         audio: true,
                     });
+                    if (generation !== joinGeneration || !get().isInCall || !socket?.connected || useAuthStore.getState().socket !== socket) {
+                        displayStream.getTracks().forEach(track => track.stop());
+                        return;
+                    }
 
                     screenStreamRef.current = displayStream;
                     const screenVideoTrack = displayStream.getVideoTracks()[0];
 
-                    // Replace or add video track on peers
-                    Object.values(peersRef.current).forEach(({ peer }) => {
-                        try {
-                            if (peer) {
-                                const currentVideoTrack = localStreamRef.current?.getVideoTracks()[0];
-                                if (currentVideoTrack) {
-                                    peer.replaceTrack(currentVideoTrack, screenVideoTrack, localStreamRef.current);
-                                } else {
-                                    peer.addTrack(screenVideoTrack, localStreamRef.current);
-                                }
-                            }
-                        } catch (e) {
-                            console.warn("Screen share track error:", e);
-                        }
-                    });
+                    syncOutgoingVideo();
 
                     // Handle native stop sharing button on browser UI
                     screenVideoTrack.onended = () => {
-                        get().toggleScreenShare();
+                        if (screenStreamRef.current === displayStream && get().isScreenSharing) get().toggleScreenShare();
                     };
 
                     set({ isScreenSharing: true, screenStream: displayStream });
@@ -684,29 +766,21 @@ export const useGroupCallStore = create((set, get) => {
                     }
                     toast.success("Bắt đầu chia sẻ màn hình");
                 } catch (err) {
+                    if (generation !== joinGeneration) return;
                     if (err.name !== "NotAllowedError") {
                         console.error("Failed to share screen:", err);
                         toast.error("Không thể chia sẻ màn hình");
                     }
+                } finally {
+                    if (screenCaptureRequest === request) screenCaptureRequest = null;
                 }
             } else {
                 // Stop screen sharing
-                if (screenStreamRef.current) {
-                    screenStreamRef.current.getTracks().forEach((track) => track.stop());
-                    screenStreamRef.current = null;
-                }
-
-                // If camera was on, revert back to camera track
-                const cameraVideoTrack = localStreamRef.current?.getVideoTracks()[0];
-                Object.values(peersRef.current).forEach(({ peer }) => {
-                    try {
-                        if (peer && cameraVideoTrack) {
-                            peer.replaceTrack(peer.streams[0]?.getVideoTracks()[0], cameraVideoTrack, localStreamRef.current);
-                        }
-                    } catch (e) {
-                        console.warn("Screen share revert error:", e);
-                    }
-                });
+                const displayStream = screenStreamRef.current;
+                screenStreamRef.current = null;
+                syncOutgoingVideo();
+                displayStream?.getVideoTracks().forEach(track => { track.onended = null; });
+                displayStream?.getTracks().forEach(track => track.stop());
 
                 set({ isScreenSharing: false, screenStream: null });
 

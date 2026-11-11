@@ -27,6 +27,7 @@ import {
 const defaultAvatar = '/favicon.png';
 import { ASSET_BASE_URL } from '../../config/env';
 import TranslationNotes from './TranslationNotes.jsx';
+import { useTranslation } from 'react-i18next';
 
 const cx = classNames.bind(styles);
 
@@ -160,9 +161,14 @@ const GroupCallModal = () => {
         incomingCall,
         acceptIncomingCall,
         declineIncomingCall,
+        attendance,
+        spokenLanguage,
+        languagePending,
+        setSpokenLanguage,
     } = useGroupCallStore();
 
-    const { user: currentUser } = useAuthStore();
+    const { user: currentUser, socket } = useAuthStore();
+    const { t } = useTranslation();
     const { conversations } = useChatStore();
 
     const [callDuration, setCallDuration] = useState(0);
@@ -175,6 +181,23 @@ const GroupCallModal = () => {
     const screenVideoRef = useRef(null);
     const featuredVideoRef = useRef(null);
     const stageCardRef = useRef(null);
+    const callContainerRef = useRef(null);
+    const dockRef = useRef(null);
+
+    useEffect(() => {
+        const container = callContainerRef.current;
+        const dock = dockRef.current;
+        if (!isInCall || !isModalOpen || !container || !dock) return;
+        const reserveControls = () => {
+            const clearance = container.getBoundingClientRect().bottom - dock.getBoundingClientRect().top + 12;
+            container.style.setProperty('--group-call-dock-clearance', `${Math.max(92, clearance)}px`);
+        };
+        const observer = new ResizeObserver(reserveControls);
+        observer.observe(dock);
+        observer.observe(container);
+        reserveControls();
+        return () => observer.disconnect();
+    }, [isInCall, isModalOpen]);
 
     const activeConversation = useMemo(
         () => (conversations || []).find((c) => c._id === currentConversationId),
@@ -200,14 +223,23 @@ const GroupCallModal = () => {
                 id: currentUser?._id,
                 stream: localStream,
                 muted: isMuted,
+                isSelf: true,
+                socketId: socket?.id,
+                attendanceId: attendance?.attendanceId,
+                spokenLanguage: attendance?.spokenLanguage,
+                languageRevision: attendance?.languageRevision,
             },
             ...Object.values(peers).map((peer) => ({
                 id: peer.user?._id || peer.user?.userId,
                 stream: peer.stream,
                 muted: peer.isMuted,
+                socketId: peer.socketId || peer.user?.socketId,
+                attendanceId: peer.user?.attendanceId,
+                spokenLanguage: peer.user?.spokenLanguage,
+                languageRevision: peer.user?.languageRevision,
             })),
         ],
-        [currentUser?._id, localStream, isMuted, peers]
+        [currentUser?._id, localStream, isMuted, peers, attendance, socket?.id]
     );
 
     // Call duration timer
@@ -478,7 +510,7 @@ const GroupCallModal = () => {
 
     return (
         <div className={cx('group-call-backdrop')} onClick={() => setViewMenuOpen(false)}>
-            <div className={cx('group-call-container')} onClick={(e) => e.stopPropagation()}>
+            <div ref={callContainerRef} className={cx('group-call-container')} onClick={(e) => e.stopPropagation()}>
                 {/* 1. Header Bar */}
                 <div className={cx('call-header')}>
                     <div className={cx('header-left')}>
@@ -717,7 +749,7 @@ const GroupCallModal = () => {
                 </div>
 
                 {/* 3. Bottom Floating Control Dock */}
-                <div className={cx('call-dock')}>
+                <div ref={dockRef} className={cx('call-dock')}>
                     {/* Mic Toggle Button */}
                     <button
                         type="button"
@@ -758,11 +790,19 @@ const GroupCallModal = () => {
                     </button>
 
                     {/* Translate Toggle + Right Panel */}
+                    <label className={cx('spoken-language')}>
+                        <span>{t('translationNotes.groupSpokenLanguage')}</span>
+                        <select value={spokenLanguage} disabled={languagePending || !attendance}
+                            onChange={event => setSpokenLanguage(event.target.value)}>
+                            {['vi', 'en'].map(language => <option key={language} value={language}>{t(`translationNotes.${language}`)}</option>)}
+                        </select>
+                    </label>
                     <TranslationNotes
                         active={isInCall}
                         kind="group"
                         sessionId={currentConversationId}
                         sources={translationSources}
+                        viewerAttendanceId={attendance?.attendanceId}
                     />
 
                     <div className={cx('dock-divider')} aria-hidden="true" />

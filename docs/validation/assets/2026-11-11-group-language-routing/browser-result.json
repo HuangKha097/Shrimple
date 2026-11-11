@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "speakers": 3,
+  "translationStarts": 11,
+  "realWorkletPackets": 21,
+  "microphoneAcquisitions": 3,
+  "screenshots": [
+    {
+      "name": "desktop-dark",
+      "left": 895,
+      "right": 1247,
+      "viewport": 1280,
+      "selects": 1,
+      "overflow": false,
+      "dockTop": 755.890625,
+      "dockBottom": 844,
+      "panelBottom": 738,
+      "height": 900
+    },
+    {
+      "name": "mobile-light",
+      "left": 29,
+      "right": 361,
+      "viewport": 390,
+      "selects": 1,
+      "overflow": false,
+      "dockTop": 639.34375,
+      "dockBottom": 791.90625,
+      "panelBottom": 621.875,
+      "height": 844
+    }
+  ],
+  "scope": "Synthetic audio with real group store/modal/React/MediaStream/AudioWorklet; mocked signaling/AI/WebRTC. Real mic, networks and ASR/MT quality unverified."
+}

@@ -20,7 +20,7 @@ const formatElapsed = startedAt => {
     return `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
 };
 
-export default function TranslationNotes({ active, kind, sessionId, sources }) {
+export default function TranslationNotes({ active, kind, sessionId, sources, viewerAttendanceId }) {
     const { user, socket } = useAuthStore();
     const { t, i18n } = useTranslation();
     const [open, setOpen] = useState(false);
@@ -28,12 +28,14 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     const [error, setError] = useState('');
     const [notes, setNotes] = useState([]);
     const [languagePair, setLanguagePair] = useState(() => defaultTranslationPair(i18n.resolvedLanguage || i18n.language));
+    const [selfLanguage, setSelfLanguage] = useState(() => defaultTranslationPair(i18n.resolvedLanguage || i18n.language).targetLanguage);
     const { sourceLanguage, targetLanguage } = languagePair;
     const [skippedClips, setSkippedClips] = useState(false);
     const [waitingForRecognition, setWaitingForRecognition] = useState(false);
     const [healthAttempt, setHealthAttempt] = useState(0);
     const [visible, setVisible] = useState(() => document.visibilityState !== 'hidden');
     const [connected, setConnected] = useState(Boolean(socket?.connected));
+    const [trackVersion, setTrackVersion] = useState(0);
     const streams = useRef(new Map());
     const audioRef = useRef(null);
     const generation = useRef(0);
@@ -76,6 +78,14 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
         try { prepareAudio(); } catch { /* Capture shows the actionable error. */ }
         setSkippedClips(false);
         setLanguagePair(nextPair);
+    };
+
+    const selectSelfLanguage = language => {
+        if (language === selfLanguage) return;
+        stop();
+        try { prepareAudio(); } catch { /* Capture shows the actionable error. */ }
+        setSkippedClips(false);
+        setSelfLanguage(language);
     };
 
     const retry = () => {
@@ -121,6 +131,21 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
     useEffect(() => {
         if (!open || !active || !visible || !user?._id) stop();
     }, [open, active, visible, user?._id, stop]);
+
+    useEffect(() => {
+        const tracks = new Set((sources || []).flatMap(source => source.stream?.getAudioTracks() || []));
+        const changed = () => setTrackVersion(value => value + 1);
+        tracks.forEach(track => {
+            track.addEventListener('mute', changed);
+            track.addEventListener('unmute', changed);
+            track.addEventListener('ended', changed);
+        });
+        return () => tracks.forEach(track => {
+            track.removeEventListener('mute', changed);
+            track.removeEventListener('unmute', changed);
+            track.removeEventListener('ended', changed);
+        });
+    }, [sources]);
 
     useEffect(() => {
         if (open && notes.length > 0) {
@@ -176,18 +201,22 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
         };
         let audio;
         try { audio = prepareAudio(); } catch { fail(t('translationNotes.unsupported')); return; }
-        const desired = conversationTranslationSources(sources, user._id);
-        const wanted = new Map(desired.map(source => [source.id, source]));
+        const desired = kind === 'group' && !viewerAttendanceId ? [] : conversationTranslationSources(sources, user._id, kind);
+        const wanted = new Map(desired.map(source => [source.key || source.id, source]));
         for (const [id, source] of streams.current) {
             const next = wanted.get(id);
-            if (!next || next.track !== source.track || Boolean(next.isSelf) !== Boolean(source.isSelf)) {
+            if (!next || next.track !== source.track || Boolean(next.isSelf) !== Boolean(source.isSelf) ||
+                next.sourceLanguage !== source.sourceLanguage || next.speakerLanguageRevision !== source.speakerLanguageRevision ||
+                source.targetLanguage !== targetLanguage || source.viewerAttendanceId !== viewerAttendanceId || source.selfLanguage !== selfLanguage) {
                 source.stop();
                 streams.current.delete(id);
             }
         }
-        const startSource = ({ id, track, isSelf = false }) => {
-            if (streams.current.has(id)) return;
-            const source = { track, isSelf: Boolean(isSelf), stopped: false, capture: null, transport: null, timer: null, streamId: null };
+        const startSource = ({ id, key = id, track, isSelf = false, sourceLanguage: declaredLanguage, ...attendance }) => {
+            if (streams.current.has(key)) return;
+            const source = { track, isSelf: Boolean(isSelf), sourceLanguage: declaredLanguage,
+                speakerLanguageRevision: attendance.speakerLanguageRevision, targetLanguage, viewerAttendanceId, selfLanguage,
+                stopped: false, capture: null, transport: null, timer: null, streamId: null };
             const stopped = () => source.stopped || epoch !== generation.current;
             const updateWaiting = waiting => {
                 source.waiting = waiting;
@@ -209,13 +238,15 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
             };
             const onEnded = () => {
                 source.stop();
-                if (streams.current.get(id) === source) streams.current.delete(id);
+                if (streams.current.get(key) === source) streams.current.delete(key);
             };
             const startAttempt = () => {
                 if (stopped() || !socket.connected || track.readyState !== 'live') return;
                 source.streamId = null;
                 const request = createTranslationRequest({ kind, sessionId, speakerId: id,
-                    isSelf: source.isSelf, sourceLanguage, targetLanguage });
+                    isSelf: source.isSelf, selfLanguage: kind === 'direct' ? selfLanguage : undefined,
+                    sourceLanguage: kind === 'group' ? declaredLanguage : sourceLanguage, targetLanguage,
+                    ...attendance, viewerAttendanceId });
                 source.transport = createTranslationPcmSocket({
                     socket, request,
                     onReady: streamId => {
@@ -240,19 +271,19 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                         finishAttempt();
                         if ([401, 403].includes(detail.status)) {
                             fail(t(detail.status === 401 ? 'translationNotes.expired' : 'translationNotes.forbidden'));
-                        } else if (detail.status === 429 || detail.status >= 500) {
+                        } else if ([409, 429].includes(detail.status) || detail.status >= 500) {
                             setSkippedClips(true);
                             source.timer = setTimeout(startAttempt, STREAM_RETRY_MS);
                         } else fail(detail.message || t('translationNotes.unavailable'));
                     },
                 });
             };
-            streams.current.set(id, source);
+            streams.current.set(key, source);
             track.addEventListener('ended', onEnded);
             startAttempt();
         };
         desired.forEach(startSource);
-    }, [open, active, visible, user?._id, status, kind, sessionId, sources, connected, socket, sourceLanguage, targetLanguage, stop, prepareAudio, t]);
+    }, [open, active, visible, user?._id, status, kind, sessionId, sources, trackVersion, connected, socket, sourceLanguage, targetLanguage, selfLanguage, viewerAttendanceId, stop, prepareAudio, t]);
     if (!active) return null;
     return (
         <>
@@ -289,31 +320,39 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                     <div className="translation-setting-card">
                         <div className="translation-direction-header">
                             <span className="translation-direction-label">{t('translationNotes.direction')}</span>
-                            <button type="button" className="translation-swap" title={t('translationNotes.swap')}
+                            {kind !== 'group' && <button type="button" className="translation-swap" title={t('translationNotes.swap')}
                                 aria-label={t('translationNotes.swap')}
                                 onClick={() => selectLanguagePair({ sourceLanguage: targetLanguage, targetLanguage: sourceLanguage })}>
                                 <ArrowLeftRight size={15} />
-                            </button>
+                            </button>}
                         </div>
-                        <div className="translation-language-fields">
-                            <label className="translation-language-field">
+                        <div className={`translation-language-fields${kind === 'group' ? ' single' : ''}`}>
+                            {kind !== 'group' && <><label className="translation-language-field">
                                 <span>{t('translationNotes.counterpartSpeech')}</span>
                                 <select value={sourceLanguage}
                                     onChange={event => selectLanguagePair(updateTranslationPair(languagePair, 'sourceLanguage', event.target.value))}>
                                     {SUPPORTED_TARGET_LANGUAGES.map(lang => <option key={lang} value={lang}>{t(`translationNotes.${lang}`)}</option>)}
                                 </select>
                             </label>
-                            <span className="translation-direction-arrow" aria-hidden="true">⇒</span>
+                            <span className="translation-direction-arrow" aria-hidden="true">⇒</span></>}
                             <label className="translation-language-field">
-                                <span>{t('translationNotes.readTranslation')}</span>
+                                <span>{t(kind === 'group' ? 'translationNotes.groupReadLanguage' : 'translationNotes.readTranslation')}</span>
                                 <select value={targetLanguage}
-                                    onChange={event => selectLanguagePair(updateTranslationPair(languagePair, 'targetLanguage', event.target.value))}>
+                                    onChange={event => selectLanguagePair(kind === 'group' ? { ...languagePair, targetLanguage: event.target.value } : updateTranslationPair(languagePair, 'targetLanguage', event.target.value))}>
                                     {SUPPORTED_TARGET_LANGUAGES.map(lang => <option key={lang} value={lang}>{t(`translationNotes.${lang}`)}</option>)}
                                 </select>
                             </label>
                         </div>
+                        {kind === 'direct' && (
+                            <label className="translation-language-field">
+                                <span>{t('translationNotes.yourSpeech')}</span>
+                                <select value={selfLanguage} onChange={event => selectSelfLanguage(event.target.value)}>
+                                    {SUPPORTED_TARGET_LANGUAGES.map(lang => <option key={lang} value={lang}>{t(`translationNotes.${lang}`)}</option>)}
+                                </select>
+                            </label>
+                        )}
                         <p className="translation-direction-hint">{t(kind === 'group' ? 'translationNotes.groupPairHint' : 'translationNotes.pairHint', {
-                            source: t(`translationNotes.${sourceLanguage}`), target: t(`translationNotes.${targetLanguage}`),
+                            source: t(`translationNotes.${sourceLanguage}`), target: t(`translationNotes.${targetLanguage}`), self: t(`translationNotes.${selfLanguage}`),
                         })}</p>
                     </div>
                     {(status === 'error' || skippedClips) && (
@@ -331,9 +370,9 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                         {notes.length === 0 ? <div className="translation-empty">
                             <div className="translation-empty-icon"><Sparkles size={20} /></div>
                             <div className="translation-empty-title">{t('translationNotes.emptyTitle')}</div>
-                            <div className="translation-empty-desc">{t('translationNotes.emptyDescription')}</div>
+                            <div className="translation-empty-desc">{t(kind === 'group' ? 'translationNotes.groupEmptyDescription' : 'translationNotes.emptyDescription')}</div>
                         </div> : notes.map(note => {
-                            const isSelfNote = note.translationState === 'self' || note.translate === false || String(note.speakerId || '') === String(user?._id || '');
+                            const isSelfNote = note.speakerSocketId ? note.speakerSocketId === socket?.id : String(note.speakerId || '') === String(user?._id || '');
                             const spokenLangKey = ['vi', 'en'].includes(note.sourceLanguage) ? note.sourceLanguage : 'auto';
                             return (
                                 <div className={`translation-msg-wrapper ${isSelfNote ? 'self' : 'other'}`} key={note.id}>
@@ -351,7 +390,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources }) {
                                         </div>
                                         <div className="translation-msg-bubble">
                                             <div className="translation-msg-original" lang={spokenLangKey !== 'auto' ? spokenLangKey : undefined}>{note.original}</div>
-                                            {!isSelfNote && (
+                                            {note.translate !== false && (
                                                 <div className="translation-msg-translated-block">
                                                     <div className="translation-note-language">{t('translationNotes.translation')} · {t(`translationNotes.${note.targetLanguage}`)}</div>
                                                     <div className={`translation-msg-text ${note.translationState !== 'complete' ? `translation-${note.translationState}` : ''}`} lang={note.translationState === 'complete' ? note.targetLanguage : undefined}>

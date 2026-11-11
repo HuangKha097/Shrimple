@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "cases": [
+    "existing viewer receives screen with camera off",
+    "late join receives current screen with camera off",
+    "stop screen then turn camera on",
+    "late rejoin receives screen with camera on",
+    "camera toggles retain active shared screen",
+    "native screen stop restores camera for all viewers",
+    "repeated sharing with camera off",
+    "video switching preserves one microphone sender and mute",
+    "leaving during pending screen capture stops late tracks",
+    "leaving during pending camera capture stops late tracks"
+  ],
+  "participants": 3,
+  "scope": "Real local Socket.IO/JWT, simple-peer, RTCPeerConnection and rendered canvas-video pixels; mock database, synthetic mic/camera/display, host ICE only. No real screen picker, physical devices, NAT/TURN or deployment acceptance."
+}

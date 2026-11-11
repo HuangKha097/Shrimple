@@ -35,7 +35,7 @@ export function createPcmCapture({ context, moduleReady, track, onPacket, onErro
                 processorOptions: { inputSampleRate: context.sampleRate },
             });
             node.port.onmessage = event => {
-                if (!stopped) onPacket(event.data);
+                if (!stopped && track.readyState === 'live' && track.enabled !== false && !track.muted) onPacket(event.data);
             };
             node.onprocessorerror = () => { if (!stopped) onError(new Error('Audio processor stopped.')); };
             // The processor writes silence, so the counterpart is never played twice.

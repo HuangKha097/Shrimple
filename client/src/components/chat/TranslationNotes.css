@@ -218,6 +218,7 @@
     gap: 5px;
     margin-top: 6px;
 }
+.translation-language-fields.single { grid-template-columns: minmax(0, 1fr); }
 
 .translation-language-field {
     display: flex;
@@ -598,6 +599,9 @@
 /* Reserve right column space in Group Call when Translation Notes panel is open */
 div[class*="group-call-container"]:has(.translation-panel) > div[class*="call-stage"] {
     padding-right: 380px;
+}
+div[class*="group-call-container"] .translation-panel {
+    bottom: var(--group-call-dock-clearance, 160px);
 }
 
 /* Responsive / Small Screens */
