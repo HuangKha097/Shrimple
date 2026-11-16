@@ -7,6 +7,7 @@ import { SUPPORTED_TARGET_LANGUAGES, conversationTranslationSources, defaultTran
 import { createPcmAudioContext, createPcmCapture } from './translationPcmCapture.js';
 import { createTranslationPcmSocket } from './translationPcmSocket.js';
 import { interruptTranslationNotes, reduceTranslationNotes } from './translationNotesState.js';
+import TranscriptText from './TranscriptText.jsx';
 import pcmWorkletUrl from './translationPcmWorklet.js?url';
 import './TranslationNotes.css';
 
@@ -39,7 +40,9 @@ export default function TranslationNotes({ active, kind, sessionId, sources, vie
     const streams = useRef(new Map());
     const audioRef = useRef(null);
     const generation = useRef(0);
-    const notesEndRef = useRef(null);
+    const notesListRef = useRef(null);
+    const followLatestRef = useRef(true);
+    const historicalNoteIds = useRef(new Set());
     const sessionStartRef = useRef(Date.now());
     const processingCount = notes.filter(note => note.translationState === 'pending').length;
 
@@ -67,7 +70,10 @@ export default function TranslationNotes({ active, kind, sessionId, sources, vie
     }, []);
 
     const togglePanel = () => {
-        if (open) { stop(); setOpen(false); return; }
+        if (open) {
+            historicalNoteIds.current = new Set(notes.map(note => note.id));
+            stop(); setOpen(false); return;
+        }
         try { prepareAudio(); } catch { /* Capture reports unsupported browsers after health. */ }
         setOpen(true);
     };
@@ -99,6 +105,7 @@ export default function TranslationNotes({ active, kind, sessionId, sources, vie
         sessionStartRef.current = Date.now();
         setOpen(false);
         setNotes([]);
+        historicalNoteIds.current.clear();
         setStatus('idle');
         setError('');
         setSkippedClips(false);
@@ -147,11 +154,17 @@ export default function TranslationNotes({ active, kind, sessionId, sources, vie
         });
     }, [sources]);
 
+    const scrollToLatest = useCallback(() => {
+        const list = notesListRef.current;
+        // Follow the rendered words without moving the page or restarting smooth scrolls.
+        if (list && followLatestRef.current) list.scrollTop = list.scrollHeight;
+    }, []);
+
     useEffect(() => {
-        if (open && notes.length > 0) {
-            notesEndRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-        }
-    }, [notes, open]);
+        if (open) { followLatestRef.current = true; scrollToLatest(); }
+    }, [open, scrollToLatest]);
+
+    useEffect(() => { scrollToLatest(); }, [notes, scrollToLatest]);
 
     useEffect(() => {
         if (!open || !active || !visible || !user?._id) return;
@@ -366,7 +379,12 @@ export default function TranslationNotes({ active, kind, sessionId, sources, vie
                             {skippedClips && <div className="translation-warning" role="status">{t('translationNotes.skipped')}</div>}
                         </div>
                     )}
-                    <div className="translation-list" role="log" aria-live="polite" aria-relevant="additions text" aria-label={t('translationNotes.title')}>
+                    <div className="translation-list" ref={notesListRef}
+                        onScroll={event => {
+                            const list = event.currentTarget;
+                            followLatestRef.current = list.scrollHeight - list.scrollTop - list.clientHeight < 48;
+                        }}
+                        role="log" aria-live="polite" aria-relevant="additions text" aria-label={t('translationNotes.title')}>
                         {notes.length === 0 ? <div className="translation-empty">
                             <div className="translation-empty-icon"><Sparkles size={20} /></div>
                             <div className="translation-empty-title">{t('translationNotes.emptyTitle')}</div>
@@ -389,7 +407,11 @@ export default function TranslationNotes({ active, kind, sessionId, sources, vie
                                             <span className="translation-msg-time">{note.time}</span>
                                         </div>
                                         <div className="translation-msg-bubble">
-                                            <div className="translation-msg-original" lang={spokenLangKey !== 'auto' ? spokenLangKey : undefined}>{note.original}</div>
+                                            <div className="translation-msg-original" lang={spokenLangKey !== 'auto' ? spokenLangKey : undefined}>
+                                                <TranscriptText text={note.original} isFinal={note.isFinal}
+                                                    stopped={!visible || ['interrupted', 'error'].includes(note.translationState)}
+                                                    skipInitialAnimation={historicalNoteIds.current.has(note.id)} onReveal={scrollToLatest} />
+                                            </div>
                                             {note.translate !== false && (
                                                 <div className="translation-msg-translated-block">
                                                     <div className="translation-note-language">{t('translationNotes.translation')} · {t(`translationNotes.${note.targetLanguage}`)}</div>
@@ -405,7 +427,6 @@ export default function TranslationNotes({ active, kind, sessionId, sources, vie
                                 </div>
                             );
                         })}
-                        <div ref={notesEndRef} />
                     </div>
                 </aside>
             )}

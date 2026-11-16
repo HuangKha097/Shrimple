@@ -1,0 +1,49 @@
+{
+  "status": "passed",
+  "checks": [
+    "progressive append; stable DOM; accessible snapshot",
+    "interim insertion/deletion/replacement; final punctuation",
+    "shortened interim during reveal; final while animating",
+    "continuous updates; bounded catch-up for 199 words",
+    "Vietnamese; Unicode; repeated words; exact whitespace",
+    "interruption; hidden tab; unmount cleanup; reopened history",
+    "live reduced-motion change; immediate updates; static cursor",
+    "restoring motion does not replay old words",
+    "panel follows rendered words; manual scroll preserved; follow resumes",
+    "translation arrival preserves original reveal and keyboard focus",
+    "clear during animation; history reopen; session reset"
+  ],
+  "screenshots": [
+    {
+      "name": "desktop-dark",
+      "left": 912,
+      "right": 1264,
+      "viewport": 1280,
+      "overflow": false,
+      "textOverflow": false,
+      "cursorColor": "rgb(231, 233, 234)",
+      "textColor": "rgb(231, 233, 234)"
+    },
+    {
+      "name": "mobile-light",
+      "left": 12,
+      "right": 378,
+      "viewport": 390,
+      "overflow": false,
+      "textOverflow": false,
+      "cursorColor": "rgb(21, 32, 43)",
+      "textColor": "rgb(21, 32, 43)"
+    },
+    {
+      "name": "mobile-custom",
+      "left": 12,
+      "right": 378,
+      "viewport": 390,
+      "overflow": false,
+      "textOverflow": false,
+      "cursorColor": "rgb(21, 32, 43)",
+      "textColor": "rgb(21, 32, 43)"
+    }
+  ],
+  "scope": "Synthetic transcripts; mocked capture/transport/health. Real React, CSS, timers and browser scrolling; no backend/AI/device acceptance."
+}
